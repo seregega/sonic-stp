@@ -20,6 +20,14 @@
 int stp_intf_get_netlink_fd();
 stp_netlink_cb_ptr *stp_netlink_cb;
 
+/**
+ * @brief используется для настройки размера буфера сокета (как для приема, так и для передачи данных). Она позволяет установить оптимальный размер буфера для повышения производительности передачи или приема данных через сокет.
+ *
+ * @param sock Дескриптор сокета, для которого устанавливается размер буфера.
+ * @param optname Имя опции сокета, определяющее, для какого буфера (приемного или передающего) изменяется размер. SO_RCVBUF Установка размера буфера для приема данных. /SO_SNDBUF — Установка размера буфера для передачи данных.
+ * @param size Новый размер буфера в байтах.
+ * @return int
+ */
 int stp_set_sock_buf_size(int sock, int optname, int size)
 {
     int new_size = 0;
@@ -27,30 +35,36 @@ int stp_set_sock_buf_size(int sock, int optname, int size)
     int size_len = sizeof(size);
     int ret = 0;
 
-    ret = getsockopt(sock, SOL_SOCKET, optname, &old_size, &size_len); 
+    ret = getsockopt(sock, SOL_SOCKET, optname, &old_size, &size_len);
     if (-1 == ret)
     {
         STP_LOG_ERR("sock[%d] Getsockopt Failed : %s", sock, strerror(errno));
         return -1;
     }
 
-    ret = setsockopt(sock, SOL_SOCKET, optname, &size, size_len); 
+    ret = setsockopt(sock, SOL_SOCKET, optname, &size, size_len);
     if (-1 == ret)
     {
-        STP_LOG_ERR("sock[%d] Setsockopt size : %d Failed : %s",sock, size, strerror(errno));
+        STP_LOG_ERR("sock[%d] Setsockopt size : %d Failed : %s", sock, size, strerror(errno));
         return -1;
     }
 
-    ret = getsockopt(sock, SOL_SOCKET, optname, &new_size, &size_len); 
+    ret = getsockopt(sock, SOL_SOCKET, optname, &new_size, &size_len);
     if (-1 == ret)
     {
-        STP_LOG_ERR("sock[%d] Getsockopt Failed : %s",sock, strerror(errno));
+        STP_LOG_ERR("sock[%d] Getsockopt Failed : %s", sock, strerror(errno));
         return -1;
     }
     STP_LOG_INFO("socket[%d] buf_size old,req,new : [%d][%d][%d]", sock, old_size, size, new_size);
     return new_size;
 }
 
+/**
+ * @brief используется для инициализации Netlink-сокета и настройки механизма обработки сообщений Netlink в контексте демона STP (Spanning Tree Protocol). Она также регистрирует функцию обратного вызова (callback) для обработки событий Netlink.
+ *
+ * @param fn Указатель на функцию обратного вызова (callback), которая вызывается при получении сообщений Netlink.
+ * @return int 0/-1 Ошибка инициализации (например, не удалось создать сокет или настроить обработку событий).
+ */
 int stp_netlink_init(stp_netlink_cb_ptr *fn)
 {
     int ret = 0;
@@ -58,12 +72,17 @@ int stp_netlink_init(stp_netlink_cb_ptr *fn)
     int len = sizeof(g_stpd_netlink_ibuf_sz);
 
     struct sockaddr_nl sa = {
-        .nl_family = AF_NETLINK,
-        .nl_pad    = 0,
-        .nl_pid    = 0,
-        .nl_groups = RTMGRP_LINK
-    };
+        .nl_family = AF_NETLINK,   // Указывает семейство адресов. Для Netlink всегда используется AF_NETLINK.
+        .nl_pad = 0,               // Зарезервированное поле, должно быть инициализировано в 0.
+        .nl_pid = 0,               // Идентификатор процесса (PID), которому адресуются сообщения Netlink. Если установлено 0, сообщения адресуются ядру.
+        .nl_groups = RTMGRP_LINK}; // Битовая маска, указывающая группы мультикаст-подписок. Используется для получения событий Netlink.  RTMGRP_LINK — Подписка на события изменения состояния интерфейсов.
 
+    /**
+     * @brief создает Netlink-сокет, который используется для взаимодействия с ядром Linux. Сокет предназначен для получения и отправки сообщений через протокол Netlink, который поддерживает обмен данными между ядром и пользовательским пространством.
+     * AF_NETLINK Указывает, что создается Netlink-сокет.
+     * SOCK_RAW Тип сокета. Указывает, что сокет будет работать с "сырыми" сообщениями без автоматической обработки.
+     * NETLINK_ROUTE Протокол Netlink, используемый для управления маршрутизацией, интерфейсами, адресами и другими сетевыми объектами
+     */
     nl_fd = socket(AF_NETLINK, SOCK_RAW, NETLINK_ROUTE);
     if (nl_fd == -1)
     {
@@ -78,9 +97,9 @@ int stp_netlink_init(stp_netlink_cb_ptr *fn)
         return -1;
     }
     STP_LOG_INFO("Netlink initial rcv buf size : %d", g_stpd_netlink_ibuf_sz);
-    g_stpd_netlink_cbuf_sz  = g_stpd_netlink_ibuf_sz;
+    g_stpd_netlink_cbuf_sz = g_stpd_netlink_ibuf_sz;
 
-    if(bind(nl_fd, (struct sockaddr *) &sa, sizeof(sa)) == -1)
+    if (bind(nl_fd, (struct sockaddr *)&sa, sizeof(sa)) == -1)
     {
         STP_LOG_ERR("nl_fd BIND Failed : %s", strerror(errno));
         return -1;
@@ -91,32 +110,43 @@ int stp_netlink_init(stp_netlink_cb_ptr *fn)
     return nl_fd;
 }
 
+/**
+ * @brief используется для отправки запроса через Netlink-сокет (идентифицированный дескриптором nl_fd) к ядру Linux. Этот запрос инициирует получение данных о сетевых объектах, таких как интерфейсы, маршруты или адреса.
+ *
+ * @param nl_fd Дескриптор Netlink-сокета, через который будет отправлен запрос.
+ * @return int -1 — Ошибка при отправке запроса (например, проблема с сокетом или недостаточные ресурсы).
+ */
 int stp_netlink_request(int nl_fd)
 {
     int ret = 0;
 
-    struct nlmsghdr nh;
-    struct iovec iov;
-    struct sockaddr_nl dst;
-    struct msghdr msg;
+    struct nlmsghdr nh;     // заголовок Netlink-сообщения. Он содержит метаинформацию, такую как тип сообщения, длина данных, идентификатор отправителя, и другие флаги.
+    struct iovec iov;       // iovec используется для описания буфера данных, передаваемого через системный вызов sendmsg или recvmsg. Это универсальная структура для работы с векторами ввода/вывода.
+    struct sockaddr_nl dst; // используется для указания адреса Netlink-сокета (отправителя или получателя).
+    struct msghdr msg;      // msghdr используется для настройки параметров передачи сообщения через системные вызовы sendmsg и recvmsg.
 
-    nh.nlmsg_len = NLMSG_LENGTH(sizeof(struct rtgenmsg));
-    nh.nlmsg_type = RTM_GETLINK;
-    nh.nlmsg_flags = (NLM_F_REQUEST | NLM_F_DUMP);
-    nh.nlmsg_pid = getpid();
+    nh.nlmsg_len = NLMSG_LENGTH(sizeof(struct rtgenmsg)); // Общая длина сообщения (включая заголовок)
+    nh.nlmsg_type = RTM_GETLINK;                          // Тип сообщения (например, RTM_GETLINK)
+    nh.nlmsg_flags = (NLM_F_REQUEST | NLM_F_DUMP);        // Флаги (например, NLM_F_REQUEST | NLM_F_ACK)
+    nh.nlmsg_pid = getpid();                              // PID отправителя (используется для адресации)
 
-    iov.iov_base = &nh;
-    iov.iov_len  = nh.nlmsg_len;
+    iov.iov_base = &nh;         // Указываем на заголовок Netlink
+    iov.iov_len = nh.nlmsg_len; // Размер данных, включая заголовок
 
     memset(&dst, 0, sizeof(struct sockaddr_nl));
-    dst.nl_family = AF_NETLINK;
+    dst.nl_family = AF_NETLINK; // Семейство адресов (AF_NETLINK)
 
     memset(&msg, 0, sizeof(struct msghdr));
-    msg.msg_name = &dst;
-    msg.msg_namelen = sizeof(struct sockaddr_nl);
-    msg.msg_iov = &iov;
-    msg.msg_iovlen = 1;
 
+    msg.msg_name = &dst;                          // Указатель на адрес (например, sockaddr_nl)
+    msg.msg_namelen = sizeof(struct sockaddr_nl); // Длина адреса
+    msg.msg_iov = &iov;                           // Указатель на массив iovec
+    msg.msg_iovlen = 1;                           // Количество элементов в iovec
+
+    /**
+     * @brief Системный вызов отправляет сформированное Netlink-сообщение через сокет и проверяет результат вызова. Если отправка завершилась неудачей, в лог записывается сообщение об ошибке. Затем функция возвращает результат вызова sendmsg.
+     *
+     */
     ret = sendmsg(nl_fd, (struct msghdr *)&msg, 0);
     if (ret == -1)
     {
@@ -125,39 +155,63 @@ int stp_netlink_request(int nl_fd)
     return ret;
 }
 
+/**
+ * @brief для разбора вложенных атрибутов в Netlink-сообщении. Она извлекает атрибуты, упакованные в структуру struct rtattr, и организует их в массив указателей для удобного доступа.
+ *
+ * @param tb  Выходной параметр. Массив, в который будут записаны указатели на атрибуты. Индекс массива соответствует типу атрибута (rta_type).
+ * @param max Максимальное количество атрибутов, которые можно разобрать. Ограничивает размер массива tb.
+ * @param rta Указатель на первый атрибут в Netlink-сообщении.
+ * @param len Длина данных, содержащих атрибуты. Обеспечивает контроль корректного разбора сообщения.
+ */
 void stp_netlink_parse_rtattr(struct rtattr *tb[], int max, struct rtattr *rta, int len)
 {
-    memset(tb, 0, sizeof(struct rtattr *)*(max));
-	while (RTA_OK(rta, len)) {
-		if (rta->rta_type < max) {
-			tb[rta->rta_type] = rta;
-		}
-		rta = RTA_NEXT(rta, len);
-	}
+    memset(tb, 0, sizeof(struct rtattr *) * (max));
+    while (RTA_OK(rta, len))
+    {
+        if (rta->rta_type < max)
+        {
+            tb[rta->rta_type] = rta;
+        }
+        rta = RTA_NEXT(rta, len);
+    }
 }
 
+/**
+ * @brief проверяет, является ли сетевой интерфейс с заданным именем (name) допустимым в контексте работы демона STP (Spanning Tree Protocol). Она помогает определить, следует ли учитывать этот интерфейс для обработки протокола STP.
+ *
+ * @param name  Указатель на строку, содержащую имя интерфейса.
+ * @return true  Интерфейс является допустимым для обработки STP.
+ * @return false
+ */
 bool stp_netlink_intf_is_valid(char *name)
 {
-    if ((strncmp(name, "Ethernet", strlen("Ethernet")) == 0) || 
+    if ((strncmp(name, "Ethernet", strlen("Ethernet")) == 0) ||
         (strncmp(name, "PortChannel", strlen("PortChannel")) == 0))
         return true;
 
-    return false; 
+    return false;
 }
 
+/**
+ * @brief отвечает за прием сообщений через Netlink-сокет (nl_fd). Она обрабатывает полученные данные, разбирая сообщения Netlink, и вызывает зарегистрированные функции для обработки каждого сообщения.
+ *
+ * @param nl_fd Дескриптор, созданный с помощью socket(AF_NETLINK, SOCK_RAW, NETLINK_ROUTE).
+ * @param read_all  Флаг, указывающий, следует ли читать все доступные данные из сокета.
+ * @return int Количество обработанных сообщений в случае успеха. -1 при ошибке.
+ */
 static int stp_netlink_recv(int nl_fd, bool read_all)
 {
     int ret = 0;
     uint8_t retry = 0;
-    int i =0;
+    int i = 0;
     int len = 0;
     int nh_len = 0;
     uint8_t read_more_msg = 0;
     struct iovec iov;
     struct sockaddr_nl nl_addr;
     struct msghdr msg;
-    struct rtattr *rt_list[IFLA_MAX+1];
-    struct rtattr *linkinfo_list[IFLA_INFO_MAX+1];
+    struct rtattr *rt_list[IFLA_MAX + 1];
+    struct rtattr *linkinfo_list[IFLA_INFO_MAX + 1];
     struct nlmsghdr *nh = 0;
     struct ifinfomsg *ifi = 0;
     struct rtattr *ptr = 0;
@@ -166,12 +220,12 @@ static int stp_netlink_recv(int nl_fd, bool read_all)
     int new_buf_size = 0;
 
     void *new_buf = calloc(1, STP_NETLINK_MSG_SIZE);
-    iov.iov_base  = new_buf;
-    iov.iov_len   = STP_NETLINK_MSG_SIZE;
+    iov.iov_base = new_buf;
+    iov.iov_len = STP_NETLINK_MSG_SIZE;
 
     nl_addr.nl_family = AF_NETLINK;
 
-    msg.msg_name = (void*)&nl_addr;
+    msg.msg_name = (void *)&nl_addr;
     msg.msg_namelen = sizeof(nl_addr);
     msg.msg_iov = &iov;
     msg.msg_iovlen = 1;
@@ -179,7 +233,8 @@ static int stp_netlink_recv(int nl_fd, bool read_all)
     msg.msg_controllen = 0;
     msg.msg_flags = 0;
 
-    do {
+    do
+    {
         len = recvmsg(nl_fd, &msg, flags);
         if (-1 == len)
         {
@@ -187,8 +242,8 @@ static int stp_netlink_recv(int nl_fd, bool read_all)
             {
                 new_buf_size = g_stpd_netlink_cbuf_sz + g_stpd_netlink_ibuf_sz;
                 /*Netlink buffer size not enough, increase it*/
-                if ( new_buf_size <= STP_NETLINK_SOCK_MAX_BUF_SIZE)  
-                { 
+                if (new_buf_size <= STP_NETLINK_SOCK_MAX_BUF_SIZE)
+                {
                     g_stpd_netlink_cbuf_sz = new_buf_size;
                     ret = stp_set_sock_buf_size(nl_fd, SO_RCVBUF, g_stpd_netlink_cbuf_sz);
                     if (-1 == ret)
@@ -210,7 +265,7 @@ static int stp_netlink_recv(int nl_fd, bool read_all)
             break;
         }
 
-        if ((msg.msg_flags & MSG_TRUNC) || (len > iov.iov_len)) 
+        if ((msg.msg_flags & MSG_TRUNC) || (len > iov.iov_len))
         { /*Application buffer size not enough*/
             STP_LOG_INFO("Packet truncated");
 
@@ -224,16 +279,16 @@ static int stp_netlink_recv(int nl_fd, bool read_all)
                     STP_LOG_CRITICAL("Relloc Failed");
                     break;
                 }
-                iov.iov_base = new_buf; 
+                iov.iov_base = new_buf;
                 flags = 0;
                 retry = 1;
                 continue;
             }
             else
             {
-                //TODO: 
-                //This is a very unlikely condition to hit.
-                //STP_NETLINK_APPL_MAX_BUF_SIZE needs to be revisited only if we hit the error
+                // TODO:
+                // This is a very unlikely condition to hit.
+                // STP_NETLINK_APPL_MAX_BUF_SIZE needs to be revisited only if we hit the error
                 STP_LOG_CRITICAL("Netlink msg len[%u] is too big", len);
                 /*sys_assert(0);*/
                 break;
@@ -242,18 +297,19 @@ static int stp_netlink_recv(int nl_fd, bool read_all)
 
         if (flags != 0)
         {
-            //ALL set read without flags
+            // ALL set read without flags
             flags = 0;
             retry = 1;
             continue;
         }
 
-        //A message successfully read , disable retry attempts... continue processing.
+        // A message successfully read , disable retry attempts... continue processing.
         retry = 0;
 
-        nh = (struct nlmsghdr *) (void*)(iov.iov_base); 
-        for (; NLMSG_OK (nh, len);
-                nh = NLMSG_NEXT (nh, len)) {
+        nh = (struct nlmsghdr *)(void *)(iov.iov_base);
+        for (; NLMSG_OK(nh, len);
+             nh = NLMSG_NEXT(nh, len))
+        {
 
             if (nh->nlmsg_flags & NLM_F_MULTI)
                 read_more_msg = 1;
@@ -272,8 +328,7 @@ static int stp_netlink_recv(int nl_fd, bool read_all)
                 continue; // move on to next nh
             }
 
-            if ((nh->nlmsg_type == RTM_NEWLINK)
-                    || (nh->nlmsg_type == RTM_DELLINK))
+            if ((nh->nlmsg_type == RTM_NEWLINK) || (nh->nlmsg_type == RTM_DELLINK))
             {
                 ifi = NLMSG_DATA(nh);
                 if (!ifi)
@@ -296,17 +351,17 @@ static int stp_netlink_recv(int nl_fd, bool read_all)
                     ptr = rt_list[IFLA_IFNAME];
                     strncpy(if_db.ifname, (char *)RTA_DATA(ptr), IFNAMSIZ);
 
-                    if(!stp_netlink_intf_is_valid(if_db.ifname))
+                    if (!stp_netlink_intf_is_valid(if_db.ifname))
                     {
                         continue;
                     }
 
                     if (ifi->ifi_family == AF_BRIDGE && nh->nlmsg_type == RTM_DELLINK)
                     {
-                        /* For last vlan removed from the port(phy/PO) 
+                        /* For last vlan removed from the port(phy/PO)
                          * Bridge sends RTM_DELLINK, ignore that
                          */
-                        STP_LOG_DEBUG("Ignore AF_BRIDGE RTM_DELLINK for %s kif:%u",if_db.ifname,if_db.kif_index);
+                        STP_LOG_DEBUG("Ignore AF_BRIDGE RTM_DELLINK for %s kif:%u", if_db.ifname, if_db.kif_index);
                         continue;
                     }
 
@@ -334,52 +389,51 @@ static int stp_netlink_recv(int nl_fd, bool read_all)
                         if (linkinfo_list[IFLA_INFO_KIND])
                         {
                             ptr = linkinfo_list[IFLA_INFO_KIND];
-                            if ((0 == strncmp((char *)RTA_DATA(ptr), "team", 4)) || 
+                            if ((0 == strncmp((char *)RTA_DATA(ptr), "team", 4)) ||
                                 (0 == strncmp((char *)RTA_DATA(ptr), "bond", 4)))
                                 if_db.is_bond = 1;
                         }
                         if (linkinfo_list[IFLA_INFO_SLAVE_KIND])
                         {
                             ptr = linkinfo_list[IFLA_INFO_SLAVE_KIND];
-                            if ((0 == strncmp((char *)RTA_DATA(ptr), "team", 4)) || 
+                            if ((0 == strncmp((char *)RTA_DATA(ptr), "team", 4)) ||
                                 (0 == strncmp((char *)RTA_DATA(ptr), "bond", 4)))
                                 if_db.is_member = 1;
                         }
                     }
 
                     if (if_db.is_member)
-                    { //find my master
+                    { // find my master
                         if (rt_list[IFLA_MASTER])
                         {
                             ptr = rt_list[IFLA_MASTER];
                             if_db.master_ifindex = *(uint32_t *)RTA_DATA(ptr);
                         }
                     }
-                    STP_LOG_INFO("RTM-%s IF:%s KIF:%u Oper:%d Bond:%d Mem:%d Master:%u", (nh->nlmsg_type == RTM_NEWLINK)?"UPDATE":"DELETE", 
-                            if_db.ifname, if_db.kif_index, if_db.oper_state, if_db.is_bond, if_db.is_member, if_db.master_ifindex); 
+                    STP_LOG_INFO("RTM-%s IF:%s KIF:%u Oper:%d Bond:%d Mem:%d Master:%u", (nh->nlmsg_type == RTM_NEWLINK) ? "UPDATE" : "DELETE",
+                                 if_db.ifname, if_db.kif_index, if_db.oper_state, if_db.is_bond, if_db.is_member, if_db.master_ifindex);
                 }
                 else
                 {
                     STP_LOG_DEBUG("No ifname for kif_index :%d ", if_db.kif_index);
                 }
             }
-            stp_netlink_cb(&if_db, (nh->nlmsg_type == RTM_NEWLINK)?1:0, read_all);
-        } //end for loop
-
+            stp_netlink_cb(&if_db, (nh->nlmsg_type == RTM_NEWLINK) ? 1 : 0, read_all);
+        } // end for loop
 
         if (read_more_msg || read_all)
         {
-            STP_LOG_DEBUG("%s : Waiting for more msgs until NLMSG_DONE", read_all?"READ_ALL":"READ_MORE");
+            STP_LOG_DEBUG("%s : Waiting for more msgs until NLMSG_DONE", read_all ? "READ_ALL" : "READ_MORE");
             flags = MSG_PEEK;
         }
 
-    }while(retry || read_more_msg || read_all);
+    } while (retry || read_more_msg || read_all);
 
-    free (iov.iov_base);
+    free(iov.iov_base);
     return 0;
 }
 
-//process all netlink msgs until EAGAIN/EWOULDBLOCK
+// process all netlink msgs until EAGAIN/EWOULDBLOCK
 int stp_netlink_recv_all(int nl_fd)
 {
     if (stp_netlink_request(nl_fd) == -1)
@@ -388,22 +442,19 @@ int stp_netlink_recv_all(int nl_fd)
     return stp_netlink_recv(nl_fd, true);
 }
 
-//process one msg only
+// process one msg only
 int stp_netlink_recv_msg(int nl_fd)
 {
     return stp_netlink_recv(nl_fd, false);
 }
 
-//Libevent callback for netlink socket
-void stp_netlink_events_cb (evutil_socket_t fd, short what, void *arg)
+// Libevent callback for netlink socket
+void stp_netlink_events_cb(evutil_socket_t fd, short what, void *arg)
 {
     const char *data = arg;
 
     if (what & EV_READ)
         stp_netlink_recv_msg(stp_intf_get_netlink_fd());
     else
-        STP_LOG_ERR("Invalid event : %x",what);
-
+        STP_LOG_ERR("Invalid event : %x", what);
 }
-
-
