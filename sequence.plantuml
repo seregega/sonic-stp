@@ -1,0 +1,27 @@
+@startuml
+actor User
+participant "STP Daemon" as Daemon
+participant "Kernel" as Kernel
+participant "CONFIG_DB" as ConfigDB
+participant "STATE_DB" as StateDB
+
+User -> Daemon : Запуск демона
+Daemon -> ConfigDB : Чтение конфигурации STP
+Daemon -> Kernel : Установка сокетов для BPDU
+Daemon -> StateDB : Инициализация состояния
+
+loop Ожидание событий
+    Kernel -> Daemon : Приём BPDU
+    Daemon -> Kernel : Обработка BPDU
+    Daemon -> StateDB : Обновление состояния порта
+    Daemon -> ConfigDB : Проверка конфигурации
+end
+
+User -> Daemon : Остановка демона
+Daemon -> Kernel : Закрытие сокетов
+Daemon -> StateDB : Очистка состояния
+@enduml
+
+' Она показывает взаимодействие между пользователем, демоном STP, ядром Linux и базами данных CONFIG_DB и STATE_DB. Эта диаграмма иллюстрирует поток событий от запуска демона до его остановки, включая обработку пакетов BPDU.
+
+' Эти диаграммы можно сгенерировать, вставив указанный код в любую утилиту, поддерживающую PlantUML.

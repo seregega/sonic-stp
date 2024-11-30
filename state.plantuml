@@ -1,0 +1,27 @@
+@startuml
+[*] --> Initialization
+
+Initialization : Инициализация глобальных структур
+Initialization : Настройка таймеров и сокетов
+Initialization --> Listening : Инициализация завершена
+
+Listening : Получение BPDU
+Listening : Ожидание пакетов
+Listening --> Blocking : BPDU показывает петлю
+Listening --> Learning : Таймер истёк или BPDU обработан
+
+Blocking : Порт заблокирован для передачи данных
+Blocking --> Listening : Событие топологии изменено
+
+Learning : Порт в состоянии обучения
+Learning --> Forwarding : Таймер истёк
+
+Forwarding : Порт активно передаёт данные
+Forwarding --> Listening : Изменение топологии
+
+[*] --> Disabled
+Disabled : Порт выключен
+Disabled --> Initialization : Порт активирован
+@enduml
+
+' Она отображает ключевые состояния порта STP и переходы между ними, включая события, такие как получение BPDU, истечение таймера или изменения в топологии.
