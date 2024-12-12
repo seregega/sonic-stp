@@ -1,18 +1,12 @@
-/*
- * Copyright 2019 Broadcom. The term "Broadcom" refers to Broadcom Inc. and/or
- * its subsidiaries.
+/**
+ * @file stp.h
+ * @brief Заголовочный файл для реализации протокола STP (Spanning Tree Protocol).
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Содержит определения структур, констант, перечислений и макросов,
+ * используемых для управления STP на уровне VLAN и портов.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * @copyright 2019 Broadcom.
+ * @license Apache License, Version 2.0.
  */
 
 #ifndef __STP_H__
@@ -22,6 +16,10 @@
 #define PORT_MASK BITMAP_T
 #define VLAN_MASK BITMAP_T
 
+/**
+ * @def STP_VERSION_ID
+ * @brief Версия протокола STP.
+ */
 #define STP_VERSION_ID 0
 
 #define STP_MESSAGE_AGE_INCREMENT 1
@@ -30,8 +28,21 @@
 #define STP_OK 0
 #define STP_ERR -1
 
+/**
+ * @def STP_DFLT_PRIORITY
+ * @brief Значение приоритета моста по умолчанию.
+ */
 #define STP_DFLT_PRIORITY 32768
+
+/**
+ * @def STP_MIN_PRIORITY
+ * @brief Минимально допустимое значение приоритета.
+ */
 #define STP_MIN_PRIORITY 0
+/**
+ * @def STP_MAX_PRIORITY
+ * @brief Максимально допустимое значение приоритета.
+ */
 #define STP_MAX_PRIORITY 65535
 
 #define STP_DFLT_FORWARD_DELAY 15
@@ -73,7 +84,16 @@
 #define STP_LEGACY_PORT_PATH_COST_400G 1
 
 // 802.1t path costs - calculated as 20,000,000,000 / LinkSpeedInKbps
+/**
+ * @def STP_MIN_PORT_PATH_COST
+ * @brief Минимальная стоимость пути для порта.
+ */
 #define STP_MIN_PORT_PATH_COST 1
+
+/**
+ * @def STP_MAX_PORT_PATH_COST
+ * @brief Максимальная стоимость пути для порта.
+ */
 #define STP_MAX_PORT_PATH_COST 200000000
 #define STP_PORT_PATH_COST_1M 20000000
 #define STP_PORT_PATH_COST_10M 2000000
@@ -146,18 +166,22 @@
 #define CLR_STP_PER_VLAN_FLAG(_stp_port_class, _flag) (_stp_port_class->flags &= ~(_flag))
 
 // debug macros
+/**
+ * @struct DEBUG_STP
+ * @brief Структура для управления настройками отладки STP.
+ */
 typedef struct
 {
-	UINT8 enabled : 1;
-	UINT8 verbose : 1;
-	UINT8 bpdu_rx : 1;
-	UINT8 bpdu_tx : 1;
-	UINT8 event : 1;
-	UINT8 all_vlans : 1;
-	UINT8 all_ports : 1;
-	UINT8 spare : 1;
-	BITMAP_T *vlan_mask;
-	PORT_MASK *port_mask;
+	UINT8 enabled : 1;	  /**< Включение отладки. */
+	UINT8 verbose : 1;	  /**< Режим подробной отладки. */
+	UINT8 bpdu_rx : 1;	  /**< Логирование получения BPDU. */
+	UINT8 bpdu_tx : 1;	  /**< Логирование отправки BPDU. */
+	UINT8 event : 1;	  /**< Логирование событий. */
+	UINT8 all_vlans : 1;  /**< Отладка для всех VLAN. */
+	UINT8 all_ports : 1;  /**< Отладка для всех портов. */
+	UINT8 spare : 1;	  /**< Зарезервировано. */
+	BITMAP_T *vlan_mask;  /**< Маска VLAN для отладки. */
+	PORT_MASK *port_mask; /**< Маска портов для отладки. */
 } DEBUG_STP;
 
 typedef struct DEBUG_GLOBAL_TAG
@@ -199,11 +223,15 @@ extern DEBUG_GLOBAL debugGlobal;
 #define stplog_root_port_change(stp_class, port_number, src) \
 	// printf("\n stplog_root_port_change\n")
 
+/**
+ * @enum STP_CLASS_STATE
+ * @brief Состояния экземпляра STP.
+ */
 enum STP_CLASS_STATE
 {
-	STP_CLASS_FREE = 0,
-	STP_CLASS_CONFIG = 1,
-	STP_CLASS_ACTIVE = 2,
+	STP_CLASS_FREE = 0,	  /**< Экземпляр свободен. */
+	STP_CLASS_CONFIG = 1, /**< Экземпляр настроен. */
+	STP_CLASS_ACTIVE = 2  /**< Экземпляр активен. */
 };
 
 /*
@@ -229,31 +257,31 @@ enum STP_KERNEL_STATE
 	STP_KERNEL_STATE_BLOCKING
 };
 
-/* struct definitions ------------------------------------------------------- */
-
+/**
+ * @struct BRIDGE_DATA
+ * @brief Представление данных моста в протоколе STP.
+ *
+ * Эта структура содержит информацию о корневом мосте, портах, стоимости пути и других параметрах,
+ * связанных с топологией и состоянием моста.
+ */
 typedef struct
 {
-	BRIDGE_IDENTIFIER root_id;
-	UINT32 root_path_cost;
-
-	PORT_ID root_port;
-	UINT8 max_age;
-	UINT8 hello_time;
-
-	UINT8 forward_delay;
-	UINT8 bridge_max_age;
-	UINT8 bridge_hello_time;
-	UINT8 bridge_forward_delay;
-
-	BRIDGE_IDENTIFIER bridge_id;
-
-	UINT32 topology_change_count;
-	UINT32 topology_change_tick; // time of last tc event
-
-	UINT8 hold_time : 6;
-	UINT8 topology_change_detected : 1;
-	UINT8 topology_change : 1;
-	UINT8 topology_change_time; // fwd dly + max age
+	BRIDGE_IDENTIFIER root_id;			/**< Идентификатор корневого моста. */
+	UINT32 root_path_cost;				/**< Стоимость пути до корневого моста. */
+	PORT_ID root_port;					/**< Номер порта, через который достигается корневой мост. */
+	UINT8 max_age;						/**< Максимальный возраст сообщений BPDU (в секундах). */
+	UINT8 hello_time;					/**< Интервал отправки сообщений Hello (в секундах). */
+	UINT8 forward_delay;				/**< Задержка пересылки (в секундах). */
+	UINT8 bridge_max_age;				/**< Максимальный возраст сообщений для текущего моста. */
+	UINT8 bridge_hello_time;			/**< Интервал Hello для текущего моста. */
+	UINT8 bridge_forward_delay;			/**< Задержка пересылки для текущего моста. */
+	BRIDGE_IDENTIFIER bridge_id;		/**< Идентификатор текущего моста. */
+	UINT32 topology_change_count;		/**< Счётчик изменений топологии. */
+	UINT32 topology_change_tick;		/**< Время последнего изменения топологии. */
+	UINT8 hold_time : 6;				/**< Время удержания BPDU для предотвращения переполнения буфера. */
+	UINT8 topology_change_detected : 1; /**< Флаг обнаружения изменения топологии. */
+	UINT8 topology_change : 1;			/**< Флаг, указывающий на активное изменение топологии. */
+	UINT8 topology_change_time;			/**< Время изменения топологии (задержка пересылки + максимальный возраст). */
 #define STP_BRIDGE_DATA_MEMBER_ROOT_ID_BIT 0
 #define STP_BRIDGE_DATA_MEMBER_ROOT_PATH_COST_BIT 1
 #define STP_BRIDGE_DATA_MEMBER_ROOT_PORT_BIT 2
@@ -267,70 +295,68 @@ typedef struct
 #define STP_BRIDGE_DATA_MEMBER_TOPO_CHNG_COUNT_BIT 10
 #define STP_BRIDGE_DATA_MEMBER_TOPO_CHNG_TIME_BIT 11
 #define STP_BRIDGE_DATA_MEMBER_HOLD_TIME_BIT 12
-	UINT32 modified_fields;
+	UINT32 modified_fields; /**< Поля, которые были изменены. */
 } __attribute__((__packed__)) BRIDGE_DATA;
 
+/**
+ * @struct STP_CLASS
+ * @brief Представление экземпляра STP для конкретного VLAN.
+ *
+ * Структура описывает параметры и состояние экземпляра STP, связанные с VLAN,
+ * включая информацию о мосте, маски портов, таймеры и статистику.
+ */
 typedef struct
 {
-	VLAN_ID vlan_id; // UINT16
-	UINT16 fast_aging : 1;
-	UINT16 spare : 11;
-	UINT16 state : 4; /* encode using enum STP_CLASS_STATE */
-	BRIDGE_DATA bridge_info;
-
-	PORT_MASK *enable_mask;
-	PORT_MASK *control_mask;
-	PORT_MASK *untag_mask;
-
-	TIMER hello_timer;
-	TIMER tcn_timer;
-	TIMER topology_change_timer;
-	UINT32 last_expiry_time;  /* for RAS to log delay events */
-	UINT32 last_bpdu_rx_time; /* for RAS to log Rx delay events */
-	UINT32 rx_drop_bpdu;
-
+	VLAN_ID vlan_id;			 /**< Идентификатор VLAN для экземпляра (тип UINT16). */
+	UINT16 fast_aging : 1;		 /**< Флаг быстрого старения записей. */
+	UINT16 spare : 11;			 /**< Зарезервированные биты. */
+	UINT16 state : 4;			 /**< Состояние класса (см. перечисление `STP_CLASS_STATE`). */
+	BRIDGE_DATA bridge_info;	 /**< Информация о мосте для данного экземпляра. */
+	PORT_MASK *enable_mask;		 /**< Маска включённых портов. */
+	PORT_MASK *control_mask;	 /**< Маска портов с включённым управлением STP. */
+	PORT_MASK *untag_mask;		 /**< Маска портов без тегов VLAN. */
+	TIMER hello_timer;			 /**< Таймер Hello сообщений. */
+	TIMER tcn_timer;			 /**< Таймер сообщений TCN (Topology Change Notification). */
+	TIMER topology_change_timer; /**< Таймер для отслеживания изменений топологии. */
+	UINT32 last_expiry_time;	 /**< Время последнего истечения таймера (для логирования событий задержки). */
+	UINT32 last_bpdu_rx_time;	 /**< Время получения последнего BPDU (для логирования задержек приема). */
+	UINT32 rx_drop_bpdu;		 /**< Количество отброшенных BPDU. */
 #define STP_CLASS_MEMBER_VLAN_BIT 0
 #define STP_CLASS_MEMBER_BRIDEGINFO_BIT 1
 #define STP_CLASS_MEMBER_ALL_PORT_CLASS_BIT 31
-	UINT32 modified_fields;
+	UINT32 modified_fields; /**< Поля, которые были изменены, обозначаются соответствующими битами. */
 } __attribute__((__packed__)) STP_CLASS;
 
 typedef struct
 {
-	PORT_IDENTIFIER port_id;
-	UINT8 state; /* encode using enum L2_PORT_STATE */
-	UINT8 topology_change_acknowledge : 1;
-	UINT8 config_pending : 1;
-	UINT8 change_detection_enabled : 1;
-	UINT8 self_loop : 1;
-	UINT8 auto_config : 1;
-	UINT8 operEdge : 1;
-	UINT8 kernel_state : 2; // STP_KERNEL_STATE
-
-	UINT32 path_cost;
-
-	BRIDGE_IDENTIFIER designated_root;
-	UINT32 designated_cost;
-	BRIDGE_IDENTIFIER designated_bridge;
-	PORT_IDENTIFIER designated_port;
-
-	TIMER message_age_timer;
-	TIMER forward_delay_timer;
-	TIMER hold_timer;
-	TIMER root_protect_timer;
-
-	UINT32 forward_transitions;
-	UINT32 rx_config_bpdu;
-	UINT32 tx_config_bpdu;
-	UINT32 rx_tcn_bpdu;
-	UINT32 tx_tcn_bpdu;
-	UINT32 rx_delayed_bpdu;
-	UINT32 rx_drop_bpdu;
-
+	PORT_IDENTIFIER port_id;			   /**< Уникальный идентификатор порта. */
+	UINT8 state;						   /**< Текущее состояние порта (например, BLOCKING, FORWARDING). */
+	UINT8 topology_change_acknowledge : 1; /**< Флаг подтверждения изменения топологии. */
+	UINT8 config_pending : 1;			   /**< Флаг ожидания применения конфигурации. */
+	UINT8 change_detection_enabled : 1;	   /**< Флаг включения обнаружения изменений. */
+	UINT8 self_loop : 1;				   /**< Флаг наличия самопетли (loopback). */
+	UINT8 auto_config : 1;				   /**< Флаг автоматической конфигурации. */
+	UINT8 operEdge : 1;					   /**< Указывает, является ли порт операционным "краем" (Edge). */
+	UINT8 kernel_state : 2;				   /**< Состояние ядра (STP_KERNEL_STATE). */
+	UINT32 path_cost;					   /**< Стоимость пути для данного порта. */
+	BRIDGE_IDENTIFIER designated_root;	   /**< Идентификатор корневого моста. */
+	UINT32 designated_cost;				   /**< Назначенная стоимость пути. */
+	BRIDGE_IDENTIFIER designated_bridge;   /**< Идентификатор назначенного моста. */
+	PORT_IDENTIFIER designated_port;	   /**< Идентификатор назначенного порта. */
+	TIMER message_age_timer;			   /**< Таймер для возраста сообщений. */
+	TIMER forward_delay_timer;			   /**< Таймер задержки пересылки. */
+	TIMER hold_timer;					   /**< Таймер удержания сообщений. */
+	TIMER root_protect_timer;			   /**< Таймер защиты корневого порта. */
+	UINT32 forward_transitions;			   /**< Количество переходов в состояние пересылки. */
+	UINT32 rx_config_bpdu;				   /**< Количество полученных BPDU конфигурации. */
+	UINT32 tx_config_bpdu;				   /**< Количество отправленных BPDU конфигурации. */
+	UINT32 rx_tcn_bpdu;					   /**< Количество полученных TCN BPDU. */
+	UINT32 tx_tcn_bpdu;					   /**< Количество отправленных TCN BPDU. */
+	UINT32 rx_delayed_bpdu;				   /**< Количество задержанных BPDU. */
+	UINT32 rx_drop_bpdu;				   /**< Количество отброшенных BPDU. */
 #define STP_CLASS_PORT_PRI_FLAG 0x0001
 #define STP_CLASS_PATH_COST_FLAG 0x0002
-	UINT16 flags;
-
+	UINT16 flags; /**< Флаги состояния порта. */
 #define STP_PORT_CLASS_MEMBER_PORT_ID_BIT 0
 #define STP_PORT_CLASS_MEMBER_PORT_STATE_BIT 1
 #define STP_PORT_CLASS_MEMBER_PATH_COST_BIT 2
@@ -350,66 +376,68 @@ typedef struct
 #define STP_PORT_CLASS_ROOT_PROTECT_BIT 15
 #define STP_PORT_CLASS_BPDU_PROTECT_BIT 16
 #define STP_PORT_CLASS_CLEAR_STATS_BIT 17
-	UINT32 modified_fields;
+	UINT32 modified_fields; /**< Поля, которые были модифицированы. */
 } __attribute__((__packed__)) STP_PORT_CLASS;
 
+/**
+ * @struct STP_GLOBAL
+ * @brief Глобальная структура данных для управления протоколом STP.
+ *
+ * Содержит общие параметры и данные, необходимые для работы протокола STP,
+ * включая настройки глобального состояния, статистику и маски портов.
+ */
 typedef struct
 {
-	UINT16 max_instances;
-	UINT16 active_instances;
-
-	STP_CLASS *class_array;
-	STP_PORT_CLASS *port_array;
-
-	STP_CONFIG_BPDU config_bpdu;
-	STP_TCN_BPDU tcn_bpdu;
-	PVST_CONFIG_BPDU pvst_config_bpdu;
-	PVST_TCN_BPDU pvst_tcn_bpdu;
-
-	UINT8 tick_id;
-	UINT8 bpdu_sync_tick_id;
-	UINT8 fast_span : 1;
-	UINT8 enable : 1;
-	UINT8 sstp_enabled : 1;
-	UINT8 pvst_protect_do_disable : 1; // global config to disable pvst bpdu received port
-	UINT8 spare1 : 4;
-
-	PORT_MASK *enable_mask;
-	PORT_MASK *enable_admin_mask;
-
-	PORT_MASK *fastspan_mask;
-	PORT_MASK *fastspan_admin_mask;
-
-	PORT_MASK *fastuplink_admin_mask;
-
-	PORT_MASK *protect_mask;
-	PORT_MASK *protect_do_disable_mask;
-	PORT_MASK *protect_disabled_mask;
-	PORT_MASK *root_protect_mask;
-	uint16_t root_protect_timeout;
-	L2_PROTO_MODE proto_mode;
-
-	UINT32 stp_drop_count;
-	UINT32 tcn_drop_count;
-	UINT32 pvst_drop_count;
+	UINT16 max_instances;				/**< Максимальное количество экземпляров STP. */
+	UINT16 active_instances;			/**< Количество активных экземпляров STP. */
+	STP_CLASS *class_array;				/**< Указатель на массив экземпляров STP. */
+	STP_PORT_CLASS *port_array;			/**< Указатель на массив классов портов. */
+	STP_CONFIG_BPDU config_bpdu;		/**< Структура конфигурационного BPDU. */
+	STP_TCN_BPDU tcn_bpdu;				/**< Структура BPDU уведомления об изменении топологии. */
+	PVST_CONFIG_BPDU pvst_config_bpdu;	/**< Конфигурационный BPDU для PVST. */
+	PVST_TCN_BPDU pvst_tcn_bpdu;		/**< BPDU уведомления об изменении топологии для PVST. */
+	UINT8 tick_id;						/**< Идентификатор текущего тика. */
+	UINT8 bpdu_sync_tick_id;			/**< Идентификатор тика для синхронизации BPDU. */
+	UINT8 fast_span : 1;				/**< Флаг быстрого охвата. */
+	UINT8 enable : 1;					/**< Флаг включения STP. */
+	UINT8 sstp_enabled : 1;				/**< Флаг включения SSTP. */
+	UINT8 pvst_protect_do_disable : 1;	/**< Конфигурация защиты PVST (отключение порта при получении PVST BPDU). */
+	UINT8 spare1 : 4;					/**< Зарезервированные биты. */
+	PORT_MASK *enable_mask;				/**< Маска включённых портов. */
+	PORT_MASK *enable_admin_mask;		/**< Маска административно включённых портов. */
+	PORT_MASK *fastspan_mask;			/**< Маска портов с функцией Fast Span. */
+	PORT_MASK *fastspan_admin_mask;		/**< Административная маска портов Fast Span. */
+	PORT_MASK *fastuplink_admin_mask;	/**< Административная маска портов Fast Uplink. */
+	PORT_MASK *protect_mask;			/**< Маска портов с включённой защитой. */
+	PORT_MASK *protect_do_disable_mask; /**< Маска портов, которые должны быть отключены из-за защиты. */
+	PORT_MASK *protect_disabled_mask;	/**< Маска отключённых портов защиты. */
+	PORT_MASK *root_protect_mask;		/**< Маска портов с защитой корневого порта. */
+	uint16_t root_protect_timeout;		/**< Тайм-аут защиты корневого порта. */
+	L2_PROTO_MODE proto_mode;			/**< Режим работы протокола STP. */
+	UINT32 stp_drop_count;				/**< Количество отброшенных BPDU для STP. */
+	UINT32 tcn_drop_count;				/**< Количество отброшенных TCN BPDU. */
+	UINT32 pvst_drop_count;				/**< Количество отброшенных PVST BPDU. */
 } __attribute__((__packed__)) STP_GLOBAL;
 
 #define INVALID_STP_PARAM ((UINT32)0xffffffff)
 
-/*Below ENUM for RAS STP, please update "stp_ras_state_string" structure when you are adding new event here*/
+/**
+ * @enum STP_RAS_EVENTS
+ * @brief События протокола STP для RAS.
+ */
 typedef enum
 {
-	STP_RAS_BLOCKING = 1,
-	STP_RAS_FORWARDING,
-	STP_RAS_INFERIOR_BPDU_RCVD,
-	STP_RAS_MES_AGE_TIMER_EXPIRY,
-	STP_RAS_ROOT_PROTECT_TIMER_EXPIRY,
-	STP_RAS_ROOT_PROTECT_VIOLATION,
-	STP_RAS_ROOT_ROLE,
-	STP_RAS_DESIGNATED_ROLE,
-	STP_RAS_MP_RX_DELAY_EVENT,
-	STP_RAS_TIMER_DELAY_EVENT,
-	STP_RAS_TCM_DETECTED
+	STP_RAS_BLOCKING = 1,			   /**< Блокировка порта. */
+	STP_RAS_FORWARDING,				   /**< Пересылка данных. */
+	STP_RAS_INFERIOR_BPDU_RCVD,		   /**< Получение BPDU с низким приоритетом. */
+	STP_RAS_MES_AGE_TIMER_EXPIRY,	   /**< Таймер истечения времени жизни сообщения. */
+	STP_RAS_ROOT_PROTECT_TIMER_EXPIRY, /**< Таймер защиты корня истёк. */
+	STP_RAS_ROOT_PROTECT_VIOLATION,	   /**< Нарушение защиты корня. */
+	STP_RAS_ROOT_ROLE,				   /**< Роль корня. */
+	STP_RAS_DESIGNATED_ROLE,		   /**< Роль назначения. */
+	STP_RAS_MP_RX_DELAY_EVENT,		   /**< Событие задержки приема MP. */
+	STP_RAS_TIMER_DELAY_EVENT,		   /**< Событие задержки таймера. */
+	STP_RAS_TCM_DETECTED			   /**< Обнаружено изменение топологии. */
 } STP_RAS_EVENTS;
 
 #endif //__STP_H__
