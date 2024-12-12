@@ -28,13 +28,12 @@
 #include <errno.h>
 
 #define STP_CLIENT_SOCK "/var/run/client.sock"
-#define stpout(fmt, ...)  fprintf(stdout, fmt, ##__VA_ARGS__)
+#define stpout(fmt, ...) fprintf(stdout, fmt, ##__VA_ARGS__)
 
 int stpd_fd;
 
-typedef struct CMD_LIST {
-    char    cmd_name[32];
-    int     cmd_type;
-}CMD_LIST;
-
-
+typedef struct CMD_LIST
+{
+    char cmd_name[32];
+    int cmd_type;
+} CMD_LIST;

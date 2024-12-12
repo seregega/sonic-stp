@@ -33,10 +33,10 @@ void transmit_config(STP_CLASS *stp_class, PORT_ID port_number)
 		return;
 	}
 
-    g_stp_config_bpdu.root_id = stp_class->bridge_info.root_id;
-    g_stp_config_bpdu.root_path_cost = stp_class->bridge_info.root_path_cost;
-    g_stp_config_bpdu.bridge_id = stp_class->bridge_info.bridge_id;
-    g_stp_config_bpdu.port_id = stp_port_class->port_id;
+	g_stp_config_bpdu.root_id = stp_class->bridge_info.root_id;
+	g_stp_config_bpdu.root_path_cost = stp_class->bridge_info.root_path_cost;
+	g_stp_config_bpdu.bridge_id = stp_class->bridge_info.bridge_id;
+	g_stp_config_bpdu.port_id = stp_port_class->port_id;
 
 	if (root_bridge(stp_class))
 	{
@@ -47,12 +47,12 @@ void transmit_config(STP_CLASS *stp_class, PORT_ID port_number)
 		stp_root_port_class = GET_STP_PORT_CLASS(stp_class, stp_class->bridge_info.root_port);
 
 		get_timer_value(&stp_root_port_class->message_age_timer, &val);
-		g_stp_config_bpdu.message_age = (UINT16) ((STP_TICKS_TO_SECONDS(val) + STP_MESSAGE_AGE_INCREMENT) << 8);
+		g_stp_config_bpdu.message_age = (UINT16)((STP_TICKS_TO_SECONDS(val) + STP_MESSAGE_AGE_INCREMENT) << 8);
 	}
 
-	g_stp_config_bpdu.max_age = (UINT16) stp_class->bridge_info.max_age << 8;
-	g_stp_config_bpdu.hello_time = (UINT16) stp_class->bridge_info.hello_time << 8;
-	g_stp_config_bpdu.forward_delay = (UINT16) stp_class->bridge_info.forward_delay << 8;
+	g_stp_config_bpdu.max_age = (UINT16)stp_class->bridge_info.max_age << 8;
+	g_stp_config_bpdu.hello_time = (UINT16)stp_class->bridge_info.hello_time << 8;
+	g_stp_config_bpdu.forward_delay = (UINT16)stp_class->bridge_info.forward_delay << 8;
 	g_stp_config_bpdu.flags.topology_change_acknowledgement = stp_port_class->topology_change_acknowledge;
 	g_stp_config_bpdu.flags.topology_change = stp_class->bridge_info.topology_change;
 
@@ -76,40 +76,40 @@ bool supercedes_port_info(STP_CLASS *stp_class, PORT_ID port_number, STP_CONFIG_
 
 	result = stputil_compare_bridge_id(&bpdu->root_id, &stp_port_class->designated_root);
 	if (result == LESS_THAN)
-    {
-		return (true); 
-    }
+	{
+		return (true);
+	}
 	if (result == GREATER_THAN)
-		return (false); 
+		return (false);
 
 	if (bpdu->root_path_cost < stp_port_class->designated_cost)
-    {
+	{
 		return (true);
-    }
+	}
 	if (bpdu->root_path_cost > stp_port_class->designated_cost)
-		return (false); 
+		return (false);
 
 	result = stputil_compare_bridge_id(&bpdu->bridge_id, &stp_port_class->designated_bridge);
 	if (result == LESS_THAN)
-    {
+	{
 		return (true);
-    }
+	}
 	if (result == GREATER_THAN)
 		return (false);
 
 	if (stputil_compare_bridge_id(&bpdu->bridge_id, &stp_class->bridge_info.bridge_id) != EQUAL_TO)
-		return (true); 
+		return (true);
 
 	result = stputil_compare_port_id(&bpdu->port_id, &stp_port_class->designated_port);
 	if (result == LESS_THAN)
-    {
+	{
 		return (true);
-    }
+	}
 	if (result == GREATER_THAN)
 		return (false);
 
-	// check if sending port is member of this stp instance (this is 
-	// necessary to isolate the case when another stp instance's bpdu is 
+	// check if sending port is member of this stp instance (this is
+	// necessary to isolate the case when another stp instance's bpdu is
 	// received on this port).
 	if (!is_member(stp_class->enable_mask, bpdu->port_id.number))
 	{
@@ -125,31 +125,32 @@ bool supercedes_port_info(STP_CLASS *stp_class, PORT_ID port_number, STP_CONFIG_
 /* 8.6.2 */
 void record_config_information(STP_CLASS *stp_class, PORT_ID port_number, STP_CONFIG_BPDU *bpdu)
 {
-	STP_PORT_CLASS *stp_port_class = GET_STP_PORT_CLASS(stp_class, port_number);;
-	
-    if(stputil_compare_bridge_id(&stp_port_class->designated_root, &bpdu->root_id) != 0)
-    {
-	    stp_port_class->designated_root = bpdu->root_id;
-        SET_BIT(stp_port_class->modified_fields, STP_PORT_CLASS_MEMBER_DESIGN_ROOT_BIT);
-    }
+	STP_PORT_CLASS *stp_port_class = GET_STP_PORT_CLASS(stp_class, port_number);
+	;
 
-	if(stp_port_class->designated_cost != bpdu->root_path_cost)
-    {
-	    stp_port_class->designated_cost = bpdu->root_path_cost;
-        SET_BIT(stp_port_class->modified_fields, STP_PORT_CLASS_MEMBER_DESIGN_COST_BIT);
-    }
+	if (stputil_compare_bridge_id(&stp_port_class->designated_root, &bpdu->root_id) != 0)
+	{
+		stp_port_class->designated_root = bpdu->root_id;
+		SET_BIT(stp_port_class->modified_fields, STP_PORT_CLASS_MEMBER_DESIGN_ROOT_BIT);
+	}
 
-    if(stputil_compare_bridge_id(&stp_port_class->designated_bridge, &bpdu->bridge_id) != 0)
-    {
-	    stp_port_class->designated_bridge = bpdu->bridge_id;
-        SET_BIT(stp_port_class->modified_fields, STP_PORT_CLASS_MEMBER_DESIGN_BRIDGE_BIT);
-    }
+	if (stp_port_class->designated_cost != bpdu->root_path_cost)
+	{
+		stp_port_class->designated_cost = bpdu->root_path_cost;
+		SET_BIT(stp_port_class->modified_fields, STP_PORT_CLASS_MEMBER_DESIGN_COST_BIT);
+	}
 
-	if(stputil_compare_port_id(&stp_port_class->designated_port, &bpdu->port_id))
-    {
-	    stp_port_class->designated_port = bpdu->port_id;
-        SET_BIT(stp_port_class->modified_fields, STP_PORT_CLASS_MEMBER_DESIGN_PORT_BIT);
-    }
+	if (stputil_compare_bridge_id(&stp_port_class->designated_bridge, &bpdu->bridge_id) != 0)
+	{
+		stp_port_class->designated_bridge = bpdu->bridge_id;
+		SET_BIT(stp_port_class->modified_fields, STP_PORT_CLASS_MEMBER_DESIGN_BRIDGE_BIT);
+	}
+
+	if (stputil_compare_port_id(&stp_port_class->designated_port, &bpdu->port_id))
+	{
+		stp_port_class->designated_port = bpdu->port_id;
+		SET_BIT(stp_port_class->modified_fields, STP_PORT_CLASS_MEMBER_DESIGN_PORT_BIT);
+	}
 
 	stptimer_start(&stp_port_class->message_age_timer, bpdu->message_age);
 }
@@ -157,29 +158,29 @@ void record_config_information(STP_CLASS *stp_class, PORT_ID port_number, STP_CO
 /* 8.6.3 */
 void record_config_timeout_values(STP_CLASS *stp_class, STP_CONFIG_BPDU *bpdu)
 {
-	if(stp_class->bridge_info.max_age != (UINT8) bpdu->max_age)
-    {
-	    stp_class->bridge_info.max_age = (UINT8) bpdu->max_age;
-        SET_BIT(stp_class->bridge_info.modified_fields, STP_BRIDGE_DATA_MEMBER_MAX_AGE_BIT);
-    }
+	if (stp_class->bridge_info.max_age != (UINT8)bpdu->max_age)
+	{
+		stp_class->bridge_info.max_age = (UINT8)bpdu->max_age;
+		SET_BIT(stp_class->bridge_info.modified_fields, STP_BRIDGE_DATA_MEMBER_MAX_AGE_BIT);
+	}
 
-	if(stp_class->bridge_info.hello_time != (UINT8) bpdu->hello_time)
-    {
-	    stp_class->bridge_info.hello_time = (UINT8) bpdu->hello_time;
-        SET_BIT(stp_class->bridge_info.modified_fields, STP_BRIDGE_DATA_MEMBER_HELLO_TIME_BIT);
-    }
+	if (stp_class->bridge_info.hello_time != (UINT8)bpdu->hello_time)
+	{
+		stp_class->bridge_info.hello_time = (UINT8)bpdu->hello_time;
+		SET_BIT(stp_class->bridge_info.modified_fields, STP_BRIDGE_DATA_MEMBER_HELLO_TIME_BIT);
+	}
 
-	if(stp_class->bridge_info.forward_delay != (UINT8) bpdu->forward_delay)
-    {
-	    stp_class->bridge_info.forward_delay = (UINT8) bpdu->forward_delay;
-        SET_BIT(stp_class->bridge_info.modified_fields, STP_BRIDGE_DATA_MEMBER_FWD_DELAY_BIT);
-    }
+	if (stp_class->bridge_info.forward_delay != (UINT8)bpdu->forward_delay)
+	{
+		stp_class->bridge_info.forward_delay = (UINT8)bpdu->forward_delay;
+		SET_BIT(stp_class->bridge_info.modified_fields, STP_BRIDGE_DATA_MEMBER_FWD_DELAY_BIT);
+	}
 
 	stp_class->bridge_info.topology_change = bpdu->flags.topology_change;
 }
 
-/* 8.6.4 */ 
-void config_bpdu_generation (STP_CLASS *stp_class)
+/* 8.6.4 */
+void config_bpdu_generation(STP_CLASS *stp_class)
 {
 	PORT_ID port_number;
 
@@ -224,28 +225,26 @@ void root_selection(STP_CLASS *stp_class)
 	enum SORT_RETURN result;
 	PORT_ID port_number, root_port;
 	STP_PORT_CLASS *stp_port_class, *root_port_class;
-	
+
 	root_port = STP_INVALID_PORT;
 
 	for (
 		port_number = port_mask_get_first_port(stp_class->enable_mask);
-		port_number != BAD_PORT_ID; 
-		port_number = port_mask_get_next_port(stp_class->enable_mask, port_number)
-		)
+		port_number != BAD_PORT_ID;
+		port_number = port_mask_get_next_port(stp_class->enable_mask, port_number))
 	{
-        if (STP_DEBUG_EVENT(stp_class->vlan_id, port_number))
-            STP_LOG_DEBUG("vlan %d port %d", stp_class->vlan_id, port_number);
+		if (STP_DEBUG_EVENT(stp_class->vlan_id, port_number))
+			STP_LOG_DEBUG("vlan %d port %d", stp_class->vlan_id, port_number);
 
 		stp_port_class = GET_STP_PORT_CLASS(stp_class, port_number);
 
 		// do not service ports that are on token-ring cabling or backup ports
-		if (stp_port_class->self_loop) 
+		if (stp_port_class->self_loop)
 			continue;
-		
 
-		if ((!designated_port(stp_class, port_number)) && 
+		if ((!designated_port(stp_class, port_number)) &&
 			(stputil_compare_bridge_id(&stp_port_class->designated_root,
-						&stp_class->bridge_info.bridge_id) == LESS_THAN)) 
+									   &stp_class->bridge_info.bridge_id) == LESS_THAN))
 		{
 			if (root_port == STP_INVALID_PORT)
 			{
@@ -256,7 +255,7 @@ void root_selection(STP_CLASS *stp_class)
 			root_port_class = GET_STP_PORT_CLASS(stp_class, root_port);
 
 			result = stputil_compare_bridge_id(&stp_port_class->designated_root,
-							&root_port_class->designated_root);
+											   &root_port_class->designated_root);
 			if (result == LESS_THAN)
 			{
 				root_port = port_number;
@@ -265,19 +264,19 @@ void root_selection(STP_CLASS *stp_class)
 			if (result == GREATER_THAN)
 				continue;
 
-            if (stp_port_class->path_cost + stp_port_class->designated_cost <
-                root_port_class->path_cost + root_port_class->designated_cost)
-            {
-                root_port = port_number;
-                continue;
-            }
+			if (stp_port_class->path_cost + stp_port_class->designated_cost <
+				root_port_class->path_cost + root_port_class->designated_cost)
+			{
+				root_port = port_number;
+				continue;
+			}
 
-            if (stp_port_class->path_cost + stp_port_class->designated_cost >
-                root_port_class->path_cost + root_port_class->designated_cost)
-                continue;
+			if (stp_port_class->path_cost + stp_port_class->designated_cost >
+				root_port_class->path_cost + root_port_class->designated_cost)
+				continue;
 
-			result = stputil_compare_bridge_id (&stp_port_class->designated_bridge,
-						&root_port_class->designated_bridge);
+			result = stputil_compare_bridge_id(&stp_port_class->designated_bridge,
+											   &root_port_class->designated_bridge);
 			if (result == LESS_THAN)
 			{
 				root_port = port_number;
@@ -286,8 +285,8 @@ void root_selection(STP_CLASS *stp_class)
 			if (result == GREATER_THAN)
 				continue;
 
-			result = stputil_compare_port_id (&stp_port_class->designated_port,
-							&root_port_class->designated_port);
+			result = stputil_compare_port_id(&stp_port_class->designated_port,
+											 &root_port_class->designated_port);
 			if (result == LESS_THAN)
 			{
 				root_port = port_number;
@@ -297,7 +296,7 @@ void root_selection(STP_CLASS *stp_class)
 				continue;
 
 			if (stputil_compare_port_id(&stp_port_class->port_id,
-				&root_port_class->port_id) == LESS_THAN)
+										&root_port_class->port_id) == LESS_THAN)
 			{
 				root_port = port_number;
 			}
@@ -309,31 +308,31 @@ void root_selection(STP_CLASS *stp_class)
 		stp_class->bridge_info.root_id = stp_class->bridge_info.bridge_id;
 		stp_class->bridge_info.root_path_cost = 0;
 		stpmgr_set_bridge_params(stp_class);
-        SET_BIT(stp_class->bridge_info.modified_fields, STP_BRIDGE_DATA_MEMBER_ROOT_ID_BIT);
-        SET_BIT(stp_class->bridge_info.modified_fields, STP_BRIDGE_DATA_MEMBER_ROOT_PATH_COST_BIT);
-        SET_BIT(stp_class->bridge_info.modified_fields, STP_BRIDGE_DATA_MEMBER_ROOT_PORT_BIT);
+		SET_BIT(stp_class->bridge_info.modified_fields, STP_BRIDGE_DATA_MEMBER_ROOT_ID_BIT);
+		SET_BIT(stp_class->bridge_info.modified_fields, STP_BRIDGE_DATA_MEMBER_ROOT_PATH_COST_BIT);
+		SET_BIT(stp_class->bridge_info.modified_fields, STP_BRIDGE_DATA_MEMBER_ROOT_PORT_BIT);
 	}
 	else
 	{
 		root_port_class = GET_STP_PORT_CLASS(stp_class, root_port);
-	    if(stputil_compare_bridge_id(&stp_class->bridge_info.root_id, &root_port_class->designated_root) != 0)
-        {
-    		stp_class->bridge_info.root_id = root_port_class->designated_root;
-            SET_BIT(stp_class->bridge_info.modified_fields, STP_BRIDGE_DATA_MEMBER_ROOT_ID_BIT);
-        }
+		if (stputil_compare_bridge_id(&stp_class->bridge_info.root_id, &root_port_class->designated_root) != 0)
+		{
+			stp_class->bridge_info.root_id = root_port_class->designated_root;
+			SET_BIT(stp_class->bridge_info.modified_fields, STP_BRIDGE_DATA_MEMBER_ROOT_ID_BIT);
+		}
 
-		if(stp_class->bridge_info.root_path_cost != 
-				root_port_class->designated_cost + root_port_class->path_cost)
-        {
-		    stp_class->bridge_info.root_path_cost = 
-			    	root_port_class->designated_cost + root_port_class->path_cost;
-            SET_BIT(stp_class->bridge_info.modified_fields, STP_BRIDGE_DATA_MEMBER_ROOT_PATH_COST_BIT);
-        }
+		if (stp_class->bridge_info.root_path_cost !=
+			root_port_class->designated_cost + root_port_class->path_cost)
+		{
+			stp_class->bridge_info.root_path_cost =
+				root_port_class->designated_cost + root_port_class->path_cost;
+			SET_BIT(stp_class->bridge_info.modified_fields, STP_BRIDGE_DATA_MEMBER_ROOT_PATH_COST_BIT);
+		}
 
 		if (stp_class->bridge_info.root_port != root_port)
 		{
-            STP_LOG_INFO("STP_RAS_ROOT_ROLE I:%lu P:%lu V:%u",GET_STP_INDEX(stp_class), root_port, stp_class->vlan_id);
-            SET_BIT(stp_class->bridge_info.modified_fields, STP_BRIDGE_DATA_MEMBER_ROOT_PORT_BIT);
+			STP_LOG_INFO("STP_RAS_ROOT_ROLE I:%lu P:%lu V:%u", GET_STP_INDEX(stp_class), root_port, stp_class->vlan_id);
+			SET_BIT(stp_class->bridge_info.modified_fields, STP_BRIDGE_DATA_MEMBER_ROOT_PORT_BIT);
 		}
 	}
 
@@ -349,12 +348,11 @@ void designated_port_selection(STP_CLASS *stp_class)
 
 	for (
 		port_number = port_mask_get_first_port(stp_class->enable_mask);
-		port_number != BAD_PORT_ID; 
-		port_number = port_mask_get_next_port(stp_class->enable_mask, port_number)
-		)
+		port_number != BAD_PORT_ID;
+		port_number = port_mask_get_next_port(stp_class->enable_mask, port_number))
 	{
-        if (STP_DEBUG_EVENT(stp_class->vlan_id, port_number))
-            STP_LOG_DEBUG("vlan %d port %d", stp_class->vlan_id, port_number);
+		if (STP_DEBUG_EVENT(stp_class->vlan_id, port_number))
+			STP_LOG_DEBUG("vlan %d port %d", stp_class->vlan_id, port_number);
 
 		stp_port_class = GET_STP_PORT_CLASS(stp_class, port_number);
 
@@ -367,7 +365,7 @@ void designated_port_selection(STP_CLASS *stp_class)
 
 		// case 2
 		if (stputil_compare_bridge_id(&stp_port_class->designated_root,
-				&stp_class->bridge_info.root_id) != EQUAL_TO) 
+									  &stp_class->bridge_info.root_id) != EQUAL_TO)
 		{
 			become_designated_port(stp_class, port_number);
 			continue;
@@ -380,11 +378,11 @@ void designated_port_selection(STP_CLASS *stp_class)
 			continue;
 		}
 
-		if (stp_class->bridge_info.root_path_cost > stp_port_class->designated_cost) 
+		if (stp_class->bridge_info.root_path_cost > stp_port_class->designated_cost)
 			continue;
 
 		result = stputil_compare_bridge_id(&stp_class->bridge_info.bridge_id,
-			 &stp_port_class->designated_bridge);
+										   &stp_port_class->designated_bridge);
 
 		// case 4
 		if (result == LESS_THAN)
@@ -398,10 +396,10 @@ void designated_port_selection(STP_CLASS *stp_class)
 
 		// case 5
 		if ((stputil_compare_port_id(&stp_port_class->port_id,
-			 &stp_port_class->designated_port) != GREATER_THAN))
+									 &stp_port_class->designated_port) != GREATER_THAN))
 		{
 			become_designated_port(stp_class, port_number);
-            STP_LOG_INFO("STP_RAS_DESIGNATED_ROLE I:%lu P:%lu V:%lu",GET_STP_INDEX(stp_class),port_number, stp_class->vlan_id);
+			STP_LOG_INFO("STP_RAS_DESIGNATED_ROLE I:%lu P:%lu V:%lu", GET_STP_INDEX(stp_class), port_number, stp_class->vlan_id);
 		}
 	}
 }
@@ -414,29 +412,29 @@ void become_designated_port(STP_CLASS *stp_class, PORT_ID port_number)
 	if (!stp_port_class)
 		return;
 
-    if(stputil_compare_bridge_id(&stp_class->bridge_info.root_id, &stp_port_class->designated_root) != 0)
-    {
-	    stp_port_class->designated_root = stp_class->bridge_info.root_id;
-        SET_BIT(stp_port_class->modified_fields, STP_PORT_CLASS_MEMBER_DESIGN_ROOT_BIT);
-    }
+	if (stputil_compare_bridge_id(&stp_class->bridge_info.root_id, &stp_port_class->designated_root) != 0)
+	{
+		stp_port_class->designated_root = stp_class->bridge_info.root_id;
+		SET_BIT(stp_port_class->modified_fields, STP_PORT_CLASS_MEMBER_DESIGN_ROOT_BIT);
+	}
 
-	if(stp_port_class->designated_cost != stp_class->bridge_info.root_path_cost)
-    {
-	    stp_port_class->designated_cost = stp_class->bridge_info.root_path_cost;
-        SET_BIT(stp_port_class->modified_fields, STP_PORT_CLASS_MEMBER_DESIGN_COST_BIT);
-    }
+	if (stp_port_class->designated_cost != stp_class->bridge_info.root_path_cost)
+	{
+		stp_port_class->designated_cost = stp_class->bridge_info.root_path_cost;
+		SET_BIT(stp_port_class->modified_fields, STP_PORT_CLASS_MEMBER_DESIGN_COST_BIT);
+	}
 
-    if(stputil_compare_bridge_id(&stp_class->bridge_info.bridge_id, &stp_port_class->designated_bridge) != 0)
-    {
-	    stp_port_class->designated_bridge = stp_class->bridge_info.bridge_id;
-        SET_BIT(stp_port_class->modified_fields, STP_PORT_CLASS_MEMBER_DESIGN_BRIDGE_BIT);
-    }
+	if (stputil_compare_bridge_id(&stp_class->bridge_info.bridge_id, &stp_port_class->designated_bridge) != 0)
+	{
+		stp_port_class->designated_bridge = stp_class->bridge_info.bridge_id;
+		SET_BIT(stp_port_class->modified_fields, STP_PORT_CLASS_MEMBER_DESIGN_BRIDGE_BIT);
+	}
 
-	if(stputil_compare_port_id(&stp_port_class->designated_port, &stp_port_class->port_id) != 0)
-    {
-	    stp_port_class->designated_port = stp_port_class->port_id;
-        SET_BIT(stp_port_class->modified_fields, STP_PORT_CLASS_MEMBER_DESIGN_PORT_BIT);
-    }
+	if (stputil_compare_port_id(&stp_port_class->designated_port, &stp_port_class->port_id) != 0)
+	{
+		stp_port_class->designated_port = stp_port_class->port_id;
+		SET_BIT(stp_port_class->modified_fields, STP_PORT_CLASS_MEMBER_DESIGN_PORT_BIT);
+	}
 }
 
 /* 8.6.11 */
@@ -444,13 +442,13 @@ void port_state_selection(STP_CLASS *stp_class)
 {
 	STP_PORT_CLASS *stp_port_class;
 	PORT_ID port_number;
-	UINT8	prev_state = 0;
-	
+	UINT8 prev_state = 0;
+
 	port_number = port_mask_get_first_port(stp_class->enable_mask);
 	while (port_number != BAD_PORT_ID)
 	{
-        if (STP_DEBUG_EVENT(stp_class->vlan_id, port_number))
-            STP_LOG_DEBUG("vlan %d port %d", stp_class->vlan_id, port_number);
+		if (STP_DEBUG_EVENT(stp_class->vlan_id, port_number))
+			STP_LOG_DEBUG("vlan %d port %d", stp_class->vlan_id, port_number);
 
 		stp_port_class = GET_STP_PORT_CLASS(stp_class, port_number);
 
@@ -460,12 +458,12 @@ void port_state_selection(STP_CLASS *stp_class)
 			stp_port_class->topology_change_acknowledge = false;
 			make_forwarding(stp_class, port_number);
 		}
-		else if (stp_port_class->self_loop) 
+		else if (stp_port_class->self_loop)
 		{
 			stp_port_class->config_pending = false;
 			stp_port_class->topology_change_acknowledge = false;
 			make_blocking(stp_class, port_number);
-		} 
+		}
 		else if (designated_port(stp_class, port_number))
 		{
 			stptimer_stop(&stp_port_class->message_age_timer);
@@ -474,16 +472,15 @@ void port_state_selection(STP_CLASS *stp_class)
 		else
 		{
 			stp_port_class->config_pending = false;
-			stp_port_class->topology_change_acknowledge = false;			
+			stp_port_class->topology_change_acknowledge = false;
 			prev_state = stp_port_class->state;
-            make_blocking(stp_class, port_number);
+			make_blocking(stp_class, port_number);
 		}
 
 		prev_state = 0;
 
 		port_number = port_mask_get_next_port(stp_class->enable_mask, port_number);
 	}
-
 }
 
 /* 8.6.12 */
@@ -493,10 +490,10 @@ void make_forwarding(STP_CLASS *stp_class, PORT_ID port_number)
 
 	if ((stp_port_class->state == BLOCKING) && (!is_timer_active(&stp_port_class->root_protect_timer)))
 	{
-	
+
 		stp_port_class->state = LISTENING;
 
-        stputil_set_port_state(stp_class, stp_port_class);
+		stputil_set_port_state(stp_class, stp_port_class);
 		stptimer_start(&stp_port_class->forward_delay_timer, 0);
 
 		stplog_port_state_change(stp_class, port_number, STP_MAKE_FORWARDING);
@@ -512,45 +509,46 @@ void make_forwarding(STP_CLASS *stp_class, PORT_ID port_number)
 void make_blocking(STP_CLASS *stp_class, PORT_ID port_number)
 {
 	STP_PORT_CLASS *stp_port_class;
-	
+
 	stp_port_class = GET_STP_PORT_CLASS(stp_class, port_number);
 
 	switch (stp_port_class->state)
 	{
-		case BLOCKING:
-		case DISABLED:
-			return; // do nothing
+	case BLOCKING:
+	case DISABLED:
+		return; // do nothing
 
-		case FORWARDING:
-		case LEARNING:
-			if ((stp_port_class->change_detection_enabled) &&
-				!STP_IS_FASTSPAN_ENABLED(port_number))
+	case FORWARDING:
+	case LEARNING:
+		if ((stp_port_class->change_detection_enabled) &&
+			!STP_IS_FASTSPAN_ENABLED(port_number))
+		{
+			topology_change_detection(stp_class);
+			stplog_topo_change(stp_class, port_number, STP_MAKE_BLOCKING);
+			if (stp_port_class->state == FORWARDING)
 			{
-				topology_change_detection(stp_class);
-				stplog_topo_change(stp_class, port_number, STP_MAKE_BLOCKING);
-				if (stp_port_class->state == FORWARDING) {
-                    //TODO:Find Alternate for SNMP_TRAP
-                    //send_stp_topo_change_trap();
-				}
+				// TODO:Find Alternate for SNMP_TRAP
+				// send_stp_topo_change_trap();
 			}
-			// fall thru
+		}
+		// fall thru
 
-		case LISTENING:
-			stp_port_class->state = BLOCKING;
-			stputil_set_port_state(stp_class, stp_port_class);
-			SET_BIT(stp_port_class->modified_fields, STP_PORT_CLASS_MEMBER_PORT_STATE_BIT);
-			stptimer_stop(&stp_port_class->forward_delay_timer);			
-			break;
+	case LISTENING:
+		stp_port_class->state = BLOCKING;
+		stputil_set_port_state(stp_class, stp_port_class);
+		SET_BIT(stp_port_class->modified_fields, STP_PORT_CLASS_MEMBER_PORT_STATE_BIT);
+		stptimer_stop(&stp_port_class->forward_delay_timer);
+		break;
 
-		default:
-			STP_LOG_ERR("make_blocking() - unknown stp state for port %d - state %d", 
+	default:
+		STP_LOG_ERR("make_blocking() - unknown stp state for port %d - state %d",
 					port_number, stp_port_class->state);
-			return;
+		return;
 	}
 
-	stplog_port_state_change(stp_class, port_number, STP_MAKE_BLOCKING);	
-    STP_LOG_INFO("STP_RAS_BLOCKING I:%lu P:%lu V:%lu",GET_STP_INDEX(stp_class),port_number, stp_class->vlan_id);
-} 
+	stplog_port_state_change(stp_class, port_number, STP_MAKE_BLOCKING);
+	STP_LOG_INFO("STP_RAS_BLOCKING I:%lu P:%lu V:%lu", GET_STP_INDEX(stp_class), port_number, stp_class->vlan_id);
+}
 
 /* 8.6.14 */
 void topology_change_detection(STP_CLASS *stp_class)
@@ -558,12 +556,11 @@ void topology_change_detection(STP_CLASS *stp_class)
 	if (root_bridge(stp_class))
 	{
 		stp_class->bridge_info.topology_change = true;
-		stp_class->bridge_info.topology_change_time = 
-			stp_class->bridge_info.forward_delay + stp_class->bridge_info.max_age ;
+		stp_class->bridge_info.topology_change_time =
+			stp_class->bridge_info.forward_delay + stp_class->bridge_info.max_age;
 		stptimer_start(&stp_class->topology_change_timer, 0);
 	}
-	else 
-	if (!stp_class->bridge_info.topology_change_detected)
+	else if (!stp_class->bridge_info.topology_change_detected)
 	{
 		transmit_tcn(stp_class);
 		stptimer_start(&stp_class->tcn_timer, 0);
@@ -572,17 +569,17 @@ void topology_change_detection(STP_CLASS *stp_class)
 	stp_class->bridge_info.topology_change_detected = true;
 	stp_class->bridge_info.topology_change_tick = sys_get_seconds();
 	(stp_class->bridge_info.topology_change_count)++;
-    SET_BIT(stp_class->bridge_info.modified_fields, STP_BRIDGE_DATA_MEMBER_TOPO_CHNG_COUNT_BIT);
+	SET_BIT(stp_class->bridge_info.modified_fields, STP_BRIDGE_DATA_MEMBER_TOPO_CHNG_COUNT_BIT);
 }
 
 /* 8.6.15 */
 void topology_change_acknowledged(STP_CLASS *stp_class)
 {
 	stp_class->bridge_info.topology_change_detected = false;
-	/* If there was already a topology change active, then reset it, so that 
+	/* If there was already a topology change active, then reset it, so that
 	 * when we receive TC from root we will trigger the flush again
 	 * */
-    STP_LOG_INFO("TCAcked reset TC vlan %u", stp_class->vlan_id);
+	STP_LOG_INFO("TCAcked reset TC vlan %u", stp_class->vlan_id);
 	stp_class->bridge_info.topology_change = false;
 	stptimer_stop(&stp_class->tcn_timer);
 }
@@ -603,7 +600,7 @@ void received_config_bpdu(STP_CLASS *stp_class, PORT_ID port_number, STP_CONFIG_
 	STP_PORT_CLASS *stp_port_class, *ccep_stp_port_class;
 	bool result;
 	PORT_ID root_port = stp_class->bridge_info.root_port;
-	
+
 	stp_port_class = GET_STP_PORT_CLASS(stp_class, port_number);
 	if (stp_port_class->state == DISABLED)
 		return;
@@ -613,7 +610,7 @@ void received_config_bpdu(STP_CLASS *stp_class, PORT_ID port_number, STP_CONFIG_
 
 	if (result)
 	{
-		
+
 		record_config_information(stp_class, port_number, bpdu);
 		configuration_update(stp_class);
 
@@ -645,37 +642,35 @@ void received_config_bpdu(STP_CLASS *stp_class, PORT_ID port_number, STP_CONFIG_
 					STP_PKTLOG("TCN ACK Received Vlan:%d Port:%d", stp_class->vlan_id, port_number);
 				}
 				topology_change_acknowledged(stp_class);
-
 			}
 		}
 	}
-	else 
+	else
 	{
 		if (designated_port(stp_class, port_number))
 		{
 			if (STP_DEBUG_BPDU_RX(stp_class->vlan_id, port_number))
 			{
 				STP_PKTLOG("Inferior BPDU Received Inst:%lu Port:%u Vlan:%u",
-                        GET_STP_INDEX(stp_class), port_number, stp_class->vlan_id);
+						   GET_STP_INDEX(stp_class), port_number, stp_class->vlan_id);
 			}
-            reply(stp_class, port_number);
+			reply(stp_class, port_number);
 		}
-		
 	}
 }
 
 /* 8.7.2 */
 void received_tcn_bpdu(STP_CLASS *stp_class, PORT_ID port_number, STP_TCN_BPDU *bpdu)
 {
-	bool	root;
-	STP_PORT_CLASS	*stp_port_class;
-	
+	bool root;
+	STP_PORT_CLASS *stp_port_class;
+
 	stp_port_class = GET_STP_PORT_CLASS(stp_class, port_number);
 	if (stp_port_class->state == DISABLED)
 		return;
-	
-    if (STP_DEBUG_BPDU_RX(stp_class->vlan_id, port_number))
-        STP_PKTLOG("Process TCN I:%lu P:%u V:%u",GET_STP_INDEX(stp_class),port_number, stp_class->vlan_id);
+
+	if (STP_DEBUG_BPDU_RX(stp_class->vlan_id, port_number))
+		STP_PKTLOG("Process TCN I:%lu P:%u V:%u", GET_STP_INDEX(stp_class), port_number, stp_class->vlan_id);
 
 	root = root_bridge(stp_class);
 
@@ -698,27 +693,26 @@ void hello_timer_expiry(STP_CLASS *stp_class)
 
 	if (current_time < last_expiry_time)
 	{
-		last_expiry_time = last_expiry_time - current_time - 1; 
-		current_time = (UINT32) -1;
+		last_expiry_time = last_expiry_time - current_time - 1;
+		current_time = (UINT32)-1;
 	}
 
-	if (((current_time - last_expiry_time) > (stp_class->bridge_info.hello_time + 1))
-				 	   && (last_expiry_time != 0))
+	if (((current_time - last_expiry_time) > (stp_class->bridge_info.hello_time + 1)) && (last_expiry_time != 0))
 	{
-		//RAS logging - Timer Delay Event
-        if (debugGlobal.stp.enabled)
-        {
-            if (STP_DEBUG_VP(stp_class->vlan_id, (uint16_t)BAD_PORT_ID))
-            {
-                STP_LOG_INFO("Inst:%lu Vlan:%u Ev:%d Cur:%d Last:%d",
-                    GET_STP_INDEX(stp_class), stp_class->vlan_id, STP_RAS_TIMER_DELAY_EVENT, current_time, last_expiry_time);
-            }
-        }
-        else
-        {
-            STP_LOG_INFO("Inst:%lu Vlan:%u Ev:%d Cur:%d Last:%d",
-                GET_STP_INDEX(stp_class), stp_class->vlan_id, STP_RAS_TIMER_DELAY_EVENT, current_time, last_expiry_time);
-        }
+		// RAS logging - Timer Delay Event
+		if (debugGlobal.stp.enabled)
+		{
+			if (STP_DEBUG_VP(stp_class->vlan_id, (uint16_t)BAD_PORT_ID))
+			{
+				STP_LOG_INFO("Inst:%lu Vlan:%u Ev:%d Cur:%d Last:%d",
+							 GET_STP_INDEX(stp_class), stp_class->vlan_id, STP_RAS_TIMER_DELAY_EVENT, current_time, last_expiry_time);
+			}
+		}
+		else
+		{
+			STP_LOG_INFO("Inst:%lu Vlan:%u Ev:%d Cur:%d Last:%d",
+						 GET_STP_INDEX(stp_class), stp_class->vlan_id, STP_RAS_TIMER_DELAY_EVENT, current_time, last_expiry_time);
+		}
 	}
 
 	config_bpdu_generation(stp_class);
@@ -765,35 +759,35 @@ void forwarding_delay_timer_expiry(STP_CLASS *stp_class, PORT_ID port_number)
 
 	switch (stp_port_class->state)
 	{
-		case LISTENING:
-			stp_port_class->state = LEARNING;
-			stptimer_start(&stp_port_class->forward_delay_timer, 0);
-			break;
+	case LISTENING:
+		stp_port_class->state = LEARNING;
+		stptimer_start(&stp_port_class->forward_delay_timer, 0);
+		break;
 
-		case LEARNING:
-			stp_port_class->state = FORWARDING;
-			(stp_port_class->forward_transitions)++;
+	case LEARNING:
+		stp_port_class->state = FORWARDING;
+		(stp_port_class->forward_transitions)++;
 
-			// request for sending tcn when root port goes forwarded.
-			if ((port_number == stp_class->bridge_info.root_port) ||
-				(designated_for_some_port(stp_class)))
+		// request for sending tcn when root port goes forwarded.
+		if ((port_number == stp_class->bridge_info.root_port) ||
+			(designated_for_some_port(stp_class)))
+		{
+			if (stp_port_class->change_detection_enabled &&
+				!STP_IS_FASTSPAN_ENABLED(port_number))
 			{
-				if (stp_port_class->change_detection_enabled &&
-					!STP_IS_FASTSPAN_ENABLED(port_number))
-				{
-					topology_change_detection(stp_class);
-					stplog_topo_change(stp_class, port_number, STP_FWD_DLY_EXPIRY);
-				}
+				topology_change_detection(stp_class);
+				stplog_topo_change(stp_class, port_number, STP_FWD_DLY_EXPIRY);
 			}
+		}
 
-			break;
+		break;
 
-		default:
-			// print error
-			return;
+	default:
+		// print error
+		return;
 	}
 
-    SET_BIT(stp_port_class->modified_fields, STP_PORT_CLASS_MEMBER_PORT_STATE_BIT);
+	SET_BIT(stp_port_class->modified_fields, STP_PORT_CLASS_MEMBER_PORT_STATE_BIT);
 	stputil_set_port_state(stp_class, stp_port_class);
 	stplog_port_state_change(stp_class, port_number, STP_FWD_DLY_EXPIRY);
 	if (STP_DEBUG_EVENT(stp_class->vlan_id, port_number))
@@ -810,7 +804,7 @@ void tcn_timer_expiry(STP_CLASS *stp_class)
 }
 
 /* 8.7.7 */
-void topology_change_timer_expiry(STP_CLASS * stp_class)
+void topology_change_timer_expiry(STP_CLASS *stp_class)
 {
 	stp_class->bridge_info.topology_change_detected = false;
 	stp_class->bridge_info.topology_change = false;
@@ -838,19 +832,19 @@ bool designated_port(STP_CLASS *stp_class, PORT_ID port_number)
 {
 	STP_PORT_CLASS *stp_port_class = GET_STP_PORT_CLASS(stp_class, port_number);
 	STP_PORT_CLASS *stp_icl_port_class;
-	
-	if (stputil_compare_bridge_id(&stp_class->bridge_info.bridge_id, 
-			&stp_port_class->designated_bridge) != EQUAL_TO)
+
+	if (stputil_compare_bridge_id(&stp_class->bridge_info.bridge_id,
+								  &stp_port_class->designated_bridge) != EQUAL_TO)
 	{
 		return (false);
 	}
 
-	if (stputil_compare_port_id(&stp_port_class->designated_port, 
-			&stp_port_class->port_id) != EQUAL_TO)
+	if (stputil_compare_port_id(&stp_port_class->designated_port,
+								&stp_port_class->port_id) != EQUAL_TO)
 	{
 		return (false);
 	}
-	
+
 	return (true);
 }
 
@@ -863,8 +857,8 @@ bool designated_for_some_port(STP_CLASS *stp_class)
 	while (port_number != BAD_PORT_ID)
 	{
 		stp_port_class = GET_STP_PORT_CLASS(stp_class, port_number);
-		if (stputil_compare_bridge_id(&stp_class->bridge_info.bridge_id, 
-			&stp_port_class->designated_bridge) == EQUAL_TO)
+		if (stputil_compare_bridge_id(&stp_class->bridge_info.bridge_id,
+									  &stp_port_class->designated_bridge) == EQUAL_TO)
 		{
 			return (true);
 		}
@@ -875,10 +869,9 @@ bool designated_for_some_port(STP_CLASS *stp_class)
 	return (false);
 }
 
-void send_config_bpdu(STP_CLASS* stp_class, PORT_ID port_number)
+void send_config_bpdu(STP_CLASS *stp_class, PORT_ID port_number)
 {
 	STP_PORT_CLASS *stp_port_class = GET_STP_PORT_CLASS(stp_class, port_number);
-	
 
 	if (!g_sstp_enabled)
 		stputil_send_pvst_bpdu(stp_class, port_number, CONFIG_BPDU_TYPE);
@@ -886,15 +879,14 @@ void send_config_bpdu(STP_CLASS* stp_class, PORT_ID port_number)
 		stputil_send_bpdu(stp_class, port_number, CONFIG_BPDU_TYPE);
 }
 
-void send_tcn_bpdu(STP_CLASS* stp_class, PORT_ID port_number)
+void send_tcn_bpdu(STP_CLASS *stp_class, PORT_ID port_number)
 {
-	
+
 	STP_PORT_CLASS *stp_port_class = GET_STP_PORT_CLASS(stp_class, port_number);
-	
 
 	if (stptimer_is_active(&stp_port_class->root_protect_timer))
 		return;
-	
+
 	if (!g_sstp_enabled)
 		stputil_send_pvst_bpdu(stp_class, port_number, TCN_BPDU_TYPE);
 	else

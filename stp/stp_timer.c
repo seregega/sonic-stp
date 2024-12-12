@@ -16,17 +16,16 @@
  */
 #include "stp_inc.h"
 
-
-//get time in secs
+// get time in secs
 uint32_t sys_get_seconds()
 {
-    struct timespec ts = {0,0};
-    if (-1 == clock_gettime(CLOCK_MONOTONIC, &ts))
-    {
-        STP_LOG_CRITICAL("clock_gettime Failed : %s",strerror(errno));
-        sys_assert(0);
-    }
-    return ts.tv_sec;
+	struct timespec ts = {0, 0};
+	if (-1 == clock_gettime(CLOCK_MONOTONIC, &ts))
+	{
+		STP_LOG_CRITICAL("clock_gettime Failed : %s", strerror(errno));
+		sys_assert(0);
+	}
+	return ts.tv_sec;
 }
 
 void start_timer(TIMER *timer, UINT32 value)

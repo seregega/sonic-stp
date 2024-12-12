@@ -18,7 +18,6 @@
 #ifndef __STP_INC_H__
 #define __STP_INC_H__
 
-
 #include "applog.h"
 #include "avl.h"
 #include "bitmap.h"
@@ -47,7 +46,5 @@
 #include "stp_main.h"
 #include "stp_externs.h"
 #include "stp_dbsync.h"
-
-
 
 #endif //__STP_INC_H__

@@ -27,13 +27,13 @@ struct event_base *stp_intf_get_evbase()
     return stpd_context.evbase;
 }
 
-char * stp_intf_get_port_name(uint32_t port_id)
+char *stp_intf_get_port_name(uint32_t port_id)
 {
     struct avl_traverser trav;
     INTERFACE_NODE *node = 0;
     avl_t_init(&trav, g_stpd_intf_db);
 
-    while(NULL != (node = avl_t_next(&trav)))
+    while (NULL != (node = avl_t_next(&trav)))
     {
         if (node->port_id == port_id)
             return node->ifname;
@@ -47,10 +47,10 @@ bool stp_intf_is_port_up(int port_id)
     INTERFACE_NODE *node = 0;
     avl_t_init(&trav, g_stpd_intf_db);
 
-    while(NULL != (node = avl_t_next(&trav)))
+    while (NULL != (node = avl_t_next(&trav)))
     {
         if (node->port_id == port_id)
-            return node->oper_state?true:false;
+            return node->oper_state ? true : false;
     }
     return false;
 }
@@ -61,7 +61,7 @@ uint32_t stp_intf_get_speed(int port_id)
     INTERFACE_NODE *node = 0;
     avl_t_init(&trav, g_stpd_intf_db);
 
-    while(NULL != (node = avl_t_next(&trav)))
+    while (NULL != (node = avl_t_next(&trav)))
     {
         if (node->port_id == port_id)
             return node->speed;
@@ -75,7 +75,7 @@ INTERFACE_NODE *stp_intf_get_node(uint32_t port_id)
     INTERFACE_NODE *node = 0;
     avl_t_init(&trav, g_stpd_intf_db);
 
-    while(NULL != (node = avl_t_next(&trav)))
+    while (NULL != (node = avl_t_next(&trav)))
     {
         if (node->port_id == port_id)
             return node;
@@ -90,7 +90,7 @@ INTERFACE_NODE *stp_intf_get_node_by_kif_index(uint32_t kif_index)
     INTERFACE_NODE *node = 0;
     avl_t_init(&trav, g_stpd_intf_db);
 
-    while(NULL != (node = avl_t_next(&trav)))
+    while (NULL != (node = avl_t_next(&trav)))
     {
         if (node->kif_index == kif_index)
             return node;
@@ -172,11 +172,11 @@ uint32_t stp_intf_get_kif_index_by_port_id(uint32_t port_id)
 uint32_t stp_intf_get_port_id_by_name(char *ifname)
 {
     INTERFACE_NODE *node = 0;
-    
+
     node = stp_intf_get_node_by_name(ifname);
     if (node && (node->port_id != BAD_PORT_ID))
         return node->port_id;
-    
+
     return BAD_PORT_ID;
 }
 
@@ -217,20 +217,20 @@ void stp_intf_del_from_intf_db(INTERFACE_NODE *node)
 uint32_t stp_intf_add_to_intf_db(INTERFACE_NODE *node)
 {
     void **ret_ptr = avl_probe(g_stpd_intf_db, node);
-    if (*ret_ptr != node) 
+    if (*ret_ptr != node)
     {
         if (*ret_ptr == NULL)
             STP_LOG_CRITICAL("AVL-Insert Malloc Failure, Intf: %s kif: %d", node->ifname, node->kif_index);
         else
             STP_LOG_CRITICAL("DUPLICATE Entry found Intf: %s kif: %d", ((INTERFACE_NODE *)(*ret_ptr))->ifname, ((INTERFACE_NODE *)(*ret_ptr))->kif_index);
-        //This should never happen. 
+        // This should never happen.
         sys_assert(0);
     }
-    else 
+    else
     {
         STP_LOG_INFO("AVL Insert :  %s %d %u", node->ifname, node->kif_index, node->port_id);
 
-        //create socket only for Ethernet ports
+        // create socket only for Ethernet ports
         if (STP_IS_ETH_PORT(node->ifname))
             stp_pkt_sock_create(node);
 
@@ -238,29 +238,29 @@ uint32_t stp_intf_add_to_intf_db(INTERFACE_NODE *node)
     }
 }
 
-bool stp_intf_ioctl_get_ifname(uint32_t kif_index, char * if_name)
+bool stp_intf_ioctl_get_ifname(uint32_t kif_index, char *if_name)
 {
     struct ifreq ifr;
 
     ifr.ifr_ifindex = kif_index;
-    if(ioctl(g_stpd_ioctl_sock, SIOCGIFNAME, &ifr) < 0)
+    if (ioctl(g_stpd_ioctl_sock, SIOCGIFNAME, &ifr) < 0)
         return false;
 
     strncpy(if_name, ifr.ifr_name, IFNAMSIZ);
     return true;
 }
 
-uint32_t stp_intf_ioctl_get_kif_index(char * if_name)
+uint32_t stp_intf_ioctl_get_kif_index(char *if_name)
 {
     struct ifreq ifr;
-    size_t if_name_len=strlen(if_name);
+    size_t if_name_len = strlen(if_name);
 
-    if(if_name_len < sizeof(ifr.ifr_name)) 
+    if (if_name_len < sizeof(ifr.ifr_name))
     {
-        memcpy(ifr.ifr_name,if_name,if_name_len);
-        ifr.ifr_name[if_name_len]='\0';
+        memcpy(ifr.ifr_name, if_name, if_name_len);
+        ifr.ifr_name[if_name_len] = '\0';
 
-        if(ioctl(g_stpd_ioctl_sock, SIOCGIFINDEX, &ifr) < 0)
+        if (ioctl(g_stpd_ioctl_sock, SIOCGIFINDEX, &ifr) < 0)
             return -1;
 
         return ifr.ifr_ifindex;
@@ -268,12 +268,12 @@ uint32_t stp_intf_ioctl_get_kif_index(char * if_name)
     return -1;
 }
 
-INTERFACE_NODE * stp_intf_create_intf_node(char * ifname, uint32_t kif_index)
+INTERFACE_NODE *stp_intf_create_intf_node(char *ifname, uint32_t kif_index)
 {
     INTERFACE_NODE *node = NULL;
 
     node = calloc(1, sizeof(INTERFACE_NODE));
-    if(!node)
+    if (!node)
     {
         STP_LOG_CRITICAL("Calloc Failed");
         return NULL;
@@ -283,24 +283,24 @@ INTERFACE_NODE * stp_intf_create_intf_node(char * ifname, uint32_t kif_index)
     node->port_id = BAD_PORT_ID;
 
     /* Update interface name */
-    if(ifname)
+    if (ifname)
     {
         strncpy(node->ifname, ifname, IFNAMSIZ);
     }
     else
     {
-        if(stp_intf_ioctl_get_ifname(kif_index, node->ifname))
+        if (stp_intf_ioctl_get_ifname(kif_index, node->ifname))
             STP_LOG_INFO("Kernel ifindex %u name %s", kif_index, node->ifname);
         else
             STP_LOG_ERR("Kernel ifindex %u name fetch failed", kif_index);
     }
 
     /* Update kernel ifindex*/
-    if(kif_index == BAD_PORT_ID)
+    if (kif_index == BAD_PORT_ID)
     {
         /* Update kernel ifindex*/
         node->kif_index = stp_intf_ioctl_get_kif_index(ifname);
-        if(node->kif_index == BAD_PORT_ID)
+        if (node->kif_index == BAD_PORT_ID)
             STP_LOG_ERR("Kernel ifindex fetch for %s failed", ifname);
     }
     else
@@ -315,37 +315,37 @@ INTERFACE_NODE * stp_intf_create_intf_node(char * ifname, uint32_t kif_index)
 }
 
 /* Handle PO configuration in case it is recieved before netlink msg is received for PO creation */
-PORT_ID stp_intf_handle_po_preconfig(char * ifname)
+PORT_ID stp_intf_handle_po_preconfig(char *ifname)
 {
     INTERFACE_NODE *node = NULL;
-    
+
     node = stp_intf_get_node_by_name(ifname);
-    if(!node)
+    if (!node)
     {
         node = stp_intf_create_intf_node(ifname, BAD_PORT_ID);
-        if(!node)
+        if (!node)
             return BAD_PORT_ID;
     }
-    
+
     /* Allocate port id for PO if not yet done */
-    if(node->port_id == BAD_PORT_ID && g_stpd_port_init_done)
+    if (node->port_id == BAD_PORT_ID && g_stpd_port_init_done)
     {
         node->port_id = stp_intf_allocate_po_id();
-        if(node->port_id == BAD_PORT_ID)
+        if (node->port_id == BAD_PORT_ID)
             sys_assert(0);
     }
     return node->port_id;
 }
 
-void stp_intf_add_po_member(INTERFACE_NODE * if_node)
+void stp_intf_add_po_member(INTERFACE_NODE *if_node)
 {
     INTERFACE_NODE *node = NULL;
-    
+
     node = stp_intf_get_node_by_kif_index(if_node->master_ifindex);
-    if(!node)
+    if (!node)
     {
         node = stp_intf_create_intf_node(NULL, if_node->master_ifindex);
-        if(!node)
+        if (!node)
             return;
     }
 
@@ -353,7 +353,7 @@ void stp_intf_add_po_member(INTERFACE_NODE * if_node)
     node->member_port_count++;
 
     /* Populate PO speed from member port speed */
-    if(node->speed == 0)
+    if (node->speed == 0)
     {
         node->speed = if_node->speed;
 
@@ -362,10 +362,10 @@ void stp_intf_add_po_member(INTERFACE_NODE * if_node)
     }
 
     /* Allocate port id for PO if not yet done */
-    if(node->port_id == BAD_PORT_ID && g_stpd_port_init_done)
+    if (node->port_id == BAD_PORT_ID && g_stpd_port_init_done)
     {
         node->port_id = stp_intf_allocate_po_id();
-        if(node->port_id == BAD_PORT_ID)
+        if (node->port_id == BAD_PORT_ID)
             sys_assert(0);
     }
 
@@ -376,15 +376,15 @@ void stp_intf_del_po_member(uint32_t po_kif_index, uint32_t member_port)
 {
     INTERFACE_NODE *node = 0;
     STP_INDEX stp_index = 0;
-    
+
     node = stp_intf_get_node_by_kif_index(po_kif_index);
-    if(!node)
+    if (!node)
     {
         STP_LOG_ERR("PO not found in interface DB kernel_if - %u member_if - %u", po_kif_index, member_port);
         return;
     }
 
-    if(node->member_port_count == 0)
+    if (node->member_port_count == 0)
     {
         STP_LOG_ERR("PO member count is 0 kernel_if - %u member_if - %u", po_kif_index, member_port);
         return;
@@ -392,7 +392,7 @@ void stp_intf_del_po_member(uint32_t po_kif_index, uint32_t member_port)
 
     node->member_port_count--;
     /* if this is last member port, delete PO node in avl tree*/
-    if(!node->member_port_count)
+    if (!node->member_port_count)
     {
         stputil_set_global_enable_mask(node->port_id, false);
         for (stp_index = 0; stp_index < g_stp_instances; stp_index++)
@@ -404,47 +404,47 @@ void stp_intf_del_po_member(uint32_t po_kif_index, uint32_t member_port)
     STP_LOG_INFO("Del PO member kernel_if - %u member_if - %u", po_kif_index, member_port);
 }
 
-bool stp_intf_update_po_members(netlink_db_t * if_db, INTERFACE_NODE * node)
+bool stp_intf_update_po_members(netlink_db_t *if_db, INTERFACE_NODE *node)
 {
     /* Add member port to PO */
-    if (!node->master_ifindex && if_db->master_ifindex) 
+    if (!node->master_ifindex && if_db->master_ifindex)
     {
         node->master_ifindex = if_db->master_ifindex;
         stp_intf_add_po_member(node);
     }
 
     /* Delete member port from PO */
-    if (node->master_ifindex && !if_db->master_ifindex) 
+    if (node->master_ifindex && !if_db->master_ifindex)
     {
         stp_intf_del_po_member(node->master_ifindex, node->port_id);
         node->master_ifindex = 0;
     }
 }
 
-INTERFACE_NODE * stp_intf_update_intf_db(netlink_db_t *if_db, uint8_t is_add, bool init_in_prog, bool eth_if)
+INTERFACE_NODE *stp_intf_update_intf_db(netlink_db_t *if_db, uint8_t is_add, bool init_in_prog, bool eth_if)
 {
     INTERFACE_NODE *node = NULL;
     uint32_t port_id = 0;
 
-    if(is_add)
+    if (is_add)
     {
         node = stp_intf_get_node_by_name(if_db->ifname);
-        if(!node)
+        if (!node)
         {
             node = stp_intf_create_intf_node(if_db->ifname, if_db->kif_index);
-            if(!node)
+            if (!node)
                 return NULL;
 
             /* Update port id */
-            if(eth_if)
+            if (eth_if)
             {
                 port_id = strtol(((char *)if_db->ifname + STP_ETH_NAME_PREFIX_LEN), NULL, 10);
                 node->port_id = port_id;
-                
+
                 /* Derive Max Port */
                 if (init_in_prog)
                 {
-                    if ( port_id + (4 - (port_id % 4)) > g_max_stp_port)
+                    if (port_id + (4 - (port_id % 4)) > g_max_stp_port)
                     {
                         g_max_stp_port = port_id + (4 - (port_id % 4));
                     }
@@ -453,34 +453,33 @@ INTERFACE_NODE * stp_intf_update_intf_db(netlink_db_t *if_db, uint8_t is_add, bo
             STP_LOG_INFO("Add Kernel ifindex %d name %s", if_db->kif_index, if_db->ifname);
         }
 
-
         /* Update the port speed */
         if (eth_if)
         {
-            if(!node->speed)
+            if (!node->speed)
             {
                 node->speed = stpsync_get_port_speed(if_db->ifname);
-        
+
                 /* Calculate default Path cost */
                 node->path_cost = stputil_get_path_cost(node->speed, g_stpd_extend_mode);
             }
 
             /* Handle PO member port */
-            if(if_db->is_member || node->master_ifindex)
+            if (if_db->is_member || node->master_ifindex)
                 stp_intf_update_po_members(if_db, node);
         }
         return node;
     }
     else
     {
-        //Netlink Delete does not send name, hence traverse and get the node to delete
+        // Netlink Delete does not send name, hence traverse and get the node to delete
         node = stp_intf_get_node_by_kif_index(if_db->kif_index);
         if (!node)
         {
             STP_LOG_ERR("Delete FAILED, AVL Node not found, Kif: %d", if_db->kif_index);
             return NULL;
         }
-        
+
         stp_intf_del_from_intf_db(node);
         STP_LOG_INFO("Del Kernel ifindex %x name %s", if_db->kif_index, if_db->ifname);
     }
@@ -494,9 +493,9 @@ void stp_intf_netlink_cb(netlink_db_t *if_db, uint8_t is_add, bool init_in_prog)
     bool eth_if;
     g_stpd_stats_libev_netlink++;
 
-    if(STP_IS_ETH_PORT(if_db->ifname))
+    if (STP_IS_ETH_PORT(if_db->ifname))
         eth_if = true;
-    else if(STP_IS_PO_PORT(if_db->ifname))
+    else if (STP_IS_PO_PORT(if_db->ifname))
         eth_if = false;
     else
         return;
@@ -504,22 +503,22 @@ void stp_intf_netlink_cb(netlink_db_t *if_db, uint8_t is_add, bool init_in_prog)
     node = stp_intf_update_intf_db(if_db, is_add, init_in_prog, eth_if);
 
     /* Handle oper data change */
-    if(node)
+    if (node)
     {
         /* Handle oper state change */
         if (if_db->oper_state != node->oper_state)
         {
             node->oper_state = if_db->oper_state;
-            if(eth_if)
+            if (eth_if)
             {
                 node->speed = stpsync_get_port_speed(if_db->ifname);
                 /* Calculate default Path cost */
                 node->path_cost = stputil_get_path_cost(node->speed, g_stpd_extend_mode);
-                if(if_db->master_ifindex) 
+                if (if_db->master_ifindex)
                 {
                     po_node = stp_intf_get_node_by_kif_index(if_db->master_ifindex);
-                
-                    if(po_node && (po_node->member_port_count == 1 || !po_node->oper_state))
+
+                    if (po_node && (po_node->member_port_count == 1 || !po_node->oper_state))
                     {
                         po_node->speed = node->speed;
                         /* Calculate default Path cost */
@@ -528,7 +527,7 @@ void stp_intf_netlink_cb(netlink_db_t *if_db, uint8_t is_add, bool init_in_prog)
                 }
             }
 
-            if(!init_in_prog && (if_db->master_ifindex == 0) && (node->port_id != BAD_PORT_ID))
+            if (!init_in_prog && (if_db->master_ifindex == 0) && (node->port_id != BAD_PORT_ID))
             {
                 stpmgr_port_event(node->port_id, if_db->oper_state);
             }
@@ -546,7 +545,7 @@ int stp_intf_init_port_stats()
         STP_LOG_CRITICAL("Calloc Failed, g_stpd_intf_stats");
         sys_assert(0);
     }
-    for(i = 0; i < g_max_stp_port ; i++)
+    for (i = 0; i < g_max_stp_port; i++)
     {
         g_stpd_intf_stats[i] = calloc(1, sizeof(STPD_INTF_STATS));
         if (!g_stpd_intf_stats[i])
@@ -563,8 +562,8 @@ int stp_intf_init_po_id_pool()
     int ret = 0;
     struct avl_traverser trav;
     INTERFACE_NODE *node = 0;
-    
-    //Allocate po-id-pool
+
+    // Allocate po-id-pool
     ret = bmp_alloc(&stpd_context.po_id_pool, STP_MAX_PO_ID);
     if (-1 == ret)
     {
@@ -572,9 +571,9 @@ int stp_intf_init_po_id_pool()
         return -1;
     }
 
-    //Allocate port-id for all PO's 
+    // Allocate port-id for all PO's
     avl_t_init(&trav, g_stpd_intf_db);
-    while(NULL != (node = avl_t_next(&trav)))
+    while (NULL != (node = avl_t_next(&trav)))
     {
         if (node->port_id == BAD_PORT_ID && STP_IS_PO_PORT(node->ifname))
         {
@@ -585,19 +584,18 @@ int stp_intf_init_po_id_pool()
     return 0;
 }
 
-
 int stp_intf_event_mgr_init(void)
 {
     struct event *nl_event = 0;
-    
-    if((g_stpd_ioctl_sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+
+    if ((g_stpd_ioctl_sock = socket(AF_INET, SOCK_STREAM, 0)) < 0)
         sys_assert(0);
 
     g_max_stp_port = 0;
 
     /* Open Netlink comminucation to populate Interface DB */
     g_stpd_netlink_handle = stp_netlink_init(&stp_intf_netlink_cb);
-    if(-1 == g_stpd_netlink_handle)
+    if (-1 == g_stpd_netlink_handle)
     {
         STP_LOG_CRITICAL("netlink init failed");
         sys_assert(0);
@@ -612,12 +610,12 @@ int stp_intf_event_mgr_init(void)
     g_max_stp_port = g_max_stp_port * 2; // Phy Ports + LAG
     STP_LOG_INFO("intf db done. max port %d", g_max_stp_port);
 
-    if(g_max_stp_port == 0)
+    if (g_max_stp_port == 0)
         return -1;
 
     stp_intf_init_port_stats();
 
-    if(-1 == stp_intf_init_po_id_pool())
+    if (-1 == stp_intf_init_po_id_pool())
     {
         STP_LOG_CRITICAL("error Allocating port-id for PO's");
         sys_assert(0);
@@ -626,11 +624,7 @@ int stp_intf_event_mgr_init(void)
     g_stpd_port_init_done = 1;
 
     /* Add libevent to monitor interface events */
-    nl_event = stpmgr_libevent_create
-            ( stp_intf_get_evbase()
-            , stp_intf_get_netlink_fd()
-            , EV_READ|EV_PERSIST
-            , stp_netlink_events_cb, (char *)"NETLINK", NULL);
+    nl_event = stpmgr_libevent_create(stp_intf_get_evbase(), stp_intf_get_netlink_fd(), EV_READ | EV_PERSIST, stp_netlink_events_cb, (char *)"NETLINK", NULL);
     if (!nl_event)
     {
         STP_LOG_ERR("Netlink Event create Failed");
@@ -677,7 +671,6 @@ bool stp_intf_set_path_cost(PORT_ID port_id, uint32_t path_cost)
     return false;
 }
 
-
 uint32_t stp_intf_get_path_cost(PORT_ID port_id)
 {
     INTERFACE_NODE *node = NULL;
@@ -696,7 +689,7 @@ void stp_intf_reset_port_params()
     INTERFACE_NODE *node = 0;
     avl_t_init(&trav, g_stpd_intf_db);
 
-    while(NULL != (node = avl_t_next(&trav)))
+    while (NULL != (node = avl_t_next(&trav)))
     {
         if (node->port_id != BAD_PORT_ID)
         {

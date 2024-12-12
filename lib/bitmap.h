@@ -27,51 +27,53 @@
 
 #define BMP_INVALID_ID -1
 
-//Bitmap will be offset of 32bits and accessed using uint32_t
+// Bitmap will be offset of 32bits and accessed using uint32_t
 #define BMP_MASK_BITS 32
 #define BMP_MASK_LEN 5
 #define BMP_MASK 0x1f
 
-#define BMP_FIRST16_MASK  0xffff0000
+#define BMP_FIRST16_MASK 0xffff0000
 #define BMP_SECOND16_MASK 0x0000ffff
 
 #define BMP_IS_BIT_POS_VALID(_bmp, _bit) ((_bit >= 0) && (_bit <= _bmp->nbits))
 
-#define BMP_GET_ARR_ID(_p)  (_p/BMP_MASK_BITS)
-#define BMP_GET_ARR_POS(_p) ((_p) & BMP_MASK) 
+#define BMP_GET_ARR_ID(_p) (_p / BMP_MASK_BITS)
+#define BMP_GET_ARR_POS(_p) ((_p) & BMP_MASK)
 
-#define BMP_SET(_bmp,_k)   (_bmp->arr[BMP_GET_ARR_ID(_k)] |= (1U<<(BMP_GET_ARR_POS(_k))))
-#define BMP_RESET(_bmp,_k) (_bmp->arr[BMP_GET_ARR_ID(_k)] &= ~(1U<<(BMP_GET_ARR_POS(_k))))
-#define BMP_ISSET(_bmp,_k) (_bmp->arr[BMP_GET_ARR_ID(_k)] & (1U<<(BMP_GET_ARR_POS(_k))))
+#define BMP_SET(_bmp, _k) (_bmp->arr[BMP_GET_ARR_ID(_k)] |= (1U << (BMP_GET_ARR_POS(_k))))
+#define BMP_RESET(_bmp, _k) (_bmp->arr[BMP_GET_ARR_ID(_k)] &= ~(1U << (BMP_GET_ARR_POS(_k))))
+#define BMP_ISSET(_bmp, _k) (_bmp->arr[BMP_GET_ARR_ID(_k)] & (1U << (BMP_GET_ARR_POS(_k))))
 
-typedef struct BITMAP_S{
-    //nbits: //range :(0-65535), bits : 16
+typedef struct BITMAP_S
+{
+    // nbits: //range :(0-65535), bits : 16
     uint16_t nbits;
 
-    //Auto derived from nbits
+    // Auto derived from nbits
     //
-    //size : min number of "unsigned int" required to accomodate all the bits
-    //range : 1-2047
-    uint16_t size; 
+    // size : min number of "unsigned int" required to accomodate all the bits
+    // range : 1-2047
+    uint16_t size;
     unsigned int *arr;
-}BITMAP_T;
+} BITMAP_T;
 
 typedef int32_t BMP_ID;
 
 //
-//For static allocation ,
+// For static allocation ,
 // ex:
 // BITMAP_T vlan_bmp;
 // BMP_INIT_STATIC(vlan_bmp, 4096)
 //
-#define BMP_GET_ARR_SIZE_FROM_BITS(nbits) ((nbits + (BMP_MASK_BITS - 1))/BMP_MASK_BITS)
-#define BMP_INIT_STATIC(bmp, nbits) \
-do {\
-    unsigned int bmp_arr[BMP_GET_ARR_SIZE_FROM_BITS(nbits)];\
-    bmp.nbits  = nbits;\
-    bmp.size   = BMP_GET_ARR_SIZE_FROM_BITS(nbits);\
-    bmp.arr    = &bmp_arr[0];\
-}while(0);
+#define BMP_GET_ARR_SIZE_FROM_BITS(nbits) ((nbits + (BMP_MASK_BITS - 1)) / BMP_MASK_BITS)
+#define BMP_INIT_STATIC(bmp, nbits)                              \
+    do                                                           \
+    {                                                            \
+        unsigned int bmp_arr[BMP_GET_ARR_SIZE_FROM_BITS(nbits)]; \
+        bmp.nbits = nbits;                                       \
+        bmp.size = BMP_GET_ARR_SIZE_FROM_BITS(nbits);            \
+        bmp.arr = &bmp_arr[0];                                   \
+    } while (0);
 
 bool bmp_is_mask_equal(BITMAP_T *bmp1, BITMAP_T *bmp2);
 void bmp_copy_mask(BITMAP_T *dst, BITMAP_T *src);

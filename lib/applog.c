@@ -108,4 +108,3 @@ int applog_deinit()
 
   return status;
 }
-
