@@ -1,0 +1,30 @@
+@startuml inline_umlgraph_1.png
+class AVL_Tree {
+    +avl_create()
+    +avl_insert()
+    +avl_delete()
+    +avl_find()
+    +avl_destroy()
+}
+class AVL_Node {
+    +balance_factor: int
+    +left: AVL_Node
+    +right: AVL_Node
+}
+AVL_Tree --> AVL_Node
+@enduml
+@startuml inline_umlgraph_2.eps
+class AVL_Tree {
+    +avl_create()
+    +avl_insert()
+    +avl_delete()
+    +avl_find()
+    +avl_destroy()
+}
+class AVL_Node {
+    +balance_factor: int
+    +left: AVL_Node
+    +right: AVL_Node
+}
+AVL_Tree --> AVL_Node
+@enduml
