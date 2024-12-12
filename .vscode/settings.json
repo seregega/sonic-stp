@@ -1,5 +1,7 @@
 {
     "files.associations": {
-        "stp_main.h": "c"
+        "stp_main.h": "c",
+        "applog.h": "c",
+        "unistd.h": "c"
     }
 }

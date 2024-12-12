@@ -1,42 +1,59 @@
-/* Produced by texiweb from libavl.w. */
-
-/* libavl - library for manipulation of binary trees.
-   Copyright (C) 1998-2002, 2004 Free Software Foundation, Inc.
-
-   This program is free software; you can redistribute it and/or
-   modify it under the terms of the GNU General Public License as
-   published by the Free Software Foundation; either version 2 of the
-   License, or (at your option) any later version.
-
-   This program is distributed in the hope that it will be useful, but
-   WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-   See the GNU General Public License for more details.
-
-   You should have received a copy of the GNU General Public License
-   along with this program; if not, write to the Free Software
-   Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA
-   02111-1307, USA.
-
-   The author may be contacted at <blp@gnu.org> on the Internet, or
-   write to Ben Pfaff, Stanford University, Computer Science Dept., 353
-   Serra Mall, Stanford CA 94305, USA.
-*/
+/**
+ * @file avl.h
+ * @brief Библиотека для работы с AVL-деревьями.
+ *
+ * AVL-деревья — это сбалансированные бинарные деревья поиска, предоставляющие
+ * операции вставки, удаления, поиска и обхода элементов с временной сложностью O(log n).
+ *
+ * @details
+ * Этот заголовочный файл содержит структуры данных и функции для управления AVL-деревьями,
+ * включая базовые операции с деревьями, управление памятью и итерацию по дереву.
+ *
+ * Copyright 1998-2002, 2004 Free Software Foundation, Inc.
+ * Licensed under the GNU General Public License (GPL) version 2 or later.
+ */
 
 #ifndef AVL_H
 #define AVL_H 1
 
 #include <stddef.h>
 
-/* Function types. */
+/**
+ * @typedef avl_comparison_func
+ * @brief Тип функции для сравнения элементов в AVL-дереве.
+ *
+ * @param avl_a Первый элемент для сравнения.
+ * @param avl_b Второй элемент для сравнения.
+ * @param avl_param Дополнительный параметр, передаваемый в функцию.
+ * @return Отрицательное значение, если avl_a < avl_b, 0, если равны, положительное значение, если avl_a > avl_b.
+ */
 typedef int avl_comparison_func(const void *avl_a, const void *avl_b,
                                 void *avl_param);
+
+/**
+ * @typedef avl_item_func
+ * @brief Тип функции для работы с элементами AVL-дерева.
+ *
+ * @param avl_item Элемент дерева.
+ * @param avl_param Дополнительный параметр, передаваемый в функцию.
+ */
 typedef void avl_item_func(void *avl_item, void *avl_param);
+
+/**
+ * @typedef avl_copy_func
+ * @brief Тип функции для копирования элементов AVL-дерева.
+ *
+ * @param avl_item Элемент дерева.
+ * @param avl_param Дополнительный параметр, передаваемый в функцию.
+ * @return Указатель на скопированный элемент.
+ */
 typedef void *avl_copy_func(void *avl_item, void *avl_param);
 
 #ifndef LIBAVL_ALLOCATOR
 #define LIBAVL_ALLOCATOR
-/* Memory allocator. */
+/**
+ * @brief Структура для управления памятью в AVL-деревьях.
+ */
 struct libavl_allocator
 {
   void *(*libavl_malloc)(struct libavl_allocator *, size_t libavl_size);
@@ -44,72 +61,279 @@ struct libavl_allocator
 };
 #endif
 
-/* Default memory allocator. */
+/**
+ * @brief Указатель на стандартный аллокатор памяти.
+ */
 extern struct libavl_allocator avl_allocator_default;
 void *avl_malloc(struct libavl_allocator *, size_t);
 void avl_free(struct libavl_allocator *, void *);
 
-/* Maximum AVL height. */
+/**
+ * @brief Максимальная высота AVL-дерева.
+ */
 #ifndef AVL_MAX_HEIGHT
 #define AVL_MAX_HEIGHT 32
 #endif
 
-/* Tree data structure. */
+/**
+ * @brief Структура, представляющая AVL-дерево.
+ */
 struct avl_table
 {
-  struct avl_node *avl_root;          /* Tree's root. */
-  avl_comparison_func *avl_compare;   /* Comparison function. */
-  void *avl_param;                    /* Extra argument to |avl_compare|. */
-  struct libavl_allocator *avl_alloc; /* Memory allocator. */
-  size_t avl_count;                   /* Number of items in tree. */
-  unsigned long avl_generation;       /* Generation number. */
+  struct avl_node *avl_root;          /**< Корень дерева. */
+  avl_comparison_func *avl_compare;   /**< Функция для сравнения элементов. */
+  void *avl_param;                    /**< Дополнительный параметр для функции сравнения. */
+  struct libavl_allocator *avl_alloc; /**< Аллокатор памяти. */
+  size_t avl_count;                   /**< Количество элементов в дереве. */
+  unsigned long avl_generation;       /**< Номер поколения дерева (используется для итерации). */
 };
 
-/* An AVL tree node. */
+/**
+ * @brief Узел AVL-дерева.
+ */
 struct avl_node
 {
-  struct avl_node *avl_link[2]; /* Subtrees. */
-  void *avl_data;               /* Pointer to data. */
-  signed char avl_balance;      /* Balance factor. */
+  struct avl_node *avl_link[2]; /**< Указатели на дочерние узлы (левый и правый). */
+  void *avl_data;               /**< Указатель на данные, хранящиеся в узле. */
+  signed char avl_balance;      /**< Баланс-фактор узла. */
 };
 
-/* AVL traverser structure. */
+/**
+ * @brief Структура для обхода AVL-дерева.
+ */
 struct avl_traverser
 {
-  struct avl_table *avl_table; /* Tree being traversed. */
-  struct avl_node *avl_node;   /* Current node in tree. */
-  struct avl_node *avl_stack[AVL_MAX_HEIGHT];
-  /* All the nodes above |avl_node|. */
-  size_t avl_height;            /* Number of nodes in |avl_parent|. */
-  unsigned long avl_generation; /* Generation number. */
+  struct avl_table *avl_table;                /**< Дерево, которое обходится. */
+  struct avl_node *avl_node;                  /**< Текущий узел дерева. */
+  struct avl_node *avl_stack[AVL_MAX_HEIGHT]; /**< Стек узлов для обратного отслеживания. */
+  size_t avl_height;                          /**< Высота стека. */
+  unsigned long avl_generation;               /**< Номер поколения дерева. */
 };
 
-/* Table functions. */
-struct avl_table *avl_create(avl_comparison_func *, void *,
-                             struct libavl_allocator *);
-struct avl_table *avl_copy(const struct avl_table *, avl_copy_func *,
-                           avl_item_func *, struct libavl_allocator *);
-void avl_destroy(struct avl_table *, avl_item_func *);
-void **avl_probe(struct avl_table *, void *);
-void *avl_insert(struct avl_table *, void *);
-void *avl_replace(struct avl_table *, void *);
-void *avl_delete(struct avl_table *, const void *);
-void *avl_find(const struct avl_table *, const void *);
-void avl_assert_insert(struct avl_table *, void *);
-void *avl_assert_delete(struct avl_table *, void *);
+/**
+ * @brief Создает новое AVL-дерево.
+ *
+ * @param compare Функция для сравнения элементов.
+ * @param param Дополнительный параметр для функции сравнения.
+ * @param allocator Аллокатор памяти (может быть NULL для использования стандартного).
+ * @return Указатель на структуру дерева или NULL в случае ошибки.
+ */
+struct avl_table *avl_create(avl_comparison_func *compare, void *param, struct libavl_allocator *allocator);
 
+/**
+ * @brief Создаёт копию указанного AVL-дерева.
+ *
+ * Функция создает новое AVL-дерево, копируя содержимое из исходного дерева.
+ * Для копирования элементов используется пользовательская функция, переданная через параметр `copy_func`.
+ * Освобождение памяти для элементов исходного дерева может быть выполнено с использованием функции `destroy_func`.
+ *
+ * @param orig Указатель на исходное AVL-дерево, которое нужно скопировать.
+ * @param copy_func Функция для копирования каждого элемента дерева. Может быть NULL, если копирование не требуется.
+ * @param destroy_func Функция для освобождения памяти каждого элемента дерева при возникновении ошибки. Может быть NULL.
+ * @param allocator Аллокатор памяти, используемый для нового дерева. Может быть NULL, чтобы использовать стандартный аллокатор.
+ * @return Указатель на новое дерево, если копирование успешно.
+ *         NULL, если произошла ошибка (например, недостаточно памяти).
+ *
+ * @note Если `copy_func` не задана, элементы копируются как есть (путем простого присвоения указателей).
+ * @note Если `destroy_func` задана, она вызывается для каждого скопированного элемента, если копирование завершается с ошибкой.
+ */
+struct avl_table *avl_copy(const struct avl_table *orig, avl_copy_func *copy_func,
+                           avl_item_func *destroy_func, struct libavl_allocator *allocator);
+
+/**
+ * @brief Уничтожает AVL-дерево и освобождает память.
+ *
+ * @param tree Указатель на дерево.
+ * @param destroy Функция для освобождения данных каждого элемента (может быть NULL).
+ */
+void avl_destroy(struct avl_table *tree, avl_item_func *destroy);
+
+/**
+ * @brief Вставляет элемент в AVL-дерево или находит существующий.
+ *
+ * Функция добавляет указанный элемент в AVL-дерево, если элемента с таким ключом ещё нет.
+ * Если элемент с таким ключом уже существует, функция возвращает указатель на существующий элемент.
+ *
+ * @param tree Указатель на AVL-дерево, в которое добавляется элемент.
+ * @param item Указатель на элемент, который нужно вставить в дерево.
+ * @return Указатель на вставленный элемент или на существующий элемент, если он уже присутствует в дереве.
+ *         Если возникла ошибка (например, нехватка памяти), возвращает NULL.
+ *
+ * @note Эта функция использует функцию сравнения, заданную при создании дерева, чтобы определить порядок элементов.
+ * @note Если элемент уже существует, указанный элемент `item` не будет добавлен, и дерево останется неизменным.
+ */
+void **avl_probe(struct avl_table *tree, void *item);
+
+/**
+ * @brief Вставляет новый элемент в AVL-дерево.
+ *
+ * @param tree Указатель на дерево.
+ * @param item Указатель на элемент, который нужно вставить.
+ * @return Указатель на элемент, если вставка успешна, или NULL, если элемент уже существует.
+ */
+void *avl_insert(struct avl_table *tree, void *item);
+/**
+ * @brief Вставляет новый элемент в AVL-дерево, заменяя существующий элемент с таким же ключом.
+ *
+ * Функция добавляет указанный элемент в AVL-дерево. Если элемент с таким ключом уже существует,
+ * он заменяется новым элементом, а старый элемент возвращается, чтобы его можно было обработать (например, освободить память).
+ *
+ * @param tree Указатель на AVL-дерево, в которое добавляется элемент.
+ * @param item Указатель на новый элемент, который нужно вставить.
+ * @return Указатель на заменённый элемент, если элемент с таким ключом уже существовал, или NULL, если элемент добавлен впервые.
+ *
+ * @note Для сравнения элементов используется функция, заданная при создании дерева (`avl_create`).
+ * @note Если функция возвращает указатель на заменённый элемент, его необходимо обработать (например, освободить память).
+ */
+void *avl_replace(struct avl_table *tree, void *item);
+/**
+ * @brief Удаляет элемент из AVL-дерева.
+ *
+ * @param tree Указатель на дерево.
+ * @param item Указатель на элемент, который нужно удалить.
+ * @return Указатель на удаленный элемент, или NULL, если элемент не найден.
+ */
+void *avl_delete(struct avl_table *tree, const void *item);
+/**
+ * @brief Ищет элемент в AVL-дереве.
+ *
+ * @param tree Указатель на дерево.
+ * @param item Указатель на элемент, который нужно найти.
+ * @return Указатель на элемент, если он найден, или NULL в случае его отсутствия.
+ */
+void *avl_find(const struct avl_table *tree, const void *item);
+/**
+ * @brief Вставляет элемент в AVL-дерево и проверяет, что элемент с таким ключом отсутствует.
+ *
+ * Функция добавляет указанный элемент в AVL-дерево. Если элемент с таким ключом уже существует,
+ * выполнение завершается с ошибкой (обычно через вызов `assert` или аналогичного механизма).
+ *
+ * @param tree Указатель на AVL-дерево, в которое добавляется элемент.
+ * @param item Указатель на элемент, который нужно вставить.
+ *
+ * @note Эта функция используется для вставки уникальных элементов.
+ *       Если элемент с таким ключом уже существует, это считается ошибкой.
+ * @note Для сравнения элементов используется функция, указанная при создании дерева (`avl_create`).
+ */
+void avl_assert_insert(struct avl_table *tree, void *item);
+
+/**
+ * @brief Удаляет элемент из AVL-дерева, проверяя, что элемент существует.
+ *
+ * Функция удаляет указанный элемент из AVL-дерева. Если элемент с указанным ключом отсутствует,
+ * выполнение завершается с ошибкой (обычно через вызов `assert` или аналогичного механизма).
+ *
+ * @param tree Указатель на AVL-дерево, из которого нужно удалить элемент.
+ * @param item Указатель на элемент, который нужно удалить.
+ * @return Указатель на удалённый элемент.
+ *
+ * @note Эта функция используется в случаях, когда отсутствие элемента считается логической ошибкой.
+ * @note Для поиска и сравнения элементов используется функция, указанная при создании дерева (`avl_create`).
+ */
+void *avl_assert_delete(struct avl_table *tree, void *item);
+
+/**
+ * @brief Возвращает количество элементов в дереве.
+ *
+ * @param tree Указатель на AVL-дерево.
+ * @return Количество элементов в дереве.
+ */
 #define avl_count(table) ((size_t)(table)->avl_count)
 
-/* Table traverser functions. */
-void avl_t_init(struct avl_traverser *, struct avl_table *);
-void *avl_t_first(struct avl_traverser *, struct avl_table *);
-void *avl_t_last(struct avl_traverser *, struct avl_table *);
-void *avl_t_find(struct avl_traverser *, struct avl_table *, void *);
-void *avl_t_insert(struct avl_traverser *, struct avl_table *, void *);
-void *avl_t_copy(struct avl_traverser *, const struct avl_traverser *);
-void *avl_t_next(struct avl_traverser *);
-void *avl_t_prev(struct avl_traverser *);
-void *avl_t_cur(struct avl_traverser *);
-void *avl_t_replace(struct avl_traverser *, void *);
+/**
+ * @brief Устанавливает объект обхода на первый элемент дерева.
+ *
+ * @param traverser Указатель на объект обхода.
+ * @param tree Указатель на AVL-дерево.
+ */
+void avl_t_init(struct avl_traverser *traverser, struct avl_table *tree);
+/**
+ * @brief Начинает обход дерева с самого первого элемента.
+ *
+ * @param traverser Указатель на объект обхода.
+ * @param tree Указатель на дерево.
+ * @return Указатель на первый элемент, или NULL, если дерево пусто.
+ */
+void *avl_t_first(struct avl_traverser *traverser, struct avl_table *tree);
+/**
+ * @brief Устанавливает объект обхода на самый последний элемент дерева.
+ *
+ * @param traverser Указатель на объект обхода.
+ * @param tree Указатель на AVL-дерево.
+ * @return Указатель на последний элемент дерева или NULL, если дерево пусто.
+ */
+void *avl_t_last(struct avl_traverser *traverser, struct avl_table *tree);
+/**
+ * @brief Устанавливает объект обхода на указанный элемент.
+ *
+ * @param traverser Указатель на объект обхода.
+ * @param tree Указатель на AVL-дерево.
+ * @param item Указатель на элемент, который нужно найти.
+ * @return Указатель на найденный элемент или NULL, если элемент отсутствует.
+ */
+void *avl_t_find(struct avl_traverser *traverser, struct avl_table *tree, void *item);
+
+/**
+ * @brief Вставляет элемент в AVL-дерево и устанавливает объект обхода на этот элемент.
+ *
+ * Функция добавляет указанный элемент в AVL-дерево и автоматически обновляет объект обхода
+ * так, чтобы он указывал на вставленный элемент.
+ *
+ * @param traverser Указатель на объект обхода. После успешной вставки он будет указывать на вставленный элемент.
+ * @param tree Указатель на AVL-дерево, в которое добавляется элемент.
+ * @param item Указатель на элемент, который нужно вставить в дерево.
+ * @return Указатель на вставленный элемент, если вставка успешна, или NULL, если элемент уже существует в дереве.
+ *
+ * @note Если элемент уже существует, объект обхода не будет изменён.
+ */
+void *avl_t_insert(struct avl_traverser *traverser, struct avl_table *tree, void *item);
+
+/**
+ * @brief Копирует состояние одного объекта обхода AVL-дерева в другой.
+ *
+ * Функция дублирует текущее состояние исходного объекта обхода в целевой объект.
+ * Это включает указатель на дерево, текущий узел, стек обхода и высоту обхода.
+ *
+ * @param dest Указатель на целевой объект обхода. После выполнения функции он будет содержать состояние, идентичное `src`.
+ * @param src Указатель на исходный объект обхода, состояние которого будет скопировано.
+ * @return Указатель на текущий элемент дерева из исходного объекта обхода или NULL, если исходный объект не указывает на элемент.
+ *
+ * @note Целевой объект должен быть инициализирован, но может быть пустым.
+ * @note Если исходный объект обхода не указывает на дерево или элемент, целевой объект также будет пустым.
+ */
+void *avl_t_copy(struct avl_traverser *dest, const struct avl_traverser *src);
+
+/**
+ * @brief Переходит к следующему элементу в обходе дерева.
+ *
+ * @param traverser Указатель на объект обхода.
+ * @return Указатель на следующий элемент, или NULL, если достигнут конец.
+ */
+void *avl_t_next(struct avl_traverser *traverser);
+/**
+ * @brief Переходит к предыдущему элементу в обходе дерева.
+ *
+ * @param traverser Указатель на объект обхода.
+ * @return Указатель на предыдущий элемент или NULL, если достигнуто начало.
+ */
+void *avl_t_prev(struct avl_traverser *traverser);
+/**
+ * @brief Возвращает текущий элемент в дереве, на который указывает объект обхода.
+ *
+ * Эта функция позволяет получить текущий элемент, который в данный момент
+ * рассматривается в ходе обхода дерева.
+ *
+ * @param traverser Указатель на объект обхода.
+ * @return Указатель на текущий элемент дерева или NULL, если объект обхода не установлен.
+ */
+void *avl_t_cur(struct avl_traverser *traverser);
+/**
+ * @brief Заменяет текущий элемент в обходе дерева на новый элемент.
+ *
+ * @param traverser Указатель на объект обхода.
+ * @param new_item Новый элемент для замены текущего.
+ * @return Указатель на старый элемент.
+ */
+void *avl_t_replace(struct avl_traverser *traverser, void *new_item);
 
 #endif /* avl.h */

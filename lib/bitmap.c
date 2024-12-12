@@ -1,20 +1,10 @@
-/*
- * Copyright 2019 Broadcom. The term "Broadcom" refers to Broadcom Inc. and/or
- * its subsidiaries.
+/**
+ * @file bitmap.c
+ * @brief Реализация функций для управления битовыми масками (Bitmaps).
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Функции включают операции над битовыми масками, такие как AND, OR, NOT, поиск
+ * установленных/сброшенных битов, их установка и сброс.
  */
-
 #include "bitmap.h"
 
 /*
@@ -109,6 +99,13 @@ void bmp_xor_masks(BITMAP_T *tgt, BITMAP_T *bmp1, BITMAP_T *bmp2)
         tgt->arr[i] = (bmp1->arr[i] ^ bmp2->arr[i]);
 }
 
+/**
+ * @brief Находит первый установленный бит после указанного смещения.
+ *
+ * @param bmp Битовая маска.
+ * @param offset Смещение.
+ * @return Индекс первого установленного бита или BMP_INVALID_ID, если такового нет.
+ */
 BMP_ID bmp_find_first_set_bit_after_offset(BITMAP_T *bmp, uint16_t offset)
 {
     offset += 1;
@@ -137,6 +134,13 @@ BMP_ID bmp_find_first_set_bit_after_offset(BITMAP_T *bmp, uint16_t offset)
     return BMP_INVALID_ID;
 }
 
+/**
+ * @brief Находит первый сброшенный бит после указанного смещения.
+ *
+ * @param bmp Битовая маска.
+ * @param offset Смещение.
+ * @return Индекс первого сброшенного бита или BMP_INVALID_ID, если такового нет.
+ */
 BMP_ID bmp_find_first_unset_bit_after_offset(BITMAP_T *bmp, uint16_t offset)
 {
     offset += 1;
@@ -166,6 +170,13 @@ BMP_ID bmp_find_first_unset_bit_after_offset(BITMAP_T *bmp, uint16_t offset)
     return BMP_INVALID_ID;
 }
 
+/**
+ * @brief Устанавливает первый сброшенный бит после указанного смещения.
+ *
+ * @param bmp Битовая маска.
+ * @param offset Смещение.
+ * @return Индекс установленного бита или BMP_INVALID_ID, если такового нет.
+ */
 BMP_ID bmp_set_first_unset_bit_after_offset(BITMAP_T *bmp, uint16_t offset)
 {
     BMP_ID bmp_id = bmp_find_first_unset_bit_after_offset(bmp, offset);
@@ -176,6 +187,12 @@ BMP_ID bmp_set_first_unset_bit_after_offset(BITMAP_T *bmp, uint16_t offset)
     return bmp_id;
 }
 
+/**
+ * @brief Находит первый сброшенный бит в битовой маске.
+ *
+ * @param bmp Битовая маска.
+ * @return Индекс первого сброшенного бита или BMP_INVALID_ID, если такового нет.
+ */
 BMP_ID bmp_find_first_unset_bit(BITMAP_T *bmp)
 {
     uint8_t i = 0;
@@ -195,6 +212,12 @@ BMP_ID bmp_find_first_unset_bit(BITMAP_T *bmp)
     return BMP_INVALID_ID;
 }
 
+/**
+ * @brief Устанавливает первый сброшенный бит в битовой маске.
+ *
+ * @param bmp Битовая маска.
+ * @return Индекс установленного бита или BMP_INVALID_ID, если такового нет.
+ */
 BMP_ID bmp_set_first_unset_bit(BITMAP_T *bmp)
 {
     BMP_ID bmp_id = bmp_find_first_unset_bit(bmp);
@@ -205,16 +228,35 @@ BMP_ID bmp_set_first_unset_bit(BITMAP_T *bmp)
     return bmp_id;
 }
 
+/**
+ * @brief Получает следующий установленный бит после указанного.
+ *
+ * @param bmp Битовая маска.
+ * @param bmp_id Индекс текущего установленного бита.
+ * @return Индекс следующего установленного бита или BMP_INVALID_ID, если такового нет.
+ */
 BMP_ID bmp_get_next_set_bit(BITMAP_T *bmp, BMP_ID bmp_id)
 {
     return bmp_find_first_set_bit_after_offset(bmp, bmp_id);
 }
 
+/**
+ * @brief Получает первый установленный бит в битовой маске.
+ *
+ * @param bmp Битовая маска.
+ * @return Индекс первого установленного бита или BMP_INVALID_ID, если такового нет.
+ */
 BMP_ID bmp_get_first_set_bit(BITMAP_T *bmp)
 {
     return bmp_get_next_set_bit(bmp, BMP_INVALID_ID);
 }
 
+/**
+ * @brief Проверяет, установлен ли хотя бы один бит в битовой маске.
+ *
+ * @param bmp Битовая маска.
+ * @return true, если хотя бы один бит установлен, иначе false.
+ */
 bool bmp_isset_any(BITMAP_T *bmp)
 {
     uint16_t i;
@@ -226,6 +268,13 @@ bool bmp_isset_any(BITMAP_T *bmp)
     return false;
 }
 
+/**
+ * @brief Проверяет, установлен ли конкретный бит в битовой маске.
+ *
+ * @param bmp Битовая маска.
+ * @param bit Позиция бита.
+ * @return true, если бит установлен, иначе false.
+ */
 bool bmp_isset(BITMAP_T *bmp, uint16_t bit)
 {
     if (!bmp)
@@ -239,6 +288,12 @@ bool bmp_isset(BITMAP_T *bmp, uint16_t bit)
     return false;
 }
 
+/**
+ * @brief Устанавливает конкретный бит в битовой маске.
+ *
+ * @param bmp Битовая маска.
+ * @param bit Позиция бита.
+ */
 void bmp_set(BITMAP_T *bmp, uint16_t bit)
 {
     if (!bmp)
@@ -256,6 +311,11 @@ void bmp_set(BITMAP_T *bmp, uint16_t bit)
     BMP_SET(bmp, bit);
 }
 
+/**
+ * @brief Устанавливает все биты в битовой маске.
+ *
+ * @param bmp Битовая маска.
+ */
 void bmp_set_all(BITMAP_T *bmp)
 {
     uint8_t i = 0;
@@ -264,6 +324,12 @@ void bmp_set_all(BITMAP_T *bmp)
     return;
 }
 
+/**
+ * @brief Сбрасывает конкретный бит в битовой маске.
+ *
+ * @param bmp Битовая маска.
+ * @param bit Позиция бита.
+ */
 void bmp_reset(BITMAP_T *bmp, uint16_t bit)
 {
     if (!bmp)
@@ -281,12 +347,22 @@ void bmp_reset(BITMAP_T *bmp, uint16_t bit)
     BMP_RESET(bmp, bit);
 }
 
+/**
+ * @brief Сбрасывает все биты в битовой маске.
+ *
+ * @param bmp Битовая маска.
+ */
 void bmp_reset_all(BITMAP_T *bmp)
 {
     memset(bmp->arr, 0, (sizeof(uint32_t) * bmp->size));
     return;
 }
 
+/**
+ * @brief Выводит содержимое битовой маски для отладки.
+ *
+ * @param bmp Битовая маска.
+ */
 void bmp_print_all(BITMAP_T *bmp)
 {
     int i = 0;
@@ -299,6 +375,12 @@ void bmp_print_all(BITMAP_T *bmp)
     APP_LOG_INFO("");
 }
 
+/**
+ * @brief Инициализирует битовую маску.
+ *
+ * @param bmp Указатель на битовую маску.
+ * @return 0 при успешной инициализации, иначе -1.
+ */
 int8_t bmp_init(BITMAP_T *bmp)
 {
     if (bmp->nbits == 0)
@@ -320,6 +402,11 @@ int8_t bmp_init(BITMAP_T *bmp)
     return 0;
 }
 
+/**
+ * @brief Освобождает память, выделенную под битовую маску.
+ *
+ * @param bmp Указатель на битовую маску.
+ */
 void bmp_free(BITMAP_T *bmp)
 {
     if (bmp->arr)
@@ -327,6 +414,13 @@ void bmp_free(BITMAP_T *bmp)
     free(bmp);
 }
 
+/**
+ * @brief Выделяет память и инициализирует битовую маску.
+ *
+ * @param bmp Указатель на указатель битовой маски.
+ * @param nbits Количество бит.
+ * @return 0 при успешной аллокации, иначе -1.
+ */
 int8_t bmp_alloc(BITMAP_T **bmp, uint16_t nbits)
 {
     if (NULL == (*bmp = calloc(1, sizeof(BITMAP_T))))

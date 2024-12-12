@@ -29,10 +29,18 @@
 #include <string.h>
 #include "avl.h"
 
-/* Creates and returns a new table
-   with comparison function |compare| using parameter |param|
-   and memory allocator |allocator|.
-   Returns |NULL| if memory allocation failed. */
+/**
+ * @brief Создаёт новое AVL-дерево.
+ *
+ * Функция инициализирует AVL-дерево с указанной функцией сравнения, параметром
+ * для сравнения и аллокатором памяти. Если аллокатор не указан, используется
+ * стандартный аллокатор.
+ *
+ * @param compare Указатель на функцию сравнения элементов.
+ * @param param Параметр, передаваемый в функцию сравнения.
+ * @param allocator Указатель на структуру аллокатора памяти или NULL для использования стандартного.
+ * @return Указатель на структуру дерева или NULL, если не удалось выделить память.
+ */
 struct avl_table *
 avl_create(avl_comparison_func *compare, void *param,
            struct libavl_allocator *allocator)
@@ -58,8 +66,16 @@ avl_create(avl_comparison_func *compare, void *param,
   return tree;
 }
 
-/* Search |tree| for an item matching |item|, and return it if found.
-   Otherwise return |NULL|. */
+/**
+ * @brief Выполняет поиск элемента в AVL-дереве.
+ *
+ * Функция возвращает указатель на элемент дерева, совпадающий с переданным, или NULL,
+ * если совпадений не найдено.
+ *
+ * @param tree Указатель на AVL-дерево.
+ * @param item Указатель на элемент для поиска.
+ * @return Указатель на найденный элемент или NULL, если элемент не найден.
+ */
 void *
 avl_find(const struct avl_table *tree, const void *item)
 {
@@ -81,10 +97,17 @@ avl_find(const struct avl_table *tree, const void *item)
   return NULL;
 }
 
-/* Inserts |item| into |tree| and returns a pointer to |item|'s address.
-   If a duplicate item is found in the tree,
-   returns a pointer to the duplicate without inserting |item|.
-   Returns |NULL| in case of memory allocation failure. */
+/**
+ * @brief Вставляет элемент в AVL-дерево.
+ *
+ * Если элемент с таким же ключом уже существует, функция возвращает указатель на него.
+ * В противном случае элемент добавляется в дерево, и функция возвращает указатель на
+ * его адрес в дереве.
+ *
+ * @param tree Указатель на AVL-дерево.
+ * @param item Указатель на элемент для вставки.
+ * @return Указатель на адрес элемента в дереве или NULL, если возникла ошибка.
+ */
 void **
 avl_probe(struct avl_table *tree, void *item)
 {
@@ -815,8 +838,16 @@ avl_copy(const struct avl_table *org, avl_copy_func *copy,
   }
 }
 
-/* Frees storage allocated for |tree|.
-   If |destroy != NULL|, applies it to each data item in inorder. */
+/**
+ * @brief Уничтожает AVL-дерево и освобождает всю связанную память.
+ *
+ * Функция проходит по дереву в порядке обхода и освобождает память каждого узла.
+ * Если передана функция `destroy`, она вызывается для каждого элемента перед
+ * освобождением памяти узла.
+ *
+ * @param tree Указатель на AVL-дерево.
+ * @param destroy Указатель на функцию для уничтожения данных элементов, может быть NULL.
+ */
 void avl_destroy(struct avl_table *tree, avl_item_func *destroy)
 {
   struct avl_node *p, *q;

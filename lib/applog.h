@@ -1,18 +1,12 @@
-/*
- * Copyright 2019 Broadcom. The term "Broadcom" refers to Broadcom Inc. and/or
- * its subsidiaries.
+/**
+ * @file applog.h
+ * @brief Application logging library.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * This library provides an interface for logging messages in applications.
+ * It supports various log levels and integrates with the system logger (syslog).
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Copyright 2019 Broadcom.
+ * Licensed under the Apache License, Version 2.0.
  */
 
 #ifndef _APPLOG_H_
@@ -29,24 +23,36 @@ int applog_get_config_level();
 int applog_get_init_status();
 int applog_write(int priority, const char *fmt, ...);
 
-#define APP_LOG_LEVEL_NONE (-1)
-#define APP_LOG_LEVEL_EMERG (0)   /* system is unusable */
-#define APP_LOG_LEVEL_ALERT (1)   /* action must be taken immediately */
-#define APP_LOG_LEVEL_CRIT (2)    /* critical conditions */
-#define APP_LOG_LEVEL_ERR (3)     /* error conditions */
-#define APP_LOG_LEVEL_WARNING (4) /* warning conditions */
-#define APP_LOG_LEVEL_NOTICE (5)  /* normal but significant condition */
-#define APP_LOG_LEVEL_INFO (6)    /* informational */
-#define APP_LOG_LEVEL_DEBUG (7)   /* debug-level messages */
+/**
+ * @defgroup APP_LOG_LEVELS Log Levels
+ * @brief Defines the log levels used by the application.
+ * @{
+ */
+#define APP_LOG_LEVEL_NONE (-1)   /**< No logging. */
+#define APP_LOG_LEVEL_EMERG (0)   /**< System is unusable. */
+#define APP_LOG_LEVEL_ALERT (1)   /**< Immediate action required. */
+#define APP_LOG_LEVEL_CRIT (2)    /**< Critical conditions. */
+#define APP_LOG_LEVEL_ERR (3)     /**< Error conditions. */
+#define APP_LOG_LEVEL_WARNING (4) /**< Warning conditions. */
+#define APP_LOG_LEVEL_NOTICE (5)  /**< Normal but significant condition. */
+#define APP_LOG_LEVEL_INFO (6)    /**< Informational messages. */
+#define APP_LOG_LEVEL_DEBUG (7)   /**< Debug-level messages. */
+/** @} */
 
 #define APP_LOG_LEVEL_MIN (APP_LOG_LEVEL_EMERG)
 #define APP_LOG_LEVEL_DEFAULT (APP_LOG_LEVEL_ERR)
 #define APP_LOG_LEVEL_MAX (APP_LOG_LEVEL_DEBUG)
 
-#define APP_LOG_STATUS_OK (0)
-#define APP_LOG_STATUS_FAIL (-1)
-#define APP_LOG_STATUS_INVALID_LEVEL (-2)
-#define APP_LOG_STATUS_LEVEL_DISABLED (-3)
+/**
+ * @defgroup APP_LOG_STATUSES Log Status Codes
+ * @brief Defines the status codes returned by logging functions.
+ * @{
+ */
+#define APP_LOG_STATUS_OK (0)              /**< Operation successful. */
+#define APP_LOG_STATUS_FAIL (-1)           /**< Operation failed. */
+#define APP_LOG_STATUS_INVALID_LEVEL (-2)  /**< Invalid log level. */
+#define APP_LOG_STATUS_LEVEL_DISABLED (-3) /**< Log level disabled. */
+/** @} */
 
 #define APP_LOG_INIT applog_init
 #define APP_LOG_DEINIT applog_deinit

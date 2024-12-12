@@ -15,6 +15,19 @@
  * limitations under the License.
  */
 
+/**
+ * @file applog.c
+ * @author your name (you@domain.com)
+ * @brief реализует подсистему для работы с журналированием в приложении.
+ * Эта подсистема позволяет инициализировать, конфигурировать,
+ * писать в системный журнал, а также завершать работу с логами.
+ * @version 0.1
+ * @date 2024-12-12
+ *
+ * @copyright Copyright (c) 2024
+ *
+ */
+
 #include <stdio.h>
 #include <unistd.h>
 #include <stdarg.h>
@@ -23,10 +36,19 @@
 
 #include "applog.h"
 
-int applog_level_map[APP_LOG_LEVEL_MAX + 2];
-int applog_config_level = APP_LOG_LEVEL_DEFAULT;
-int applog_inited = 0;
+int applog_level_map[APP_LOG_LEVEL_MAX + 2];     // Массив для сопоставления уровней пользовательских логов (например, APP_LOG_LEVEL_ERR) с уровнями системного журнала (LOG_ERR).
+int applog_config_level = APP_LOG_LEVEL_DEFAULT; // Хранит текущий конфигурационный уровень логирования.
+int applog_inited = 0;                           // Указывает, была ли подсистема логирования инициализирована
 
+/**
+ * @brief Инициализирует подсистему логирования.
+ * Заполняет массив applog_level_map, связывая уровни пользовательских логов с уровнями системного журнала (syslog).
+ * Вызывает функцию openlog, чтобы настроить системный журнал.
+ * Устанавливает уровень логирования по умолчанию (APP_LOG_LEVEL_DEFAULT).
+ * Устанавливает флаг applog_inited в 1, сигнализируя, что логирование инициализировано.
+ *
+ * @return int APP_LOG_STATUS_OK
+ */
 int applog_init()
 {
   memset(applog_level_map, 0, sizeof(applog_level_map));
@@ -49,11 +71,24 @@ int applog_init()
   return APP_LOG_STATUS_OK;
 }
 
+/**
+ * @brief Проверяет, была ли подсистема логирования инициализирована.
+ *
+ * @return int 1, если инициализировано, 0 — если нет
+ */
 int applog_get_init_status()
 {
   return applog_inited;
 }
 
+/**
+ * @brief Устанавливает конфигурационный уровень логирования.
+ * Проверяет, что переданный уровень находится в допустимом диапазоне.
+ * Если уровень валиден, сохраняет его в переменной applog_config_level.
+
+ * @param level
+ * @return int APP_LOG_STATUS_OK при успешной установке. APP_LOG_STATUS_INVALID_LEVEL при недопустимом уровне.
+ */
 int applog_set_config_level(int level)
 {
   if (level < APP_LOG_LEVEL_NONE || level > APP_LOG_LEVEL_MAX)
@@ -68,11 +103,29 @@ int applog_set_config_level(int level)
   return APP_LOG_STATUS_OK;
 }
 
+/**
+ * @brief Возвращает текущий уровень логирования (applog_config_level).
+ *
+ * @return int
+ */
 int applog_get_config_level()
 {
   return applog_config_level;
 }
 
+/**
+ * @brief Основная функция для записи в журнал
+ * Проверяет, что переданный уровень валиден и не превышает текущий уровень конфигурации.
+ * Преобразует уровень в системный приоритет через applog_level_map.
+ * спользует vsyslog для записи форматированной строки в журнал
+ *
+ * @param level
+ * @param fmt
+ * @param ...
+ * @return int APP_LOG_STATUS_OK при успешной записи.
+ * APP_LOG_STATUS_INVALID_LEVEL, если уровень недопустим.
+ * APP_LOG_STATUS_LEVEL_DISABLED, если уровень ниже текущего уровня конфигурации.
+ */
 int applog_write(int level, const char *fmt, ...)
 {
   int priority;
@@ -97,6 +150,12 @@ int applog_write(int level, const char *fmt, ...)
   return APP_LOG_STATUS_OK;
 }
 
+/**
+ * @brief Закрывает подсистему логирования.
+ * Сбрасывает уровень конфигурации на значение по умолчанию.
+ *
+ * @return int 0
+ */
 int applog_deinit()
 {
   int status = 0;
