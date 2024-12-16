@@ -1,18 +1,10 @@
-/*
- * Copyright 2019 Broadcom. The term "Broadcom" refers to Broadcom Inc. and/or
- * its subsidiaries.
+/**
+ * @file stp_main.h
+ * @brief Заголовочный файл для основного демона stpd
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * @details
+ * Содержит основные рабочие структуры и определения для демона STP
  */
 
 #ifndef _STP_MAIN_H_
@@ -108,6 +100,10 @@ struct netlink_db_s;
 #define STP_LIBEV_HIGH_PRI_Q 0
 #define STP_LIBEV_LOW_PRI_Q 1
 
+/**
+ * @struct stp_if_avl_node_t
+ * @brief Нода дерева AVL с параметрами интерфейса и мака для хранения в отсортированном виде.
+ */
 typedef struct
 {
     char ifname[IFNAMSIZ];    // Имя интерфейса, читаемое человеком, например, "Ethernet0" или "Vlan10"
@@ -129,6 +125,10 @@ typedef struct
 #define STPD_INCR_PKT_COUNT(x, y) (g_stpd_intf_stats[x]->y)++
 #define STPD_GET_PKT_COUNT(x, y) (g_stpd_intf_stats[x]->y)
 
+/**
+ * @struct STPD_LIBEV_STATS
+ * @brief Вектор статистики для библиотеки libevent
+ */
 typedef struct
 {
     uint16_t no_of_sockets; // Хранит текущее количество активных сокетов, зарегистрированных в библиотеке libevent.
@@ -138,6 +138,10 @@ typedef struct
     uint64_t netlink;       // Количество событий Netlink, обработанных демоном STP.
 } STPD_LIBEV_STATS;
 
+/**
+ * @struct STPD_INTF_STATS
+ * @brief Вектор статистики для интерфейса
+ */
 typedef struct
 {
     uint64_t pkt_rx;           // Счетчик принятых пакетов через интерфейс
@@ -147,12 +151,20 @@ typedef struct
     uint64_t pkt_tx_err;       // Общее количество ошибок при передаче пакетов.
 } STPD_INTF_STATS;
 
+/**
+ * @struct STPD_DEBUG_STATS
+ * @brief Вектор статистики для отладки демона stpd
+ */
 typedef struct
 {
     STPD_INTF_STATS **intf; // Двумерный массив указателей на объекты типа STPD_INTF_STATS, где каждый элемент хранит статистику для конкретного интерфейса.
     STPD_LIBEV_STATS libev; // Статистика, связанная с работой библиотеки libevent. Включает данные о количестве активных сокетов, таймерах, обработанных пакетах, IPC, и событиях Netlink.
 } STPD_DEBUG_STATS;
 
+/**
+ * @struct STPD_CONTEXT
+ * @brief Вектор параметров для демона stpd
+ */
 typedef struct STPD_CONTEXT
 {
     /*Libevent base to monitor all socket Fd's*/
@@ -192,8 +204,8 @@ typedef struct STPD_CONTEXT
 extern char msgtype_str[][64];
 
 // Function declaration
-int stpmgr_avl_compare(const void *user_p, const void *data_p, void *param);
-void stpmgr_interface_update(struct netlink_db_s *if_db, uint8_t add);
-uint32_t stpmgr_update_if_avl_tree(struct netlink_db_s *if_db, uint8_t add);
-void stpmgr_update_portclass(uint32_t port_id, struct netlink_db_s *if_db, uint8_t add);
+int stpmgr_avl_compare(const void *user_p, const void *data_p, void *param);             // сравнение данных в дереве
+void stpmgr_interface_update(struct netlink_db_s *if_db, uint8_t add);                   // обновление интерфейса через netlink_db_s
+uint32_t stpmgr_update_if_avl_tree(struct netlink_db_s *if_db, uint8_t add);             // обновление интерфейса в дереве
+void stpmgr_update_portclass(uint32_t port_id, struct netlink_db_s *if_db, uint8_t add); // обновление через мэнеджер
 #endif

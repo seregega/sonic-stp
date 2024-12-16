@@ -1,18 +1,12 @@
-/*
- * Copyright 2019 Broadcom. The term "Broadcom" refers to Broadcom Inc. and/or
- * its subsidiaries.
+/**
+ * @file stp_timer.h
+ * @brief Заголовочный файл для работы с таймерами linux
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Содержит определения структур, констант, перечислений и макросов,
+ * используемых для управления таймерами и задержками
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * @copyright 2019 Broadcom.
+ * @license Apache License, Version 2.0.
  */
 
 #ifndef __STP_TIMER_H__
@@ -31,23 +25,35 @@
  * - For an example routine, look at the comment at the end of this file
  */
 
+/**
+ * @struct TIMER
+ * @brief Структура для управления таймерами.
+ */
 typedef struct TIMER
 {
-	UINT32 active : 1;
-	UINT32 value : 31;
+	UINT32 active : 1; // флаг статуса таймера
+	UINT32 value : 31; // поле тиков таймера
 } TIMER;
 
-uint32_t sys_get_seconds();
+uint32_t sys_get_seconds(); // функция для получения значения секунд из тиков?
 /*
  * start_timer()
  *		this function initializes the timer to the input start_value_in_ticks
  *		and marks it as an active timer.
  */
+
+/**
+ * @brief Функция для инициализации и запуска таймера с заданным начальным значением
+ *
+ * @param timer указатель на структуру таймера
+ * @param start_value_in_ticks начальное значение
+ */
 void start_timer(TIMER *timer, UINT32 start_value_in_ticks);
 
-/*
- * stop_timer()
- *		this function stops the timer and marks it as an inactive timer
+/**
+ * @brief останавливает таймер и обновляет статус
+ *
+ * @param timer указатель на структуру таймера
  */
 void stop_timer(TIMER *timer);
 
@@ -60,18 +66,36 @@ void stop_timer(TIMER *timer);
  *		  timer_limit_in_ticks. if it exceeds or equal to the limit, stops the
  *		  timer and returns TRUE, other wise returns FALSE
  */
+
+/**
+ * @brief вызывается каждый системный тик
+ *
+ * @param timer указатель на структуру таймера
+ * @param timer_limit_in_ticks if the timer is active, this function increments the timer value
+ * by 1. after incrementing, checks if the timer value exceeds the
+ * timer_limit_in_ticks. if it exceeds or equal to the limit, stops the
+ * timer and returns TRUE, other wise returns FALSE
+ * @return true
+ * @return false if the timer is inactive, this function will return FALSE
+ */
 bool timer_expired(TIMER *timer, UINT32 timer_limit_in_ticks);
 
-/*
- * is_timer_active()
- *		returns TRUE if the timer is active, else returns FALSE
+/**
+ * @brief возвращает состояние таймера
+ *
+ * @param timer указатель на структуру таймера
+ * @return true returns TRUE if the timer is active
+ * @return false  else returns FALSE
  */
 bool is_timer_active(TIMER *timer);
 
-/*
- * get_timer_value()
- *		fills in the the current value of the timer in ticks, return FALSE
- *		if the timer is inactive.
+/**
+ * @brief Get the timer value object
+ *
+ * @param timer указатель на структуру таймера
+ * @param value_in_ticks fills in the the current value of the timer in ticks
+ * @return true
+ * @return false return FALSE if the timer is inactive
  */
 bool get_timer_value(TIMER *timer, UINT32 *value_in_ticks);
 

@@ -1,18 +1,12 @@
-/*
- * Copyright 2019 Broadcom. The term "Broadcom" refers to Broadcom Inc. and/or
- * its subsidiaries.
+/**
+ * @file stp_netlink.h
+ * @brief Заголовочный файл для работы с сокетами netlink
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Содержит определения структур, констант, перечислений и макросов,
+ * используемых для управления таймерами и задержками
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * @copyright 2019 Broadcom.
+ * @license Apache License, Version 2.0.
  */
 
 #ifndef __STP_NETLINK_H__
@@ -71,6 +65,13 @@
 // TODO: remove once linux version is upgraded
 #define IFLA_INFO_SLAVE_KIND 4
 
+/**
+ * @struct netlink_db_t
+ * @brief Вектор состояния для работы с netlink
+ *
+ * Содержит общие параметры и данные, необходимые для работы протокола STP,
+ * включая настройки глобального состояния, статистику и маски портов.
+ */
 typedef struct netlink_db_s
 {
     uint32_t kif_index;       // kernel if index Уникальный идентификатор интерфейса в ядре Linux, предоставляемый Netlink.
@@ -95,10 +96,10 @@ typedef struct netlink_db_s
 typedef void stp_netlink_cb_ptr(netlink_db_t *if_db, uint8_t add, bool init_in_prog);
 extern stp_netlink_cb_ptr *stp_netlink_cb;
 
-#define PRINT_MAC_FORMAT "%02hhx:%02hhx:%02hhx:%02hhx:%02hhx:%02hhx"
+#define PRINT_MAC_FORMAT "%02hhx:%02hhx:%02hhx:%02hhx:%02hhx:%02hhx" // маска для вывода мак адреса
 #define PRINT_MAC_VAL(x) *(char *)x, *((char *)x) + 1, *((char *)x) + 2, *((char *)x) + 3, *((char *)x) + 4, *((char *)x) + 5
 
-int stp_netlink_init(stp_netlink_cb_ptr *fn);
+int stp_netlink_init(stp_netlink_cb_ptr *fn); // инициализация stp
 int stp_netlink_recv_all(int fd);
 int stp_netlink_recv_msg(int fd);
 void stp_netlink_event_mgr_init();

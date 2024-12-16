@@ -184,9 +184,13 @@ typedef struct
 	PORT_MASK *port_mask; /**< Маска портов для отладки. */
 } DEBUG_STP;
 
+/**
+ * @struct DEBUG_GLOBAL
+ * @brief Структура - отладочный вектор stp
+ */
 typedef struct DEBUG_GLOBAL_TAG
 {
-	DEBUG_STP stp;
+	DEBUG_STP stp; // отладочный вектор stp
 } DEBUG_GLOBAL;
 extern DEBUG_GLOBAL debugGlobal;
 
@@ -238,6 +242,10 @@ enum STP_CLASS_STATE
  * NOTE: if fields are added to this enum, please also add them
  * to stp_log_msg_src_string defined in stp_debug.c
  */
+/**
+ * @enum STP_LOG_MSG_SRC
+ * @brief состояния интерфейса в логе STP
+ */
 enum STP_LOG_MSG_SRC
 {
 	STP_SRC_NOT_IMPORTANT = 0,
@@ -251,6 +259,10 @@ enum STP_LOG_MSG_SRC
 	STP_ROOT_SELECTION
 };
 
+/**
+ * @enum STP_KERNEL_STATE
+ * @brief состояния интерфейса в ядре STP
+ */
 enum STP_KERNEL_STATE
 {
 	STP_KERNEL_STATE_FORWARD = 1,
@@ -264,7 +276,7 @@ enum STP_KERNEL_STATE
  * Эта структура содержит информацию о корневом мосте, портах, стоимости пути и других параметрах,
  * связанных с топологией и состоянием моста.
  */
-typedef struct
+typedef struct BRIDGE_DATA
 {
 	BRIDGE_IDENTIFIER root_id;			/**< Идентификатор корневого моста. */
 	UINT32 root_path_cost;				/**< Стоимость пути до корневого моста. */
@@ -305,7 +317,7 @@ typedef struct
  * Структура описывает параметры и состояние экземпляра STP, связанные с VLAN,
  * включая информацию о мосте, маски портов, таймеры и статистику.
  */
-typedef struct
+typedef struct STP_CLASS
 {
 	VLAN_ID vlan_id;			 /**< Идентификатор VLAN для экземпляра (тип UINT16). */
 	UINT16 fast_aging : 1;		 /**< Флаг быстрого старения записей. */
@@ -327,7 +339,11 @@ typedef struct
 	UINT32 modified_fields; /**< Поля, которые были изменены, обозначаются соответствующими битами. */
 } __attribute__((__packed__)) STP_CLASS;
 
-typedef struct
+/**
+ * @struct STP_PORT_CLASS
+ * @brief Вектор состояния для порта в  stp
+ */
+typedef struct STP_PORT_CLASS
 {
 	PORT_IDENTIFIER port_id;			   /**< Уникальный идентификатор порта. */
 	UINT8 state;						   /**< Текущее состояние порта (например, BLOCKING, FORWARDING). */
@@ -386,7 +402,7 @@ typedef struct
  * Содержит общие параметры и данные, необходимые для работы протокола STP,
  * включая настройки глобального состояния, статистику и маски портов.
  */
-typedef struct
+typedef struct STP_GLOBAL
 {
 	UINT16 max_instances;				/**< Максимальное количество экземпляров STP. */
 	UINT16 active_instances;			/**< Количество активных экземпляров STP. */
