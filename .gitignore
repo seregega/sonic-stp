@@ -1,3 +1,5 @@
 .Doxygen_doc/*
 html/*
 latex/*
+stpctl/html/*
+stpctl/latex/*
