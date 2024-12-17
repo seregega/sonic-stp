@@ -1,53 +1,74 @@
-/*
- * Copyright 2019 Broadcom. The term "Broadcom" refers to Broadcom Inc. and/or
- * its subsidiaries.
+/**
+ * @file stpctl.c
+ * @brief Программа клиента для управления демоном STP.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Этот файл содержит реализацию команд клиента для взаимодействия с демоном STP
+ * через IPC-сокет. Поддерживаются команды для отладки, управления VLAN и портами,
+ * а также запросы на получение статистики.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * @copyright 2019 Broadcom.
+ * @license Apache License, Version 2.0
  */
 #include "stpctl.h"
 
 #define cmd_max STP_CTL_MAX
-CMD_LIST g_cmd_list[] = {
-    "help",
-    STP_CTL_HELP,
-    "all",
-    STP_CTL_DUMP_ALL,
-    "global",
-    STP_CTL_DUMP_GLOBAL,
-    "vlan",
-    STP_CTL_DUMP_VLAN,
-    "port",
-    STP_CTL_DUMP_INTF,
-    "dbglvl",
-    STP_CTL_SET_LOG_LVL,
-    "nldb",
-    STP_CTL_DUMP_NL_DB,
-    "nlintf",
-    STP_CTL_DUMP_NL_DB_INTF,
-    "lstats",
-    STP_CTL_DUMP_LIBEV_STATS,
-    "dbg",
-    STP_CTL_SET_DBG,
-    "clrstsall",
-    STP_CTL_CLEAR_ALL,
-    "clrstsvlan",
-    STP_CTL_CLEAR_VLAN,
-    "clrstsintf",
-    STP_CTL_CLEAR_INTF,
-    "clrstsvlanintf",
-    STP_CTL_CLEAR_VLAN_INTF,
-};
 
+/**
+ * @var CMD_LIST g_cmd_list[]
+ * @brief Список команд для управления STP.
+ */
+CMD_LIST g_cmd_list[] = {
+    {"help", STP_CTL_HELP},
+    {"all", STP_CTL_DUMP_ALL},
+    {"global", STP_CTL_DUMP_GLOBAL},
+    {"vlan", STP_CTL_DUMP_VLAN},
+    {"port", STP_CTL_DUMP_INTF},
+    {"dbglvl", STP_CTL_SET_LOG_LVL},
+    {"nldb", STP_CTL_DUMP_NL_DB},
+    {"nlintf", STP_CTL_DUMP_NL_DB_INTF},
+    {"lstats", STP_CTL_DUMP_LIBEV_STATS},
+    {"dbg", STP_CTL_SET_DBG},
+    {"clrstsall", STP_CTL_CLEAR_ALL},
+    {"clrstsvlan", STP_CTL_CLEAR_VLAN},
+    {"clrstsintf", STP_CTL_CLEAR_INTF},
+    {"clrstsvlanintf", STP_CTL_CLEAR_VLAN_INTF},
+};
+// CMD_LIST g_cmd_list[] = {
+//     "help",
+//     STP_CTL_HELP,
+//     "all",
+//     STP_CTL_DUMP_ALL,
+//     "global",
+//     STP_CTL_DUMP_GLOBAL,
+//     "vlan",
+//     STP_CTL_DUMP_VLAN,
+//     "port",
+//     STP_CTL_DUMP_INTF,
+//     "dbglvl",
+//     STP_CTL_SET_LOG_LVL,
+//     "nldb",
+//     STP_CTL_DUMP_NL_DB,
+//     "nlintf",
+//     STP_CTL_DUMP_NL_DB_INTF,
+//     "lstats",
+//     STP_CTL_DUMP_LIBEV_STATS,
+//     "dbg",
+//     STP_CTL_SET_DBG,
+//     "clrstsall",
+//     STP_CTL_CLEAR_ALL,
+//     "clrstsvlan",
+//     STP_CTL_CLEAR_VLAN,
+//     "clrstsintf",
+//     STP_CTL_CLEAR_INTF,
+//     "clrstsvlanintf",
+//     STP_CTL_CLEAR_VLAN_INTF,
+// };
+
+/**
+ * @brief Выводит список поддерживаемых команд.
+ *
+ * Функция перебирает массив команд и выводит их в стандартный вывод.
+ */
 void print_cmds()
 {
     int i;
@@ -56,6 +77,12 @@ void print_cmds()
         stpout("stpctl %s\n", g_cmd_list[i].cmd_name);
 }
 
+/**
+ * @brief Возвращает тип команды по её имени.
+ *
+ * @param name Имя команды.
+ * @return Тип команды или -1, если команда не найдена.
+ */
 int get_cmd_type(char *name)
 {
     int i;
@@ -69,6 +96,12 @@ int get_cmd_type(char *name)
     return -1;
 }
 
+/**
+ * @brief Устанавливает соединение с сервером STP.
+ *
+ * Создаёт и привязывает UNIX-сокет для общения с сервером.
+ * @return 0 при успехе или -1 в случае ошибки.
+ */
 int connect_server()
 {
     int ret;
@@ -97,6 +130,14 @@ int connect_server()
     }
 }
 
+/**
+ * @brief Отправляет сообщение демону STP.
+ *
+ * @param msgType Тип сообщения.
+ * @param msgLen Длина сообщения.
+ * @param data Указатель на данные сообщения.
+ * @return Код возврата функции sendto или -1 при ошибке.
+ */
 int send_msg_stpd(STP_MSG_TYPE msgType, uint32_t msgLen, void *data)
 {
     STP_IPC_MSG *tx_msg;
@@ -130,6 +171,13 @@ int send_msg_stpd(STP_MSG_TYPE msgType, uint32_t msgLen, void *data)
     return rc;
 }
 
+/**
+ * @brief Обрабатывает аргументы командной строки и отправляет команду.
+ *
+ * @param argc Количество аргументов.
+ * @param argv Массив аргументов.
+ * @return 0 при успехе или -1 при ошибке.
+ */
 int send_command(int argc, char **argv)
 {
     char *end_ptr = 0;
@@ -423,6 +471,11 @@ int send_command(int argc, char **argv)
     return 0;
 }
 
+/**
+ * @brief Отображает ответ, полученный от демона STP.
+ *
+ * Читает и выводит содержимое файла `/var/log/stp_dmp.log`.
+ */
 void display_resp()
 {
     FILE *fp = fopen("/var/log/stp_dmp.log", "r");
@@ -446,6 +499,16 @@ void display_resp()
         free(line);
 }
 
+/**
+ * @brief Точка входа в программу.
+ *
+ * Обрабатывает аргументы командной строки, подключается к серверу STP,
+ * отправляет команду и отображает результат.
+ *
+ * @param argc Количество аргументов командной строки.
+ * @param argv Массив аргументов командной строки.
+ * @return 0 при успехе, -1 при ошибке.
+ */
 int main(int argc, char **argv)
 {
     int ch;

@@ -1,18 +1,12 @@
-/*
- * Copyright 2019 Broadcom. The term "Broadcom" refers to Broadcom Inc. and/or
- * its subsidiaries.
+/**
+ * @file stpctl.h
+ * @brief Заголовочный файл для клиентских команд управления STP.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Содержит определения макросов, структур и глобальных переменных,
+ * используемых для взаимодействия с демоном STP через IPC-сокет.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * @copyright 2019 Broadcom
+ * @license Apache License, Version 2.0
  */
 
 #include <stdio.h>
@@ -27,13 +21,39 @@
 #include <stddef.h>
 #include <errno.h>
 
+/**
+ * @def STP_CLIENT_SOCK
+ * @brief Путь к UNIX-сокету клиента STP.
+ *
+ * Этот сокет используется для связи клиента с демоном STP.
+ */
 #define STP_CLIENT_SOCK "/var/run/client.sock"
+
+/**
+ * @def stpout
+ * @brief Макрос для вывода сообщений в стандартный поток вывода.
+ *
+ * @param fmt Формат строки вывода, совместимый с printf.
+ * @param ... Дополнительные аргументы для форматирования строки.
+ */
 #define stpout(fmt, ...) fprintf(stdout, fmt, ##__VA_ARGS__)
 
+/**
+ * @var stpd_fd
+ * @brief Дескриптор сокета для связи с демоном STP.
+ *
+ * Используется для отправки команд и получения ответов от демона STP.
+ */
 int stpd_fd;
 
+/**
+ * @struct CMD_LIST
+ * @brief Структура для хранения информации о командах STP.
+ *
+ * Используется для управления и обработки клиентских команд.
+ */
 typedef struct CMD_LIST
 {
-    char cmd_name[32];
-    int cmd_type;
+    char cmd_name[32]; /**< Имя команды (максимум 32 символа). */
+    int cmd_type;      /**< Тип команды (определённый числовой код). */
 } CMD_LIST;
