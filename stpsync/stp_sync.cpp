@@ -1,19 +1,20 @@
-/*
- * Copyright 2019 Broadcom. The term "Broadcom" refers to Broadcom Inc. and/or
- * its subsidiaries.
+/**
+ * @file stp_sync.cpp
+ * @brief Реализация функций для синхронизации данных STP с базой данных.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Этот файл содержит реализацию методов класса `StpSync` и интерфейса C для
+ * управления VLAN, портами и состояниями STP в базе данных.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * @details
+ * Реализован функционал для взаимодействия с базами данных конфигурации и состояния
+ * через таблицы APP DB и CONFIG DB. Методы предоставляют средства добавления,
+ * удаления и обновления данных VLAN и портов.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * @see stp_sync.h
+ * @copyright
+ * Broadcom, 2019. Лицензия Apache License 2.0.
  */
+
 #include <string.h>
 #include <errno.h>
 #include <system_error>
@@ -28,6 +29,14 @@
 using namespace std;
 using namespace swss;
 
+/**
+ * @brief Конструктор класса StpSync.
+ *
+ * Инициализирует таблицы состояния и конфигурации для работы с базами данных.
+ *
+ * @param db Указатель на подключение к базе данных состояния.
+ * @param cfgDb Указатель на подключение к базе данных конфигурации.
+ */
 StpSync::StpSync(DBConnector *db, DBConnector *cfgDb) : m_stpVlanTable(db, APP_STP_VLAN_TABLE_NAME),
                                                         m_stpVlanPortTable(db, APP_STP_VLAN_PORT_TABLE_NAME),
                                                         m_stpVlanInstanceTable(db, APP_STP_VLAN_INSTANCE_TABLE_NAME),
@@ -49,87 +58,278 @@ StpSync stpsync(&db, &cfgDb);
 extern "C"
 {
 
+    /**
+     * @brief Добавляет VLAN в экземпляр STP.
+     * @param vlan_id Идентификатор VLAN.
+     * @param instance Идентификатор экземпляра STP.
+     */
     void stpsync_add_vlan_to_instance(uint16_t vlan_id, uint16_t instance)
     {
         stpsync.addVlanToInstance(vlan_id, instance);
     }
 
+    /**
+     * @brief Удаляет VLAN из экземпляра STP.
+     * @param vlan_id Идентификатор VLAN.
+     * @param instance Идентификатор экземпляра STP.
+     */
     void stpsync_del_vlan_from_instance(uint16_t vlan_id, uint16_t instance)
     {
         stpsync.delVlanFromInstance(vlan_id, instance);
     }
 
+    /**
+     * @brief Обновляет информацию экземпляра STP для указанного VLAN.
+     *
+     * Функция обновляет параметры экземпляра STP, такие как состояние, данные моста,
+     * таймеры и другую информацию на основе переданных данных VLAN.
+     * Используется для синхронизации изменений с базой данных STP.
+     *
+     * @param stp_vlan Указатель на структуру `STP_VLAN_TABLE`, содержащую данные VLAN.
+     *                 Включает информацию о VLAN ID, состоянии и параметрах моста.
+     *
+     * @return void
+     */
     void stpsync_update_stp_class(STP_VLAN_TABLE *stp_vlan)
     {
         stpsync.updateStpVlanInfo(stp_vlan);
     }
 
+    /**
+     * @brief Удаляет экземпляр STP, связанный с указанным VLAN.
+     *
+     * Функция удаляет данные STP, связанные с определённым VLAN,
+     * из базы данных и освобождает ресурсы, связанные с этим экземпляром STP.
+     *
+     * @param vlan_id Идентификатор VLAN, для которого требуется удалить экземпляр STP.
+     *
+     * @return void
+     */
     void stpsync_del_stp_class(uint16_t vlan_id)
     {
         stpsync.delStpVlanInfo(vlan_id);
     }
 
+    /**
+     * @brief Удаляет экземпляр STP, связанный с указанным VLAN.
+     *
+     * Функция удаляет данные STP, связанные с определённым VLAN,
+     * из базы данных и освобождает ресурсы, связанные с этим экземпляром STP.
+     *
+     * @param vlan_id Идентификатор VLAN, для которого требуется удалить экземпляр STP.
+     *
+     * @return void
+     */
     void stpsync_update_port_class(STP_VLAN_PORT_TABLE *stp_vlan_intf)
     {
         stpsync.updateStpVlanInterfaceInfo(stp_vlan_intf);
     }
 
+    /**
+     * @brief Удаляет информацию о порте VLAN из STP.
+     *
+     * Функция удаляет данные, связанные с указанным портом VLAN, из базы данных STP.
+     * Используется для освобождения ресурсов и синхронизации изменений конфигурации.
+     *
+     * @param if_name Указатель на строку, содержащую имя интерфейса.
+     *                Например, `Ethernet0`.
+     * @param vlan_id Идентификатор VLAN, к которому относится порт.
+     *
+     * @return void
+     */
     void stpsync_del_port_class(char *if_name, uint16_t vlan_id)
     {
         stpsync.delStpVlanInterfaceInfo(if_name, vlan_id);
     }
 
+    /**
+     * @brief Обновляет состояние порта STP в экземпляре.
+     *
+     * Функция обновляет текущее состояние указанного порта STP для определённого экземпляра.
+     * Используется для синхронизации изменений состояния с базой данных STP.
+     *
+     * @param ifName Имя интерфейса (порта), например, `Ethernet0`.
+     * @param instance Идентификатор экземпляра STP (например, VLAN ID или MSTI).
+     * @param state Новое состояние порта, например, `STP_PORT_FORWARDING`.
+     *
+     * @return void
+     */
     void stpsync_update_port_state(char *ifName, uint16_t instance, uint8_t state)
     {
         stpsync.updateStpPortState(ifName, instance, state);
     }
 
+    /**
+     * @brief Удаляет состояние порта STP для указанного экземпляра.
+     *
+     * Функция удаляет данные о состоянии порта STP для определённого экземпляра,
+     * например, VLAN или MSTI. Используется для синхронизации изменений конфигурации
+     * и освобождения ресурсов.
+     *
+     * @param ifName Имя интерфейса (порта), например, `Ethernet0`.
+     * @param instance Идентификатор экземпляра STP (например, VLAN ID или MSTI).
+     *
+     * @return void
+     */
     void stpsync_del_port_state(char *ifName, uint16_t instance)
     {
         stpsync.delStpPortState(ifName, instance);
     }
 
 #if 0
+/**
+ * @brief Обновляет состояние порта VLAN в STP.
+ *
+ * Функция обновляет текущее состояние указанного порта, связанного с VLAN,
+ * в базе данных STP. Используется для синхронизации состояния порта
+ * с конфигурацией STP.
+ *
+ * @param ifName Имя интерфейса (порта), например, `Ethernet0`.
+ * @param vlan_id Идентификатор VLAN, к которому относится порт.
+ * @param state Новое состояние порта, например, `STP_PORT_FORWARDING`.
+ *
+ * @return void
+ */
     void stpsync_update_vlan_port_state(char * ifName, uint16_t vlan_id, uint8_t state)
     {
         stpsync.updateStpVlanPortState(ifName, vlan_id, state);
     }
     
+    /**
+ * @brief Удаляет состояние порта VLAN в STP.
+ *
+ * Функция удаляет данные о состоянии указанного порта, связанного с VLAN,
+ * из базы данных STP. Используется для очистки данных при изменении
+ * конфигурации или удалении VLAN.
+ *
+ * @param ifName Имя интерфейса (порта), например, `Ethernet0`.
+ * @param vlan_id Идентификатор VLAN, к которому относится порт.
+ *
+ * @return void
+ */
     void stpsync_del_vlan_port_state(char * ifName, uint16_t vlan_id)
     {
         stpsync.delStpVlanPortState(ifName, vlan_id);
     }
 #endif
+    /**
+     * @brief Обновляет состояние быстрого старения (Fast Aging) для указанного VLAN.
+     *
+     * Функция добавляет или удаляет VLAN в список быстрого старения в зависимости
+     * от значения параметра `add`. Используется для управления конфигурацией
+     * режима Fast Aging.
+     *
+     * @param vlan_id Идентификатор VLAN, для которого обновляется состояние.
+     * @param add Логическое значение, указывающее действие:
+     *            - `true` для добавления VLAN в режим быстрого старения.
+     *            - `false` для удаления VLAN из режима быстрого старения.
+     *
+     * @return void
+     */
     void stpsync_update_fastage_state(uint16_t vlan_id, bool add)
     {
         stpsync.updateStpVlanFastage(vlan_id, add);
     }
 
+    /**
+     * @brief Обновляет административное состояние порта.
+     *
+     * Функция обновляет административное состояние указанного порта (включён или выключен)
+     * и применяет изменения для физических или виртуальных портов в базе данных STP.
+     *
+     * @param ifName Имя интерфейса (порта), например, `Ethernet0`.
+     * @param up Логическое значение, указывающее состояние:
+     *           - `true` для включения порта.
+     *           - `false` для отключения порта.
+     * @param physical Логическое значение, указывающее тип порта:
+     *                 - `true` для физического порта.
+     *                 - `false` для виртуального порта.
+     *
+     * @return void
+     */
     void stpsync_update_port_admin_state(char *ifName, bool up, bool physical)
     {
         stpsync.updatePortAdminState(ifName, up, physical);
     }
 
+    /**
+     * @brief Получает скорость порта.
+     *
+     * Функция возвращает текущую скорость указанного интерфейса (порта) в Мбит/с.
+     * Используется для получения информации о производительности порта в контексте STP.
+     *
+     * @param ifName Имя интерфейса (порта), например, `Ethernet0`.
+     *
+     * @return uint32_t Скорость порта в Мбит/с.
+     *         - Возвращает `0`, если интерфейс не найден или произошла ошибка.
+     */
     uint32_t stpsync_get_port_speed(char *ifName)
     {
         return stpsync.getPortSpeed(ifName);
     }
 
+    /**
+     * @brief Обновляет состояние защиты BPDU (BPDU Guard) для указанного интерфейса.
+     *
+     * Функция включает или отключает защиту BPDU Guard для указанного порта.
+     * Если защита активирована и обнаружено BPDU, порт будет переведён в состояние shutdown.
+     *
+     * @param ifName Имя интерфейса (порта), например, `Ethernet0`.
+     * @param enabled Логическое значение:
+     *                - `true` для включения BPDU Guard.
+     *                - `false` для отключения BPDU Guard.
+     *
+     * @return void
+     */
     void stpsync_update_bpdu_guard_shutdown(char *ifName, bool enabled)
     {
         stpsync.updateBpduGuardShutdown(ifName, enabled);
     }
 
+    /**
+     * @brief Обновляет состояние Fast Port для указанного интерфейса.
+     *
+     * Функция включает или отключает режим Fast Port для указанного порта.
+     * Режим Fast Port позволяет порту сразу переходить в состояние пересылки (Forwarding),
+     * минуя стандартные задержки STP, такие как Listening и Learning.
+     *
+     * @param ifName Имя интерфейса (порта), например, `Ethernet0`.
+     * @param enabled Логическое значение:
+     *                - `true` для включения Fast Port.
+     *                - `false` для отключения Fast Port.
+     *
+     * @return void
+     */
     void stpsync_update_port_fast(char *ifName, bool enabled)
     {
         stpsync.updatePortFast(ifName, enabled);
     }
 
+    /**
+     * @brief Удаляет порт STP из базы данных.
+     *
+     * Функция удаляет данные порта STP для указанного интерфейса из базы данных STP
+     * и очищает связанные локальные структуры. Используется при удалении порта
+     * или его отключении в сети.
+     *
+     * @param ifName Имя интерфейса (порта), например, `Ethernet0`.
+     *
+     * @return void
+     */
     void stpsync_del_stp_port(char *ifName)
     {
         stpsync.delStpInterface(ifName);
     }
 
+    /**
+     * @brief Очищает таблицы STP в базе данных приложения (APP DB).
+     *
+     * Функция удаляет все записи из таблиц STP в базе данных приложения.
+     * Используется для сброса состояния STP при перезапуске демона или
+     * изменении конфигурации.
+     *
+     * @return void
+     */
     void stpsync_clear_appdb_stp_tables(void)
     {
         stpsync.clearAllStpAppDbTables();
