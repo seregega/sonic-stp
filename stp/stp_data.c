@@ -1,18 +1,23 @@
-/*
- * Copyright 2019 Broadcom. The term "Broadcom" refers to Broadcom Inc. and/or
- * its subsidiaries.
+/**
+ * @file stp_data.c
+ * @brief Реализация функций управления данными STP.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Этот файл содержит функции для управления глобальными структурами STP,
+ * инициализации масок портов, экземпляров STP, а также работы с
+ * BPDU и отладочными структурами.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * @details
+ * В файле реализованы основные функции, используемые для конфигурации
+ * и управления данными протокола STP (Spanning Tree Protocol), включая:
+ * - Инициализация глобальных и локальных структур STP.
+ * - Управление экземплярами STP и их связями с VLAN.
+ * - Работа с портами STP и их параметрами.
+ * - Обработка данных BPDU и конфигурация отладочных структур.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * @author
+ * Broadcom, 2019. Лицензия Apache License 2.0.
+ *
+ * @see stp_data.h
  */
 
 #include "stp_inc.h"
@@ -24,6 +29,14 @@ STP_GLOBAL stp_global;
 uint32_t g_max_stp_port;
 uint16_t g_stp_bmp_po_offset;
 
+/**
+ * @brief Инициализирует глобальную маску портов STP.
+ *
+ * Функция выделяет память для различных глобальных масок портов и
+ * инициализирует их. По умолчанию маски быстрого соединения активированы.
+ *
+ * @return int8_t Возвращает 0 при успешной инициализации, иначе -1.
+ */
 int8_t stpdata_init_global_port_mask()
 {
 	int8_t ret = 0;
@@ -44,6 +57,15 @@ int8_t stpdata_init_global_port_mask()
 	return ret;
 }
 
+/**
+ * @brief Инициализирует маску портов для экземпляра STP.
+ *
+ * Функция выделяет память для масок портов, связанных с заданным
+ * экземпляром STP.
+ *
+ * @param stp_index Индекс экземпляра STP.
+ * @return int8_t Возвращает 0 при успешной инициализации, иначе -1.
+ */
 int8_t stpdata_init_stp_class_port_mask(STP_INDEX stp_index)
 {
 	int8_t ret = 0;
@@ -57,11 +79,14 @@ int8_t stpdata_init_stp_class_port_mask(STP_INDEX stp_index)
 	return ret;
 }
 
-/* FUNCTION
- *		stpdata_init_global_structures()
+/**
+ * @brief Инициализирует глобальные структуры STP.
  *
- * SYNOPSIS
- *		initializes the stp_global data structure. Called at system startup.
+ * Функция инициализирует структуру `stp_global`, а также
+ * выделяет память для экземпляров STP, портов и связанных структур.
+ *
+ * @param max_instances Максимальное количество экземпляров STP.
+ * @return bool Возвращает true при успешной инициализации, иначе false.
  */
 bool stpdata_init_global_structures(UINT16 max_instances)
 {
@@ -127,11 +152,13 @@ bool stpdata_init_global_structures(UINT16 max_instances)
 	return true;
 }
 
-/* FUNCTION
- *		stpdata_malloc_port_structures()
+/**
+ * @brief Выделяет память для структуры данных портов STP.
  *
- * SYNOPSIS
- *		allocates the port data structures. called at init
+ * Функция выделяет память для массива портов STP, если она ещё не
+ * была выделена.
+ *
+ * @return bool Возвращает true при успешной аллокации, иначе false.
  */
 bool stpdata_malloc_port_structures()
 {
@@ -153,11 +180,12 @@ bool stpdata_malloc_port_structures()
 	return false;
 }
 
-/* FUNCTION
- *		stpdata_free_port_structures()
+/**
+ * @brief Освобождает память, выделенную для структуры данных портов STP.
  *
- * SYNOPSIS
- *		de-allocates the port data structures.
+ * Функция освобождает массив портов STP, если он был ранее выделен.
+ *
+ * @return void
  */
 void stpdata_free_port_structures()
 {
@@ -168,11 +196,14 @@ void stpdata_free_port_structures()
 	}
 }
 
-/* FUNCTION
- *		stpdata_init_class()
+/**
+ * @brief Инициализирует экземпляр STP.
  *
- * SYNOPSIS
- *		initializes STP_CLASS
+ * Функция конфигурирует указанный экземпляр STP для работы с указанным VLAN.
+ *
+ * @param stp_index Индекс экземпляра STP.
+ * @param vlan_id Идентификатор VLAN.
+ * @return int Возвращает 0 при успешной инициализации, иначе -1.
  */
 int stpdata_init_class(STP_INDEX stp_index, VLAN_ID vlan_id)
 {
@@ -196,11 +227,14 @@ int stpdata_init_class(STP_INDEX stp_index, VLAN_ID vlan_id)
 	return 0;
 }
 
-/* FUNCTION
- *		stpdata_class_free()
+/**
+ * @brief Освобождает экземпляр STP.
  *
- * SYNOPSIS
- *		de-allocates an STP instance
+ * Функция сбрасывает указанный экземпляр STP и освобождает связанные с ним
+ * ресурсы.
+ *
+ * @param stp_index Индекс экземпляра STP.
+ * @return void
  */
 void stpdata_class_free(STP_INDEX stp_index)
 {
@@ -221,12 +255,12 @@ void stpdata_class_free(STP_INDEX stp_index)
 	g_stp_active_instances--;
 }
 
-/* FUNCTION
- *		stpdata_init_bpdu_structures()
+/**
+ * @brief Инициализирует структуры BPDU.
  *
- * SYNOPSIS
- *		initialize the configuration bpdu, tcn bpdu for IEEE 802.1D
- *		also initialize the pvst bpdus
+ * Функция конфигурирует BPDU для работы с протоколами IEEE 802.1D и PVST.
+ *
+ * @return void
  */
 void stpdata_init_bpdu_structures()
 {
@@ -276,11 +310,12 @@ void stpdata_init_bpdu_structures()
 	g_stp_pvst_tcn_bpdu.protocol_version_id = STP_VERSION_ID;
 }
 
-/* FUNCTION
- *		stpdata_init_debug_structures()
+/**
+ * @brief Инициализирует структуры отладки STP.
  *
- * SYNOPSIS
- *		resets the debug structure contents for STP and RSTP.
+ * Функция сбрасывает структуры отладки для STP и RSTP.
+ *
+ * @return int Возвращает 0 при успешной инициализации, иначе -1.
  */
 int stpdata_init_debug_structures(void)
 {
@@ -303,11 +338,15 @@ int stpdata_init_debug_structures(void)
 	return 0;
 }
 
-/* FUNCTION
- *		stpdata_get_port_class()
+/**
+ * @brief Возвращает структуру порта STP.
  *
- * SYNOPSIS
- *		get the port class structure associated with stp_class and port_number
+ * Функция получает структуру порта, связанную с заданным экземпляром STP
+ * и номером порта.
+ *
+ * @param stp_class Указатель на структуру экземпляра STP.
+ * @param port_number Номер порта.
+ * @return STP_PORT_CLASS* Указатель на структуру порта или NULL в случае ошибки.
  */
 STP_PORT_CLASS *stpdata_get_port_class(STP_CLASS *stp_class, PORT_ID port_number)
 {

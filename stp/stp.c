@@ -1,25 +1,42 @@
-/*
- * Copyright 2019 Broadcom. The term "Broadcom" refers to Broadcom Inc. and/or
- * its subsidiaries.
+/**
+ * @file stp.c
+ * @brief Реализация основных функций STP (Spanning Tree Protocol).
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Этот файл содержит реализацию алгоритмов и функций, связанных с управлением
+ * протоколом STP. Реализованы основные механизмы для обработки BPDU,
+ * выбора корневого моста, управления состояниями портов, обработки таймеров
+ * и управления топологическими изменениями.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * @details
+ * Включает:
+ * - Обработку конфигурационных и TCN BPDU.
+ * - Алгоритмы выбора корневого моста и назначенных портов.
+ * - Управление состояниями портов STP.
+ * - Таймеры STP, включая hello, forward delay, message age и другие.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * @author
+ * Broadcom, 2019. Лицензия Apache License 2.0.
+ *
+ * @see stp_inc.h
  */
 
 #include "stp_inc.h"
 
 DEBUG_GLOBAL debugGlobal;
 
-/* 8.6.1 */
+/**
+ * @brief Передаёт конфигурационный BPDU для указанного порта.
+ *
+ * Функция формирует и отправляет конфигурационный BPDU (Bridge Protocol Data Unit)
+ * для указанного порта в рамках работы протокола STP. Конфигурация включает
+ * такие параметры, как идентификатор корневого моста, стоимость пути,
+ * идентификатор порта и другие.
+ *
+ * @param stp_class Указатель на экземпляр класса STP (Spanning Tree Protocol).
+ * @param port_number Номер порта, для которого будет отправлен BPDU.
+ *
+ * @return void
+ */
 void transmit_config(STP_CLASS *stp_class, PORT_ID port_number)
 {
 	STP_PORT_CLASS *stp_port_class, *stp_root_port_class;
@@ -65,7 +82,21 @@ void transmit_config(STP_CLASS *stp_class, PORT_ID port_number)
 	}
 }
 
-/* 8.6.2.2 */
+/**
+ * @brief Проверяет, замещает ли информация порта текущую конфигурацию.
+ *
+ * Функция определяет, должна ли информация порта, содержащаяся в BPDU (Bridge Protocol Data Unit),
+ * заменить текущую информацию о порте. Используется для выбора корневого моста
+ * и обновления состояния порта в соответствии с новым BPDU.
+ *
+ * @param stp_class Указатель на экземпляр класса STP (Spanning Tree Protocol).
+ * @param port_number Номер порта, информация о котором проверяется.
+ * @param bpdu Указатель на структуру BPDU с полученной информацией о порте.
+ *
+ * @return bool
+ *         - `true`, если информация в BPDU должна заменить текущую информацию.
+ *         - `false`, если информация в BPDU не имеет приоритета.
+ */
 bool supercedes_port_info(STP_CLASS *stp_class, PORT_ID port_number, STP_CONFIG_BPDU *bpdu)
 {
 	enum SORT_RETURN result;
@@ -122,7 +153,19 @@ bool supercedes_port_info(STP_CLASS *stp_class, PORT_ID port_number, STP_CONFIG_
 	return (true);
 }
 
-/* 8.6.2 */
+/**
+ * @brief Сохраняет конфигурационную информацию из BPDU для указанного порта.
+ *
+ * Функция обновляет конфигурационные данные порта на основе полученного
+ * конфигурационного BPDU. Это включает обновление идентификаторов корневого моста,
+ * стоимости пути, идентификаторов моста и порта.
+ *
+ * @param stp_class Указатель на экземпляр класса STP (Spanning Tree Protocol).
+ * @param port_number Номер порта, для которого сохраняется конфигурационная информация.
+ * @param bpdu Указатель на структуру BPDU с конфигурационными данными.
+ *
+ * @return void
+ */
 void record_config_information(STP_CLASS *stp_class, PORT_ID port_number, STP_CONFIG_BPDU *bpdu)
 {
 	STP_PORT_CLASS *stp_port_class = GET_STP_PORT_CLASS(stp_class, port_number);
@@ -155,7 +198,17 @@ void record_config_information(STP_CLASS *stp_class, PORT_ID port_number, STP_CO
 	stptimer_start(&stp_port_class->message_age_timer, bpdu->message_age);
 }
 
-/* 8.6.3 */
+/**
+ * @brief Сохраняет значения тайм-аутов конфигурации из BPDU.
+ *
+ * Функция обновляет тайм-ауты конфигурации STP для указанного экземпляра
+ * STP на основе данных, содержащихся в полученном BPDU.
+ *
+ * @param stp_class Указатель на экземпляр класса STP (Spanning Tree Protocol).
+ * @param bpdu Указатель на структуру BPDU с конфигурационными данными о тайм-аутах.
+ *
+ * @return void
+ */
 void record_config_timeout_values(STP_CLASS *stp_class, STP_CONFIG_BPDU *bpdu)
 {
 	if (stp_class->bridge_info.max_age != (UINT8)bpdu->max_age)
@@ -179,7 +232,16 @@ void record_config_timeout_values(STP_CLASS *stp_class, STP_CONFIG_BPDU *bpdu)
 	stp_class->bridge_info.topology_change = bpdu->flags.topology_change;
 }
 
-/* 8.6.4 */
+/**
+ * @brief Генерирует и отправляет конфигурационные BPDU для всех назначенных портов.
+ *
+ * Функция обрабатывает все активные порты, связанные с экземпляром STP, и генерирует
+ * конфигурационные BPDU для каждого порта, который является назначенным (designated port).
+ *
+ * @param stp_class Указатель на экземпляр класса STP (Spanning Tree Protocol).
+ *
+ * @return void
+ */
 void config_bpdu_generation(STP_CLASS *stp_class)
 {
 	PORT_ID port_number;
@@ -196,13 +258,33 @@ void config_bpdu_generation(STP_CLASS *stp_class)
 	}
 }
 
-/* 8.6.5 */
+/**
+ * @brief Отправляет конфигурационный BPDU в ответ на полученный BPDU.
+ *
+ * Функция генерирует и отправляет конфигурационный BPDU для указанного порта.
+ * Используется для ответа на полученный BPDU, чтобы сообщить о текущем состоянии
+ * моста и порта.
+ *
+ * @param stp_class Указатель на экземпляр класса STP (Spanning Tree Protocol).
+ * @param port_number Номер порта, для которого отправляется ответный BPDU.
+ *
+ * @return void
+ */
 void reply(STP_CLASS *stp_class, PORT_ID port_number)
 {
 	transmit_config(stp_class, port_number);
 }
 
-/* 8.6.6 */
+/**
+ * @brief Отправляет TCN (Topology Change Notification) BPDU.
+ *
+ * Функция генерирует и отправляет BPDU типа TCN через корневой порт
+ * для уведомления соседних мостов об изменении топологии.
+ *
+ * @param stp_class Указатель на экземпляр класса STP (Spanning Tree Protocol).
+ *
+ * @return void
+ */
 void transmit_tcn(STP_CLASS *stp_class)
 {
 	PORT_ID port_number = stp_class->bridge_info.root_port;
@@ -212,14 +294,33 @@ void transmit_tcn(STP_CLASS *stp_class)
 	}
 }
 
-/* 8.6.7 */
+/**
+ * @brief Обновляет конфигурацию STP на основе текущей информации о портах.
+ *
+ * Функция пересчитывает конфигурацию STP, включая выбор корневого моста
+ * и назначенных портов, для обновления состояния протокола.
+ *
+ * @param stp_class Указатель на экземпляр класса STP (Spanning Tree Protocol).
+ *
+ * @return void
+ */
 void configuration_update(STP_CLASS *stp_class)
 {
 	root_selection(stp_class);
 	designated_port_selection(stp_class);
 }
 
-/* 8.6.8 */
+/**
+ * @brief Выполняет выбор корневого моста для экземпляра STP.
+ *
+ * Функция определяет корневой мост для текущего экземпляра STP, основываясь на
+ * информации, полученной от соседних мостов через BPDU, и обновляет состояние
+ * корневого порта.
+ *
+ * @param stp_class Указатель на экземпляр класса STP (Spanning Tree Protocol).
+ *
+ * @return void
+ */
 void root_selection(STP_CLASS *stp_class)
 {
 	enum SORT_RETURN result;
@@ -339,7 +440,17 @@ void root_selection(STP_CLASS *stp_class)
 	stp_class->bridge_info.root_port = root_port;
 }
 
-/* 8.6.9 */
+/**
+ * @brief Выполняет выбор назначенных (designated) портов для экземпляра STP.
+ *
+ * Функция анализирует состояние всех активных портов экземпляра STP и определяет,
+ * какие из них будут назначенными портами, основываясь на текущей конфигурации
+ * и приоритетах протокола.
+ *
+ * @param stp_class Указатель на экземпляр класса STP (Spanning Tree Protocol).
+ *
+ * @return void
+ */
 void designated_port_selection(STP_CLASS *stp_class)
 {
 	PORT_ID port_number;
@@ -404,7 +515,18 @@ void designated_port_selection(STP_CLASS *stp_class)
 	}
 }
 
-/* 8.6.10 */
+/**
+ * @brief Превращает указанный порт в назначенный (designated) порт.
+ *
+ * Функция обновляет конфигурацию и параметры порта, чтобы обозначить его
+ * как назначенный (designated) порт в соответствии с текущим состоянием
+ * экземпляра STP.
+ *
+ * @param stp_class Указатель на экземпляр класса STP (Spanning Tree Protocol).
+ * @param port_number Номер порта, который становится назначенным.
+ *
+ * @return void
+ */
 void become_designated_port(STP_CLASS *stp_class, PORT_ID port_number)
 {
 	STP_PORT_CLASS *stp_port_class = GET_STP_PORT_CLASS(stp_class, port_number);
@@ -437,7 +559,16 @@ void become_designated_port(STP_CLASS *stp_class, PORT_ID port_number)
 	}
 }
 
-/* 8.6.11 */
+/**
+ * @brief Определяет и устанавливает состояние каждого порта экземпляра STP.
+ *
+ * Функция анализирует текущее состояние каждого порта, связанного с экземпляром STP,
+ * и обновляет их состояния в соответствии с текущей конфигурацией протокола.
+ *
+ * @param stp_class Указатель на экземпляр класса STP (Spanning Tree Protocol).
+ *
+ * @return void
+ */
 void port_state_selection(STP_CLASS *stp_class)
 {
 	STP_PORT_CLASS *stp_port_class;
@@ -483,7 +614,18 @@ void port_state_selection(STP_CLASS *stp_class)
 	}
 }
 
-/* 8.6.12 */
+/**
+ * @brief Переводит указанный порт в состояние Forwarding.
+ *
+ * Функция изменяет состояние указанного порта на Forwarding, чтобы
+ * разрешить передачу данных. Это состояние используется для портов,
+ * которые участвуют в активной топологии.
+ *
+ * @param stp_class Указатель на экземпляр класса STP (Spanning Tree Protocol).
+ * @param port_number Номер порта, который переводится в состояние Forwarding.
+ *
+ * @return void
+ */
 void make_forwarding(STP_CLASS *stp_class, PORT_ID port_number)
 {
 	STP_PORT_CLASS *stp_port_class = GET_STP_PORT_CLASS(stp_class, port_number);
@@ -505,7 +647,18 @@ void make_forwarding(STP_CLASS *stp_class, PORT_ID port_number)
 	}
 }
 
-/* 8.6.13 */
+/**
+ * @brief Переводит указанный порт в состояние Blocking.
+ *
+ * Функция изменяет состояние указанного порта на Blocking, чтобы
+ * предотвратить передачу данных через данный порт. Это состояние
+ * используется для предотвращения петлей в сети.
+ *
+ * @param stp_class Указатель на экземпляр класса STP (Spanning Tree Protocol).
+ * @param port_number Номер порта, который переводится в состояние Blocking.
+ *
+ * @return void
+ */
 void make_blocking(STP_CLASS *stp_class, PORT_ID port_number)
 {
 	STP_PORT_CLASS *stp_port_class;
@@ -550,7 +703,17 @@ void make_blocking(STP_CLASS *stp_class, PORT_ID port_number)
 	STP_LOG_INFO("STP_RAS_BLOCKING I:%lu P:%lu V:%lu", GET_STP_INDEX(stp_class), port_number, stp_class->vlan_id);
 }
 
-/* 8.6.14 */
+/**
+ * @brief Обнаруживает и обрабатывает изменения топологии в сети STP.
+ *
+ * Функция инициирует процесс обработки топологических изменений в сети,
+ * вызывая отправку TCN (Topology Change Notification) BPDU, если мост не является корневым,
+ * или устанавливая соответствующие флаги для корневого моста.
+ *
+ * @param stp_class Указатель на экземпляр класса STP (Spanning Tree Protocol).
+ *
+ * @return void
+ */
 void topology_change_detection(STP_CLASS *stp_class)
 {
 	if (root_bridge(stp_class))
@@ -572,7 +735,16 @@ void topology_change_detection(STP_CLASS *stp_class)
 	SET_BIT(stp_class->bridge_info.modified_fields, STP_BRIDGE_DATA_MEMBER_TOPO_CHNG_COUNT_BIT);
 }
 
-/* 8.6.15 */
+/**
+ * @brief Обрабатывает подтверждение изменения топологии.
+ *
+ * Функция сбрасывает флаги и таймеры, связанные с изменением топологии,
+ * после получения подтверждения от корневого моста или других устройств.
+ *
+ * @param stp_class Указатель на экземпляр класса STP (Spanning Tree Protocol).
+ *
+ * @return void
+ */
 void topology_change_acknowledged(STP_CLASS *stp_class)
 {
 	stp_class->bridge_info.topology_change_detected = false;
@@ -584,7 +756,17 @@ void topology_change_acknowledged(STP_CLASS *stp_class)
 	stptimer_stop(&stp_class->tcn_timer);
 }
 
-/* 8.6.16 */
+/**
+ * @brief Подтверждает изменение топологии для указанного порта.
+ *
+ * Функция устанавливает флаг подтверждения изменения топологии (`topology_change_acknowledge`)
+ * для порта и отправляет конфигурационный BPDU для уведомления соседних мостов.
+ *
+ * @param stp_class Указатель на экземпляр класса STP (Spanning Tree Protocol).
+ * @param port_number Номер порта, для которого подтверждается изменение топологии.
+ *
+ * @return void
+ */
 void acknowledge_topology_change(STP_CLASS *stp_class, PORT_ID port_number)
 {
 	STP_PORT_CLASS *stp_port_class = GET_STP_PORT_CLASS(stp_class, port_number);
@@ -593,7 +775,19 @@ void acknowledge_topology_change(STP_CLASS *stp_class, PORT_ID port_number)
 	transmit_config(stp_class, port_number);
 }
 
-/* 8.7.1 */
+/**
+ * @brief Обрабатывает полученный конфигурационный BPDU.
+ *
+ * Функция анализирует содержимое полученного конфигурационного BPDU и обновляет
+ * параметры протокола STP, такие как корневой мост, стоимость пути и состояние портов,
+ * если BPDU содержит более приоритетную информацию.
+ *
+ * @param stp_class Указатель на экземпляр класса STP (Spanning Tree Protocol).
+ * @param port_number Номер порта, на котором был получен BPDU.
+ * @param bpdu Указатель на структуру BPDU с конфигурационными данными.
+ *
+ * @return void
+ */
 void received_config_bpdu(STP_CLASS *stp_class, PORT_ID port_number, STP_CONFIG_BPDU *bpdu)
 {
 	bool root;
@@ -659,7 +853,19 @@ void received_config_bpdu(STP_CLASS *stp_class, PORT_ID port_number, STP_CONFIG_
 	}
 }
 
-/* 8.7.2 */
+/**
+ * @brief Обрабатывает полученный TCN (Topology Change Notification) BPDU.
+ *
+ * Функция анализирует содержимое TCN BPDU, полученного на указанном порту,
+ * и выполняет действия для обработки уведомления о топологическом изменении.
+ * Это включает генерацию подтверждения изменения топологии.
+ *
+ * @param stp_class Указатель на экземпляр класса STP (Spanning Tree Protocol).
+ * @param port_number Номер порта, на котором был получен TCN BPDU.
+ * @param bpdu Указатель на структуру BPDU с данными уведомления о топологии.
+ *
+ * @return void
+ */
 void received_tcn_bpdu(STP_CLASS *stp_class, PORT_ID port_number, STP_TCN_BPDU *bpdu)
 {
 	bool root;
@@ -681,7 +887,17 @@ void received_tcn_bpdu(STP_CLASS *stp_class, PORT_ID port_number, STP_TCN_BPDU *
 	}
 }
 
-/* 8.7.3 */
+/**
+ * @brief Обрабатывает истечение таймера Hello для экземпляра STP.
+ *
+ * Функция генерирует и отправляет конфигурационные BPDU для всех назначенных портов,
+ * а также перезапускает таймер Hello. Используется для периодического уведомления
+ * соседних мостов о текущем состоянии сети.
+ *
+ * @param stp_class Указатель на экземпляр класса STP (Spanning Tree Protocol).
+ *
+ * @return void
+ */
 void hello_timer_expiry(STP_CLASS *stp_class)
 {
 	UINT32 last_expiry_time = 0;
@@ -719,7 +935,18 @@ void hello_timer_expiry(STP_CLASS *stp_class)
 	stptimer_start(&stp_class->hello_timer, 0);
 }
 
-/* 8.7.4 */
+/**
+ * @brief Обрабатывает истечение таймера возраста сообщения (Message Age Timer) для порта.
+ *
+ * Функция обрабатывает событие истечения таймера Message Age для указанного порта.
+ * Это может означать, что информация о корневом мосте или назначенном порте устарела,
+ * и требуется пересчёт конфигурации сети.
+ *
+ * @param stp_class Указатель на экземпляр класса STP (Spanning Tree Protocol).
+ * @param port_number Номер порта, для которого истёк таймер Message Age.
+ *
+ * @return void
+ */
 void message_age_timer_expiry(STP_CLASS *stp_class, PORT_ID port_number)
 {
 	bool root;
@@ -750,7 +977,18 @@ void message_age_timer_expiry(STP_CLASS *stp_class, PORT_ID port_number)
 	}
 }
 
-/* 8.7.5 */
+/**
+ * @brief Обрабатывает истечение таймера задержки перехода (Forwarding Delay Timer) для порта.
+ *
+ * Функция обновляет состояние порта в соответствии с этапами перехода между
+ * состояниями STP (Listening -> Learning -> Forwarding). Используется для
+ * контроля времени, необходимого для безопасного изменения состояния порта.
+ *
+ * @param stp_class Указатель на экземпляр класса STP (Spanning Tree Protocol).
+ * @param port_number Номер порта, для которого истёк таймер задержки перехода.
+ *
+ * @return void
+ */
 void forwarding_delay_timer_expiry(STP_CLASS *stp_class, PORT_ID port_number)
 {
 	STP_PORT_CLASS *stp_port_class;
@@ -796,21 +1034,52 @@ void forwarding_delay_timer_expiry(STP_CLASS *stp_class, PORT_ID port_number)
 	}
 }
 
-/* 8.7.6 */
+/**
+ * @brief Обрабатывает истечение таймера TCN (Topology Change Notification).
+ *
+ * Функция инициирует отправку TCN BPDU для уведомления соседних мостов
+ * о том, что произошло изменение топологии. Также перезапускает таймер TCN
+ * для продолжения мониторинга изменений топологии.
+ *
+ * @param stp_class Указатель на экземпляр класса STP (Spanning Tree Protocol).
+ *
+ * @return void
+ */
 void tcn_timer_expiry(STP_CLASS *stp_class)
 {
 	transmit_tcn(stp_class);
 	stptimer_start(&stp_class->tcn_timer, 0);
 }
 
-/* 8.7.7 */
+/**
+ * @brief Обрабатывает истечение таймера изменения топологии.
+ *
+ * Функция сбрасывает флаг изменения топологии и останавливает все
+ * таймеры, связанные с обработкой изменений в сети. Она сигнализирует
+ * о завершении обработки события изменения топологии.
+ *
+ * @param stp_class Указатель на экземпляр класса STP (Spanning Tree Protocol).
+ *
+ * @return void
+ */
 void topology_change_timer_expiry(STP_CLASS *stp_class)
 {
 	stp_class->bridge_info.topology_change_detected = false;
 	stp_class->bridge_info.topology_change = false;
 }
 
-/* 8.7.8 */
+/**
+ * @brief Обрабатывает истечение таймера удержания (Hold Timer) для порта.
+ *
+ * Функция проверяет, если для порта было запланировано отправить конфигурационный BPDU,
+ * она инициирует его отправку. Таймер удержания используется для предотвращения
+ * частых изменений состояния порта и обеспечения стабильности топологии.
+ *
+ * @param stp_class Указатель на экземпляр класса STP (Spanning Tree Protocol).
+ * @param port_number Номер порта, для которого истёк таймер удержания.
+ *
+ * @return void
+ */
 void hold_timer_expiry(STP_CLASS *stp_class, PORT_ID port_number)
 {
 	STP_PORT_CLASS *stp_port_class = GET_STP_PORT_CLASS(stp_class, port_number);
@@ -820,6 +1089,19 @@ void hold_timer_expiry(STP_CLASS *stp_class, PORT_ID port_number)
 	}
 }
 
+/**
+ * @brief Проверяет, является ли текущий мост корневым.
+ *
+ * Функция сравнивает идентификаторы корневого моста и текущего моста
+ * и возвращает `true`, если они совпадают, что означает, что текущий мост является
+ * корневым в топологии STP.
+ *
+ * @param stp_class Указатель на экземпляр класса STP (Spanning Tree Protocol).
+ *
+ * @return bool
+ *         - `true`, если текущий мост является корневым.
+ *         - `false`, если текущий мост не является корневым.
+ */
 bool root_bridge(STP_CLASS *stp_class)
 {
 	BRIDGE_IDENTIFIER *bridge_id = &stp_class->bridge_info.bridge_id;
@@ -828,6 +1110,20 @@ bool root_bridge(STP_CLASS *stp_class)
 	return (stputil_compare_bridge_id(root_id, bridge_id) == EQUAL_TO);
 }
 
+/**
+ * @brief Проверяет, является ли указанный порт назначенным (designated) портом.
+ *
+ * Функция проверяет, является ли порт назначенным для текущего экземпляра STP.
+ * Это означает, что порт будет передавать трафик для заданного VLAN в сети.
+ * Проверка включает сравнение идентификаторов моста и порта.
+ *
+ * @param stp_class Указатель на экземпляр класса STP (Spanning Tree Protocol).
+ * @param port_number Номер порта, который проверяется.
+ *
+ * @return bool
+ *         - `true`, если порт является назначенным.
+ *         - `false`, если порт не является назначенным.
+ */
 bool designated_port(STP_CLASS *stp_class, PORT_ID port_number)
 {
 	STP_PORT_CLASS *stp_port_class = GET_STP_PORT_CLASS(stp_class, port_number);
@@ -848,6 +1144,18 @@ bool designated_port(STP_CLASS *stp_class, PORT_ID port_number)
 	return (true);
 }
 
+/**
+ * @brief Проверяет, является ли какой-либо порт назначенным (designated) для текущего экземпляра STP.
+ *
+ * Функция проверяет, есть ли хотя бы один порт, который является назначенным для текущего экземпляра STP.
+ * Это необходимо для проверки, используется ли данный мост для передачи трафика в сети.
+ *
+ * @param stp_class Указатель на экземпляр класса STP (Spanning Tree Protocol).
+ *
+ * @return bool
+ *         - `true`, если хотя бы один порт является назначенным.
+ *         - `false`, если нет назначенных портов.
+ */
 bool designated_for_some_port(STP_CLASS *stp_class)
 {
 	PORT_ID port_number;
@@ -869,6 +1177,19 @@ bool designated_for_some_port(STP_CLASS *stp_class)
 	return (false);
 }
 
+/**
+ * @brief Отправляет конфигурационный BPDU для указанного порта.
+ *
+ * Функция генерирует и отправляет конфигурационный BPDU (Bridge Protocol Data Unit)
+ * для указанного порта. Этот BPDU содержит информацию о текущем состоянии моста,
+ * включая идентификатор корневого моста, стоимость пути и другие параметры.
+ * В зависимости от конфигурации, функция может использовать стандартный или PVST BPDU.
+ *
+ * @param stp_class Указатель на экземпляр класса STP (Spanning Tree Protocol).
+ * @param port_number Номер порта, для которого отправляется конфигурационный BPDU.
+ *
+ * @return void
+ */
 void send_config_bpdu(STP_CLASS *stp_class, PORT_ID port_number)
 {
 	STP_PORT_CLASS *stp_port_class = GET_STP_PORT_CLASS(stp_class, port_number);
@@ -879,6 +1200,18 @@ void send_config_bpdu(STP_CLASS *stp_class, PORT_ID port_number)
 		stputil_send_bpdu(stp_class, port_number, CONFIG_BPDU_TYPE);
 }
 
+/**
+ * @brief Отправляет TCN (Topology Change Notification) BPDU для указанного порта.
+ *
+ * Функция генерирует и отправляет BPDU типа TCN, чтобы уведомить соседние мосты
+ * о том, что произошло изменение топологии сети. Это позволяет инициировать процесс
+ * обновления таблиц MAC-адресов и адаптации сети к изменениям.
+ *
+ * @param stp_class Указатель на экземпляр класса STP (Spanning Tree Protocol).
+ * @param port_number Номер порта, через который отправляется TCN BPDU.
+ *
+ * @return void
+ */
 void send_tcn_bpdu(STP_CLASS *stp_class, PORT_ID port_number)
 {
 
