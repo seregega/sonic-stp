@@ -1,18 +1,19 @@
-/*
- * Copyright 2019 Broadcom. The term "Broadcom" refers to Broadcom Inc. and/or
- * its subsidiaries.
+/**
+ * @file stp_debug.c
+ * @brief Реализация функций отладки и мониторинга работы STP (Spanning Tree Protocol).
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Этот файл содержит функции для записи журналов, диагностики и сбора статистики
+ * работы протокола STP. Функционал включает:
+ * - Вывод данных об интерфейсах.
+ * - Вывод глобальной и портовой статистики STP.
+ * - Управление настройками отладки.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * @details
+ * Функции из этого файла используются для сбора информации о состоянии сети
+ * и диагностики проблем, связанных с конфигурацией и работой STP.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * @author Broadcom
+ * @license Apache License 2.0
  */
 
 #include "stp_inc.h"
@@ -41,6 +42,16 @@ char *l2_port_state_string[] =
         "FORWARDING",
         "UNKNOWN"};
 
+/**
+ * @brief Выводит данные о заданном интерфейсе из базы данных Netlink.
+ *
+ * Функция формирует детальную информацию о сетевом интерфейсе, включая его
+ * имя, индексы, состояние, скорость и другие параметры.
+ *
+ * @param node Указатель на структуру интерфейса, содержащую данные для вывода.
+ *
+ * @return void
+ */
 void stpdbg_dump_nl_db_node(INTERFACE_NODE *node)
 {
     STP_DUMP("-------------------------\n");
@@ -57,6 +68,17 @@ void stpdbg_dump_nl_db_node(INTERFACE_NODE *node)
     STP_DUMP("\n");
 }
 
+
+/**
+ * @brief Выводит данные о конкретном интерфейсе по его имени.
+ *
+ * Функция ищет интерфейс в базе данных Netlink по имени и выводит
+ * его параметры. Если интерфейс не найден, выводится сообщение об ошибке.
+ *
+ * @param name Имя интерфейса для поиска и вывода данных.
+ *
+ * @return void
+ */
 void stpdbg_dump_nl_db_intf(char *name)
 {
     INTERFACE_NODE search_node;
@@ -70,6 +92,16 @@ void stpdbg_dump_nl_db_intf(char *name)
         STP_DUMP("Interface : %s not Found\n", name);
 }
 
+
+/**
+ * @brief Выводит всю базу данных Netlink, связанную с интерфейсами.
+ *
+ * Функция отображает данные обо всех интерфейсах, хранящихся в базе данных Netlink.
+ * Это включает информацию об именах интерфейсов, их индексах, состояниях,
+ * скоростях и других параметрах.
+ *
+ * @return void
+ */
 void stpdbg_dump_nl_db()
 {
     INTERFACE_NODE *node = 0;
@@ -80,6 +112,15 @@ void stpdbg_dump_nl_db()
         stpdbg_dump_nl_db_node(node);
 }
 
+
+/**
+ * @brief Выводит глобальную статистику работы STP.
+ *
+ * Функция собирает и выводит данные о количестве пакетов, ошибок, активных событий
+ * и другую информацию, связанную с работой STP.
+ *
+ * @return void
+ */
 void stpdbg_dump_stp_stats()
 {
     uint16_t i = 0;
@@ -108,7 +149,14 @@ void stpdbg_dump_stp_stats()
     }
 }
 
-/* DM */
+/**
+ * @brief Выводит глобальные данные структуры STP.
+ *
+ * Функция формирует вывод с подробной информацией о глобальных настройках
+ * STP, включая маски портов, таймеры и параметры конфигурации.
+ *
+ * @return void
+ */
 void stpdm_global()
 {
     UINT8 enable_string[500], enable_admin_string[500];
@@ -181,6 +229,16 @@ void stpdm_global()
         g_max_stp_port);
 }
 
+/**
+ * @brief Выводит данные о заданной структуре класса STP.
+ *
+ * Функция собирает и выводит информацию о VLAN, состоянии, масках портов
+ * и других параметрах для конкретного экземпляра STP.
+ *
+ * @param stp_class Указатель на структуру STP класса для вывода данных.
+ *
+ * @return void
+ */
 void stpdm_class(STP_CLASS *stp_class)
 {
     UINT8 s1[256], s2[256], s3[256];
@@ -250,6 +308,18 @@ void stpdm_class(STP_CLASS *stp_class)
     STP_DUMP("\n");
 }
 
+
+/**
+ * @brief Выводит информацию о состоянии порта для заданного экземпляра STP.
+ *
+ * Функция отображает данные о состоянии порта, такие как состояние STP,
+ * стоимость пути, настройки таймеров и флаги изменений.
+ *
+ * @param stp_class Указатель на экземпляр STP класса (VLAN).
+ * @param port_id Идентификатор порта, данные о котором будут выведены.
+ *
+ * @return void
+ */
 void stpdm_port_class(STP_CLASS *stp_class, PORT_ID port_number)
 {
     STP_PORT_CLASS *stp_port;
@@ -313,6 +383,7 @@ void stpdm_port_class(STP_CLASS *stp_class, PORT_ID port_number)
              stp_port->tx_tcn_bpdu);
 }
 
+
 char *l2_port_state_to_string(uint8_t state, uint32_t port)
 {
     if (state >= L2_MAX_PORT_STATE)
@@ -325,6 +396,14 @@ char *l2_port_state_to_string(uint8_t state, uint32_t port)
     return (l2_port_state_string[state]);
 }
 
+/**
+ * @brief Выводит текущие параметры отладки STP.
+ *
+ * Функция отображает текущие настройки отладки, такие как уровни
+ * логирования, состояние отладки для портов и VLAN.
+ *
+ * @return void
+ */
 void stp_debug_show()
 {
     char buffer[500];
@@ -366,6 +445,20 @@ void stp_debug_show()
     STP_DUMP("\n");
 }
 
+/**
+ * @brief Включает или отключает глобальную отладку для указанного порта.
+ *
+ * Функция настраивает режим глобальной отладки для указанного порта.
+ * Позволяет включить или отключить вывод отладочной информации для
+ * порта на уровне всей сети STP.
+ *
+ * @param port_id Идентификатор порта, для которого настраивается режим отладки.
+ * @param flag Значение:
+ *             - `1` для включения отладки.
+ *             - `0` для отключения отладки.
+ *
+ * @return void
+ */
 void stp_debug_global_enable_port(uint32_t port_id, uint8_t flag)
 {
     if (flag)
@@ -391,6 +484,20 @@ void stp_debug_global_enable_port(uint32_t port_id, uint8_t flag)
     }
 }
 
+/**
+ * @brief Включает или отключает глобальную отладку для указанного VLAN.
+ *
+ * Функция настраивает режим глобальной отладки для указанного VLAN.
+ * Позволяет включить или отключить вывод отладочной информации для
+ * VLAN на уровне всей сети STP.
+ *
+ * @param vlan_id Идентификатор VLAN, для которого настраивается режим отладки.
+ * @param flag Значение:
+ *             - `1` для включения отладки.
+ *             - `0` для отключения отладки.
+ *
+ * @return void
+ */
 void stp_debug_global_enable_vlan(uint16_t vlan_id, uint8_t flag)
 {
     if (flag)
@@ -416,6 +523,17 @@ void stp_debug_global_enable_vlan(uint16_t vlan_id, uint8_t flag)
     }
 }
 
+/**
+ * @brief Обрабатывает управляющее сообщение, связанное с отладкой STP.
+ *
+ * Функция анализирует полученное управляющее сообщение и выполняет
+ * соответствующее действие, связанное с отладкой, мониторингом или изменением
+ * параметров работы STP. Используется для обработки внешних команд.
+ *
+ * @param msg Указатель на структуру сообщения, содержащую данные управления.
+ *
+ * @return void
+ */
 void stpdbg_process_ctl_msg(void *msg)
 {
     STP_CTL_MSG *pmsg = (STP_CTL_MSG *)msg;
