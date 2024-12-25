@@ -81,7 +81,6 @@ struct event *stpmgr_libevent_create(struct event_base *base,
     return NULL;
 }
 
-
 /**
  * @brief Инициализирует менеджер STP.
  *
@@ -231,6 +230,18 @@ void stpmgr_deactivate_stp_class(STP_CLASS *stp_class)
 }
 
 /* 8.8.1 */
+/**
+ * @brief Инициализирует указанный порт для экземпляра STP.
+ *
+ * Функция выполняет настройку и инициализацию параметров управления для
+ * конкретного порта в заданном экземпляре STP. Устанавливает значения по умолчанию
+ * и подготавливает порт к работе в рамках протокола STP.
+ *
+ * @param stp_class Указатель на структуру `STP_CLASS`, представляющую экземпляр STP.
+ * @param port_number Идентификатор порта, который нужно инициализировать.
+ *
+ * @return void
+ */
 void stpmgr_initialize_port(STP_CLASS *stp_class, PORT_ID port_number)
 {
     STP_PORT_CLASS *stp_port_class;
@@ -254,6 +265,18 @@ void stpmgr_initialize_port(STP_CLASS *stp_class, PORT_ID port_number)
 }
 
 /* 8.8.2 */
+/**
+ * @brief Включает указанный порт для экземпляра STP.
+ *
+ * Функция активирует порт, позволяя ему участвовать в протоколе STP.
+ * Устанавливает порт в активное состояние, запускает необходимые таймеры
+ * и начинает обработку BPDU для указанного порта.
+ *
+ * @param stp_class Указатель на структуру `STP_CLASS`, представляющую экземпляр STP.
+ * @param port_number Идентификатор порта, который нужно включить.
+ *
+ * @return void
+ */
 void stpmgr_enable_port(STP_CLASS *stp_class, PORT_ID port_number)
 {
     STP_PORT_CLASS *stp_port_class;
@@ -270,6 +293,17 @@ void stpmgr_enable_port(STP_CLASS *stp_class, PORT_ID port_number)
 }
 
 /* 8.8.3 */
+/**
+ * @brief Отключает указанный порт для экземпляра STP.
+ *
+ * Функция переводит порт в неактивное состояние, останавливает связанные таймеры,
+ * запрещает обработку BPDU и удаляет порт из активных участников STP.
+ *
+ * @param stp_class Указатель на структуру `STP_CLASS`, представляющую экземпляр STP.
+ * @param port_number Идентификатор порта, который нужно отключить.
+ *
+ * @return void
+ */
 void stpmgr_disable_port(STP_CLASS *stp_class, PORT_ID port_number)
 {
     bool root;
@@ -331,6 +365,18 @@ void stpmgr_disable_port(STP_CLASS *stp_class, PORT_ID port_number)
 }
 
 /* 8.8.4 */
+/**
+ * @brief Устанавливает приоритет моста для указанного экземпляра STP.
+ *
+ * Функция обновляет приоритет моста (Bridge Priority) в структуре `BRIDGE_IDENTIFIER`
+ * для указанного экземпляра STP. Приоритет используется для выбора корневого моста
+ * в протоколе STP.
+ *
+ * @param stp_class Указатель на структуру `STP_CLASS`, представляющую экземпляр STP.
+ * @param bridge_id Указатель на структуру `BRIDGE_IDENTIFIER`, содержащую новый приоритет моста.
+ *
+ * @return void
+ */
 void stpmgr_set_bridge_priority(STP_CLASS *stp_class, BRIDGE_IDENTIFIER *bridge_id)
 {
     bool root;
@@ -383,6 +429,19 @@ void stpmgr_set_bridge_priority(STP_CLASS *stp_class, BRIDGE_IDENTIFIER *bridge_
 }
 
 /* 8.8.5 */
+/**
+ * @brief Устанавливает приоритет порта для указанного экземпляра STP.
+ *
+ * Функция обновляет приоритет указанного порта в экземпляре STP. Приоритет порта
+ * используется для выбора портов с наивысшим приоритетом при определении
+ * топологии STP.
+ *
+ * @param stp_class Указатель на структуру `STP_CLASS`, представляющую экземпляр STP.
+ * @param port_number Идентификатор порта, приоритет которого нужно установить.
+ * @param priority Новое значение приоритета порта (0-65535, меньшее значение имеет более высокий приоритет).
+ *
+ * @return void
+ */
 void stpmgr_set_port_priority(STP_CLASS *stp_class, PORT_ID port_number, UINT16 priority)
 {
     STP_PORT_CLASS *stp_port_class = GET_STP_PORT_CLASS(stp_class, port_number);
@@ -406,6 +465,22 @@ void stpmgr_set_port_priority(STP_CLASS *stp_class, PORT_ID port_number, UINT16 
 }
 
 /* 8.8.6 */
+/**
+ * @brief Устанавливает стоимость пути (Path Cost) для указанного порта в экземпляре STP.
+ *
+ * Функция обновляет стоимость пути для заданного порта, используемую в алгоритме STP
+ * для выбора оптимального пути к корневому мосту. При необходимости стоимость
+ * может быть установлена автоматически или вручную.
+ *
+ * @param stp_class Указатель на структуру `STP_CLASS`, представляющую экземпляр STP.
+ * @param port_number Идентификатор порта, для которого устанавливается стоимость пути.
+ * @param auto_config Флаг автоматической настройки:
+ *                    - `true` — стоимость пути рассчитывается автоматически.
+ *                    - `false` — стоимость пути задаётся вручную.
+ * @param path_cost Стоимость пути, если `auto_config` равен `false`.
+ *
+ * @return void
+ */
 void stpmgr_set_path_cost(STP_CLASS *stp_class, PORT_ID port_number, bool auto_config, UINT32 path_cost)
 {
     STP_PORT_CLASS *stp_port_class = GET_STP_PORT_CLASS(stp_class, port_number);
@@ -418,6 +493,18 @@ void stpmgr_set_path_cost(STP_CLASS *stp_class, PORT_ID port_number, bool auto_c
 }
 
 /* 8.8.7 */
+/**
+ * @brief Включает обнаружение изменений топологии для указанного порта.
+ *
+ * Функция активирует механизм обнаружения изменений топологии (Topology Change Detection)
+ * для заданного порта. Это позволяет обнаруживать события, такие как подключение
+ * или отключение устройств, и инициировать соответствующие действия в рамках STP.
+ *
+ * @param stp_class Указатель на структуру `STP_CLASS`, представляющую экземпляр STP.
+ * @param port_number Идентификатор порта, для которого включается обнаружение изменений.
+ *
+ * @return void
+ */
 void stpmgr_enable_change_detection(STP_CLASS *stp_class, PORT_ID port_number)
 {
     STP_PORT_CLASS *stp_port_class = GET_STP_PORT_CLASS(stp_class, port_number);
@@ -425,6 +512,18 @@ void stpmgr_enable_change_detection(STP_CLASS *stp_class, PORT_ID port_number)
 }
 
 /* 8.8.8 */
+/**
+ * @brief Отключает обнаружение изменений топологии для указанного порта.
+ *
+ * Функция деактивирует механизм обнаружения изменений топологии (Topology Change Detection)
+ * для заданного порта. Это предотвращает реагирование STP на изменения состояния порта,
+ * такие как подключение или отключение устройств.
+ *
+ * @param stp_class Указатель на структуру `STP_CLASS`, представляющую экземпляр STP.
+ * @param port_number Идентификатор порта, для которого отключается обнаружение изменений.
+ *
+ * @return void
+ */
 void stpmgr_disable_change_detection(STP_CLASS *stp_class, PORT_ID port_number)
 {
     STP_PORT_CLASS *stp_port_class = GET_STP_PORT_CLASS(stp_class, port_number);
@@ -437,6 +536,16 @@ void stpmgr_disable_change_detection(STP_CLASS *stp_class, PORT_ID port_number)
  * SYNOPSIS
  *		used when user configures an stp bridge parameter to propagate the
  *		values if this is the root bridge.
+ */
+/**
+ * @brief Устанавливает параметры моста для указанного экземпляра STP.
+ *
+ * Функция обновляет параметры моста, такие как идентификатор моста, возраст сообщений,
+ * приветственный интервал и задержку пересылки, в структуре `STP_CLASS`.
+ *
+ * @param stp_class Указатель на структуру `STP_CLASS`, представляющую экземпляр STP.
+ *
+ * @return void
  */
 void stpmgr_set_bridge_params(STP_CLASS *stp_class)
 {
@@ -456,6 +565,17 @@ void stpmgr_set_bridge_params(STP_CLASS *stp_class)
  *
  * SYNOPSIS
  *		sets the bridge priority.
+ */
+/**
+ * @brief Конфигурирует приоритет моста для указанного экземпляра STP.
+ *
+ * Функция обновляет приоритет моста (Bridge Priority) для экземпляра STP, заданного индексом.
+ * Это значение используется для выбора корневого моста в процессе работы протокола STP.
+ *
+ * @param stp_index Индекс экземпляра STP, для которого необходимо установить приоритет.
+ * @param priority Новое значение приоритета моста (меньшее значение имеет более высокий приоритет).
+ *
+ * @return `true` в случае успешной конфигурации, `false` в случае ошибки.
  */
 bool stpmgr_config_bridge_priority(STP_INDEX stp_index, UINT16 priority)
 {
@@ -500,6 +620,17 @@ bool stpmgr_config_bridge_priority(STP_INDEX stp_index, UINT16 priority)
  * SYNOPSIS
  *		sets the bridge max-age.
  */
+/**
+ * @brief Конфигурирует максимальный возраст сообщения (Max Age) для указанного экземпляра STP.
+ *
+ * Функция устанавливает значение максимального возраста сообщения для указанного экземпляра STP.
+ * Этот параметр определяет, как долго мост будет считать BPDU актуальным.
+ *
+ * @param stp_index Индекс экземпляра STP, для которого устанавливается максимальный возраст сообщения.
+ * @param max_age Новое значение максимального возраста сообщения (в секундах).
+ *
+ * @return `true` в случае успешной конфигурации, `false` в случае ошибки.
+ */
 bool stpmgr_config_bridge_max_age(STP_INDEX stp_index, UINT16 max_age)
 {
     STP_CLASS *stp_class;
@@ -526,6 +657,17 @@ bool stpmgr_config_bridge_max_age(STP_INDEX stp_index, UINT16 max_age)
  *
  * SYNOPSIS
  *		sets the bridge hello-time.
+ */
+/**
+ * @brief Конфигурирует время приветствия (Hello Time) для указанного экземпляра STP.
+ *
+ * Функция устанавливает значение времени приветствия для экземпляра STP. Этот параметр
+ * определяет интервал времени, через который мост отправляет BPDU, если он является корневым.
+ *
+ * @param stp_index Индекс экземпляра STP, для которого устанавливается время приветствия.
+ * @param hello_time Новое значение времени приветствия (в секундах). Обычно от 1 до 10 секунд.
+ *
+ * @return `true` в случае успешной конфигурации, `false` в случае ошибки.
  */
 bool stpmgr_config_bridge_hello_time(STP_INDEX stp_index, UINT16 hello_time)
 {
@@ -554,6 +696,18 @@ bool stpmgr_config_bridge_hello_time(STP_INDEX stp_index, UINT16 hello_time)
  * SYNOPSIS
  *		sets the bridge forward-delay.
  */
+/**
+ * @brief Конфигурирует задержку пересылки (Forward Delay) для указанного экземпляра STP.
+ *
+ * Функция устанавливает значение задержки пересылки для экземпляра STP. Этот параметр
+ * определяет время, в течение которого порт остаётся в состояниях Listening и Learning
+ * перед переходом в Forwarding.
+ *
+ * @param stp_index Индекс экземпляра STP, для которого устанавливается задержка пересылки.
+ * @param fwd_delay Новое значение задержки пересылки (в секундах). Обычно от 4 до 30 секунд.
+ *
+ * @return `true` в случае успешной конфигурации, `false` в случае ошибки.
+ */
 bool stpmgr_config_bridge_forward_delay(STP_INDEX stp_index, UINT16 fwd_delay)
 {
     STP_CLASS *stp_class;
@@ -581,6 +735,21 @@ bool stpmgr_config_bridge_forward_delay(STP_INDEX stp_index, UINT16 fwd_delay)
  *
  * SYNOPSIS
  *		sets the port priority.
+ */
+/**
+ * @brief Конфигурирует приоритет порта для указанного экземпляра STP.
+ *
+ * Функция устанавливает значение приоритета порта (Port Priority) для указанного экземпляра STP.
+ * Приоритет используется для определения роли порта в процессе выбора топологии STP.
+ *
+ * @param stp_index Индекс экземпляра STP, для которого задаётся приоритет порта.
+ * @param port_number Идентификатор порта, для которого устанавливается приоритет.
+ * @param priority Новое значение приоритета порта (0-65535, меньшее значение имеет более высокий приоритет).
+ * @param is_global Флаг, определяющий, применяется ли конфигурация ко всем экземплярам:
+ *                  - `true` — установить приоритет глобально для всех экземпляров.
+ *                  - `false` — применить только к указанному экземпляру STP.
+ *
+ * @return `true` в случае успешной конфигурации, `false` в случае ошибки.
  */
 bool stpmgr_config_port_priority(STP_INDEX stp_index, PORT_ID port_number, UINT16 priority, bool is_global)
 {
@@ -629,6 +798,25 @@ bool stpmgr_config_port_priority(STP_INDEX stp_index, PORT_ID port_number, UINT1
  *
  * SYNOPSIS
  *		sets the ports path cost.
+ */
+
+/**
+ * @brief Конфигурирует стоимость пути (Path Cost) для указанного порта STP.
+ *
+ * Функция устанавливает стоимость пути (Path Cost) для порта, используемую в алгоритме STP
+ * для выбора оптимального пути. Стоимость может быть задана вручную или автоматически рассчитана.
+ *
+ * @param stp_index Индекс экземпляра STP, для которого задаётся стоимость пути (игнорируется, если `is_global` равен `true`).
+ * @param port_number Идентификатор порта, для которого устанавливается стоимость пути.
+ * @param auto_config Флаг автоматической настройки:
+ *                    - `true` — стоимость пути рассчитывается автоматически.
+ *                    - `false` — стоимость пути задаётся вручную.
+ * @param path_cost Стоимость пути, если `auto_config` равен `false`.
+ * @param is_global Флаг глобальной конфигурации:
+ *                  - `true` — применить конфигурацию ко всем экземплярам STP.
+ *                  - `false` — применить только к указанному экземпляру STP.
+ *
+ * @return `true` в случае успешной конфигурации, `false` в случае ошибки.
  */
 bool stpmgr_config_port_path_cost(STP_INDEX stp_index, PORT_ID port_number, bool auto_config,
                                   UINT32 path_cost, bool is_global)
@@ -687,6 +875,18 @@ bool stpmgr_config_port_path_cost(STP_INDEX stp_index, PORT_ID port_number, bool
 /* stpmgr_clear_port_statistics: clears the bpdu statistics associated with  */
 /* input port.                                                               */
 /*****************************************************************************/
+/**
+ * @brief Очищает статистику порта для указанного экземпляра STP.
+ *
+ * Функция сбрасывает все собранные статистические данные для указанного порта в рамках
+ * заданного экземпляра STP. Это может включать такие показатели, как количество
+ * полученных и отправленных BPDU, изменения состояния порта и другие метрики.
+ *
+ * @param stp_class Указатель на структуру `STP_CLASS`, представляющую экземпляр STP.
+ * @param port_number Идентификатор порта, статистика которого очищается.
+ *
+ * @return void
+ */
 static void stpmgr_clear_port_statistics(STP_CLASS *stp_class, PORT_ID port_number)
 {
     STP_PORT_CLASS *stp_port = NULL;
@@ -729,6 +929,19 @@ static void stpmgr_clear_port_statistics(STP_CLASS *stp_class, PORT_ID port_numb
 /* stpmgr_clear_statistics: clears the bpdu statistics associated with all   */
 /* the ports in input mask.                                                  */
 /*****************************************************************************/
+/**
+ * @brief Очищает статистику для указанного VLAN и/или порта.
+ *
+ * Функция сбрасывает статистику, связанную с указанным VLAN и портом. Если порт
+ * не указан (значение `port_number` равно `BAD_PORT_ID`), статистика очищается
+ * для всех портов внутри указанного VLAN.
+ *
+ * @param vlan_id Идентификатор VLAN, статистика которого очищается.
+ * @param port_number Идентификатор порта, для которого очищается статистика.
+ *                    Если `BAD_PORT_ID`, статистика очищается для всех портов VLAN.
+ *
+ * @return void
+ */
 void stpmgr_clear_statistics(VLAN_ID vlan_id, PORT_ID port_number)
 {
     STP_INDEX stp_index;
@@ -760,6 +973,16 @@ void stpmgr_clear_statistics(VLAN_ID vlan_id, PORT_ID port_number)
  *
  * SYNOPSIS
  *		releases the stp index
+ */
+/**
+ * @brief Освобождает указанный индекс STP экземпляра.
+ *
+ * Функция удаляет привязку индекса STP экземпляра и освобождает связанные ресурсы,
+ * делая индекс доступным для повторного использования.
+ *
+ * @param stp_index Индекс STP экземпляра, который необходимо освободить.
+ *
+ * @return `true`, если индекс успешно освобождён, `false` в случае ошибки.
  */
 bool stpmgr_release_index(STP_INDEX stp_index)
 {
@@ -805,6 +1028,19 @@ bool stpmgr_release_index(STP_INDEX stp_index)
  * SYNOPSIS
  *		adds the port mask to the list of stp ports controlled by the
  *		stp instance
+ */
+/**
+ * @brief Добавляет порт управления (control port) к указанному экземпляру STP.
+ *
+ * Функция добавляет порт управления к экземпляру STP с заданным индексом. Порт
+ * управления используется для обработки событий STP, таких как отправка или
+ * получение BPDU, а также управления состояниями порта.
+ *
+ * @param stp_index Индекс экземпляра STP, к которому добавляется порт управления.
+ * @param port_number Идентификатор порта, который будет добавлен как порт управления.
+ * @param mode Режим работы порта управления (определяет поведение порта в рамках STP).
+ *
+ * @return `true` в случае успешного добавления порта, `false` в случае ошибки.
  */
 bool stpmgr_add_control_port(STP_INDEX stp_index, PORT_ID port_number, uint8_t mode)
 {
@@ -859,6 +1095,21 @@ bool stpmgr_add_control_port(STP_INDEX stp_index, PORT_ID port_number, uint8_t m
  * SYNOPSIS
  *		removes the port mask from the list of stp ports controlled by the
  *		stp instance
+ */
+/**
+ * @brief Удаляет порт управления (control port) из указанного экземпляра STP.
+ *
+ * Функция удаляет порт управления из экземпляра STP с заданным индексом. При необходимости
+ * может также удалить порт из STP таблицы. Это освобождает ресурсы, связанные с портом,
+ * и отключает его участие в обработке протокола STP.
+ *
+ * @param stp_index Индекс экземпляра STP, из которого удаляется порт управления.
+ * @param port_number Идентификатор порта, который будет удалён.
+ * @param del_stp_port Указывает, нужно ли удалить порт из STP таблицы:
+ *                     - `true` — порт будет удалён из STP таблицы.
+ *                     - `false` — порт будет исключён только из управления.
+ *
+ * @return `true` в случае успешного удаления порта, `false` в случае ошибки.
  */
 bool stpmgr_delete_control_port(STP_INDEX stp_index, PORT_ID port_number, bool del_stp_port)
 {
@@ -916,6 +1167,18 @@ bool stpmgr_delete_control_port(STP_INDEX stp_index, PORT_ID port_number, bool d
  * SYNOPSIS
  *		adds the port to the list of enabled stp ports
  */
+/**
+ * @brief Добавляет и активирует порт для указанного экземпляра STP.
+ *
+ * Функция добавляет порт в список активных портов для экземпляра STP, заданного индексом.
+ * Этот порт начинает участвовать в обработке STP, включая отправку и получение BPDU,
+ * управление состоянием и участие в алгоритме выбора корневого моста.
+ *
+ * @param stp_index Индекс экземпляра STP, к которому добавляется порт.
+ * @param port_number Идентификатор порта, который добавляется и активируется.
+ *
+ * @return `true` в случае успешного добавления порта, `false` в случае ошибки.
+ */
 bool stpmgr_add_enable_port(STP_INDEX stp_index, PORT_ID port_number)
 {
     STP_CLASS *stp_class;
@@ -954,6 +1217,18 @@ bool stpmgr_add_enable_port(STP_INDEX stp_index, PORT_ID port_number)
  * SYNOPSIS
  *		removes the port from the list of enabled stp ports
  */
+/**
+ * @brief Удаляет и деактивирует порт из указанного экземпляра STP.
+ *
+ * Функция удаляет порт из списка активных портов для экземпляра STP, заданного индексом.
+ * Этот порт прекращает участие в обработке STP, включая отправку и получение BPDU,
+ * управление состоянием и участие в алгоритме выбора корневого моста.
+ *
+ * @param stp_index Индекс экземпляра STP, из которого удаляется порт.
+ * @param port_number Идентификатор порта, который будет удалён и деактивирован.
+ *
+ * @return `true` в случае успешного удаления порта, `false` в случае ошибки.
+ */
 bool stpmgr_delete_enable_port(STP_INDEX stp_index, PORT_ID port_number)
 {
     STP_CLASS *stp_class;
@@ -981,6 +1256,22 @@ bool stpmgr_delete_enable_port(STP_INDEX stp_index, PORT_ID port_number)
  *
  * SYNOPSIS
  *		updates stp port statistics
+ */
+/**
+ * @brief Обновляет статистику для указанного порта в заданном экземпляре STP.
+ *
+ * Функция анализирует содержимое буфера BPDU и обновляет статистические данные
+ * для указанного порта в заданном экземпляре STP. Также учитывает, является ли
+ * обработка BPDU специфичной для протокола PVST.
+ *
+ * @param stp_index Индекс экземпляра STP, статистика которого обновляется.
+ * @param port_number Идентификатор порта, для которого обновляется статистика.
+ * @param buffer Указатель на буфер с данными BPDU.
+ * @param pvst Флаг, указывающий, обрабатывается ли PVST BPDU:
+ *             - `true` — BPDU относится к протоколу PVST.
+ *             - `false` — стандартный BPDU.
+ *
+ * @return void
  */
 static void stpmgr_update_stats(STP_INDEX stp_index, PORT_ID port_number, void *buffer, bool pvst)
 {
@@ -1017,6 +1308,19 @@ static void stpmgr_update_stats(STP_INDEX stp_index, PORT_ID port_number, void *
  * SYNOPSIS
  *		validates the pvst bpdu and passes to the stp bpdu handler process
  */
+/**
+ * @brief Обрабатывает PVST BPDU для указанного порта в экземпляре STP.
+ *
+ * Функция анализирует содержимое буфера PVST BPDU, обновляет соответствующую
+ * статистику и выполняет необходимые действия для обработки BPDU в рамках
+ * протокола PVST.
+ *
+ * @param stp_index Индекс экземпляра STP, к которому относится BPDU.
+ * @param port_number Идентификатор порта, с которого получен BPDU.
+ * @param buffer Указатель на буфер с данными PVST BPDU.
+ *
+ * @return void
+ */
 void stpmgr_process_pvst_bpdu(STP_INDEX stp_index, PORT_ID port_number, void *buffer)
 {
     STP_CONFIG_BPDU *bpdu;
@@ -1050,6 +1354,19 @@ void stpmgr_process_pvst_bpdu(STP_INDEX stp_index, PORT_ID port_number, void *bu
  *		bpdu received. note that the bpdu should have been validated
  *		before this function is called.
  */
+/**
+ * @brief Обрабатывает стандартный STP BPDU для указанного порта в экземпляре STP.
+ *
+ * Функция анализирует содержимое буфера STP BPDU, обновляет соответствующую
+ * статистику и выполняет необходимые действия для обработки BPDU в рамках
+ * стандартного протокола STP.
+ *
+ * @param stp_index Индекс экземпляра STP, к которому относится BPDU.
+ * @param port_number Идентификатор порта, с которого получен BPDU.
+ * @param buffer Указатель на буфер с данными STP BPDU.
+ *
+ * @return void
+ */
 void stpmgr_process_stp_bpdu(STP_INDEX stp_index, PORT_ID port_number, void *buffer)
 {
     STP_CONFIG_BPDU *bpdu = (STP_CONFIG_BPDU *)buffer;
@@ -1074,6 +1391,20 @@ void stpmgr_process_stp_bpdu(STP_INDEX stp_index, PORT_ID port_number, void *buf
  *
  * SYNOPSIS
  *		enables/disables fast uplink for all the ports in the port mask
+ */
+/**
+ * @brief Конфигурирует функцию Fast Uplink для указанного порта.
+ *
+ * Функция включает или отключает функцию Fast Uplink на указанном порту. Эта функция
+ * позволяет быстро переключаться на резервный линк при изменении топологии сети,
+ * минимизируя время простоя.
+ *
+ * @param port_number Уникальный идентификатор порта, который необходимо настроить.
+ * @param enable Логический флаг для включения/отключения функции:
+ *               - `true` — включить Fast Uplink.
+ *               - `false` — отключить Fast Uplink.
+ *
+ * @return void
  */
 void stpmgr_config_fastuplink(PORT_ID port_number, bool enable)
 {
@@ -1101,6 +1432,19 @@ void stpmgr_config_fastuplink(PORT_ID port_number, bool enable)
  *
  * RETURN VALUE
  *		true if it is "spanning protect"; false otherwise.
+ */
+
+/**
+ * @brief Обрабатывает защиту порта от нежелательных изменений топологии.
+ *
+ * Функция проверяет наличие условий, которые могут вызвать нарушение работы
+ * протокола STP на указанном порту и VLAN, и применяет соответствующие меры
+ * защиты, если это необходимо.
+ *
+ * @param rx_port Идентификатор порта, на котором был обнаружен потенциальный конфликт.
+ * @param vlan_id Идентификатор VLAN, в контексте которого выполняется проверка.
+ *
+ * @return `true`, если защита успешно применена, `false` в случае отсутствия нарушений или ошибки.
  */
 static bool stpmgr_protect_process(PORT_ID rx_port, uint16_t vlan_id)
 {
@@ -1137,6 +1481,20 @@ static bool stpmgr_protect_process(PORT_ID rx_port, uint16_t vlan_id)
  * NOTES
  *
  */
+/**
+ * @brief Конфигурирует функцию Fast Span для указанного порта.
+ *
+ * Функция включает или отключает функцию Fast Span для указанного порта. Эта функция
+ * позволяет ускорить процесс согласования состояния порта в протоколе STP, минимизируя
+ * задержки при изменении топологии сети.
+ *
+ * @param port_id Уникальный идентификатор порта, который необходимо настроить.
+ * @param enable Логический флаг для включения/отключения функции:
+ *               - `true` — включить Fast Span.
+ *               - `false` — отключить Fast Span.
+ *
+ * @return `true`, если конфигурация была успешно применена, `false` в случае ошибки.
+ */
 static bool stpmgr_config_fastspan(PORT_ID port_id, bool enable)
 {
     bool ret = true;
@@ -1168,6 +1526,23 @@ static bool stpmgr_config_fastspan(PORT_ID port_id, bool enable)
  *
  * NOTES
  *		The protection mask is (protect_mask || protect_do_disable_mask).
+ */
+
+/**
+ * @brief Конфигурирует защиту порта (Protection) для указанного порта.
+ *
+ * Функция включает или отключает защиту порта, такую как BPDU Guard или Root Guard.
+ * При необходимости также может отключить порт при обнаружении нарушения.
+ *
+ * @param port_id Уникальный идентификатор порта, который необходимо настроить.
+ * @param enable Логический флаг для включения/отключения защиты:
+ *               - `true` — включить защиту.
+ *               - `false` — отключить защиту.
+ * @param do_disable Логический флаг, указывающий, следует ли отключить порт при обнаружении нарушения:
+ *                   - `true` — порт будет отключён в случае нарушения.
+ *                   - `false` — порт останется активным, но нарушение будет зафиксировано.
+ *
+ * @return `true`, если конфигурация защиты была успешно применена, `false` в случае ошибки.
  */
 static bool stpmgr_config_protect(PORT_ID port_id, bool enable, bool do_disable)
 {
@@ -1202,6 +1577,22 @@ static bool stpmgr_config_protect(PORT_ID port_id, bool enable, bool do_disable)
 /* stpmgr_config_root_protect: enables/disables root-guard feature on the    */
 /* input mask.                                                               */
 /*****************************************************************************/
+/**
+ * @brief Конфигурирует функцию Root Protect для указанного порта.
+ *
+ * Функция включает или отключает функцию Root Protect, которая предотвращает
+ * назначение порта корневым портом, даже если он получает BPDU с более высоким
+ * приоритетом. Эта функция используется для защиты текущего корневого моста
+ * от нежелательных изменений топологии.
+ *
+ * @param port_id Уникальный идентификатор порта, который необходимо настроить.
+ * @param enable Логический флаг для включения/отключения функции:
+ *               - `true` — включить Root Protect.
+ *               - `false` — отключить Root Protect.
+ *
+ * @return `true`, если конфигурация Root Protect была успешно применена,
+ *         `false` в случае ошибки.
+ */
 static bool stpmgr_config_root_protect(PORT_ID port_id, bool enable)
 {
     if (enable)
@@ -1216,6 +1607,18 @@ static bool stpmgr_config_root_protect(PORT_ID port_id, bool enable)
 /* stpmgr_config_root_protect_timeout: configures the timeout in seconds for */
 /* which the violated stp port is kept in blocking state.                    */
 /*****************************************************************************/
+/**
+ * @brief Устанавливает таймаут для функции Root Protect.
+ *
+ * Функция задаёт таймаут, в течение которого порт остаётся защищённым
+ * от нежелательных изменений топологии (например, назначение порта корневым).
+ * Таймаут определяет максимальное время действия функции Root Protect.
+ *
+ * @param timeout Значение таймаута в секундах.
+ *
+ * @return `true`, если значение таймаута было успешно установлено,
+ *         `false` в случае ошибки.
+ */
 static bool stpmgr_config_root_protect_timeout(UINT timeout)
 {
     // sanity check (should never happen)
@@ -1238,6 +1641,19 @@ static bool stpmgr_config_root_protect_timeout(UINT timeout)
  *		mode, bridge instances will operate in the 802.1d-2004 mode rather than
  *		802.1d-1998 mode.
  */
+/**
+ * @brief Включает или отключает расширенный режим (Extend Mode) для STP.
+ *
+ * Функция активирует или деактивирует расширенный режим работы STP. Расширенный режим
+ * позволяет использовать дополнительные возможности и параметры STP, такие как
+ * поддержка нестандартных конфигураций или улучшенных алгоритмов.
+ *
+ * @param enable Логический флаг для включения/отключения расширенного режима:
+ *               - `true` — включить расширенный режим.
+ *               - `false` — отключить расширенный режим.
+ *
+ * @return void
+ */
 void stpmgr_set_extend_mode(bool enable)
 {
     if (enable == g_stpd_extend_mode)
@@ -1252,6 +1668,21 @@ void stpmgr_set_extend_mode(bool enable)
  * SYNOPSIS
  *		port event handler. propagates port events across all stp and
  *		rstp_instances.
+ */
+/**
+ * @brief Обрабатывает событие изменения состояния порта.
+ *
+ * Функция вызывается при изменении состояния указанного порта (включение или выключение).
+ * В зависимости от текущего состояния порта и входных параметров, обновляет
+ * состояние порта в протоколе STP и выполняет связанные операции, такие как
+ * активация или деактивация таймеров, обновление топологии и т. д.
+ *
+ * @param port_number Уникальный идентификатор порта, для которого произошло событие.
+ * @param up Логический флаг, указывающий новое состояние порта:
+ *           - `true` — порт стал активным (поднят).
+ *           - `false` — порт стал неактивным (опущен).
+ *
+ * @return void
  */
 void stpmgr_port_event(PORT_ID port_number, bool up)
 {
@@ -1307,6 +1738,19 @@ void stpmgr_port_event(PORT_ID port_number, bool up)
     }
 }
 
+/**
+ * @brief Обрабатывает полученный STP BPDU на указанном порту и VLAN.
+ *
+ * Функция вызывается при получении STP BPDU. Она анализирует содержимое BPDU,
+ * обновляет статистику и вызывает обработку в рамках текущего состояния протокола STP
+ * для указанного VLAN и порта.
+ *
+ * @param vlan_id Идентификатор VLAN, в котором получен BPDU.
+ * @param port_id Идентификатор порта, на котором получен BPDU.
+ * @param pkt Указатель на буфер с данными BPDU.
+ *
+ * @return void
+ */
 void stpmgr_rx_stp_bpdu(uint16_t vlan_id, uint32_t port_id, char *pkt)
 {
     STP_INDEX stp_index = STP_INDEX_INVALID;
@@ -1397,6 +1841,19 @@ void stpmgr_rx_stp_bpdu(uint16_t vlan_id, uint32_t port_id, char *pkt)
     }
 }
 
+/**
+ * @brief Обрабатывает полученный PVST BPDU на указанном порту и VLAN.
+ *
+ * Функция вызывается при получении BPDU протокола PVST (Per-VLAN Spanning Tree).
+ * Она анализирует содержимое BPDU, обновляет соответствующую статистику и выполняет
+ * обработку на основе состояния протокола PVST для указанного VLAN и порта.
+ *
+ * @param vlan_id Идентификатор VLAN, в котором был получен BPDU.
+ * @param port_id Идентификатор порта, на котором был получен BPDU.
+ * @param pkt Указатель на буфер с данными BPDU.
+ *
+ * @return void
+ */
 void stpmgr_rx_pvst_bpdu(uint16_t vlan_id, uint32_t port_id, void *pkt)
 {
     STP_INDEX stp_index = STP_INDEX_INVALID;
@@ -1463,6 +1920,20 @@ void stpmgr_rx_pvst_bpdu(uint16_t vlan_id, uint32_t port_id, void *pkt)
     }
 }
 
+/**
+ * @brief Обрабатывает полученный BPDU (STP или PVST) на указанном порту и VLAN.
+ *
+ * Функция вызывается при получении BPDU и определяет, к какому протоколу
+ * относится BPDU (STP или PVST), а затем вызывает соответствующую функцию
+ * для обработки. Также обновляет статистику и выполняет действия, связанные с
+ * изменением состояния топологии.
+ *
+ * @param vlan_id Идентификатор VLAN, в котором был получен BPDU.
+ * @param port_id Идентификатор порта, на котором был получен BPDU.
+ * @param pkt Указатель на буфер с данными BPDU.
+ *
+ * @return void
+ */
 void stpmgr_process_rx_bpdu(uint16_t vlan_id, uint32_t port_id, unsigned char *pkt)
 {
     // sanity checks
@@ -1482,6 +1953,20 @@ void stpmgr_process_rx_bpdu(uint16_t vlan_id, uint32_t port_id, unsigned char *p
         stpmgr_rx_pvst_bpdu(vlan_id, port_id, pkt);
 }
 
+/**
+ * @brief Обработчик 100-миллисекундного таймера для STP.
+ *
+ * Эта функция вызывается каждые 100 миллисекунд для выполнения
+ * периодических задач в контексте протокола STP. Основные задачи включают
+ * обновление таймеров, управление состояниями портов, обработку изменений
+ * топологии и обновление статистики.
+ *
+ * @param fd Сокетный дескриптор (не используется в данном обработчике).
+ * @param what Тип события (не используется в данном обработчике).
+ * @param arg Указатель на аргумент, переданный таймеру (обычно структура данных STP).
+ *
+ * @return void
+ */
 void stpmgr_100ms_timer(evutil_socket_t fd, short what, void *arg)
 {
     const char *data = (char *)arg;
@@ -1489,6 +1974,19 @@ void stpmgr_100ms_timer(evutil_socket_t fd, short what, void *arg)
     stptimer_tick();
 }
 
+/**
+ * @brief Обрабатывает сообщение конфигурации моста (Bridge Config Message).
+ *
+ * Эта функция отвечает за обработку входящего сообщения конфигурации моста.
+ * Сообщение содержит параметры конфигурации, такие как приоритет моста,
+ * максимальный возраст, время задержки и другие настройки STP. Функция
+ * обновляет соответствующие параметры в контексте STP и выполняет
+ * необходимые действия для применения новой конфигурации.
+ *
+ * @param msg Указатель на сообщение конфигурации моста.
+ *
+ * @return void
+ */
 static void stpmgr_process_bridge_config_msg(void *msg)
 {
     STP_BRIDGE_CONFIG_MSG *pmsg = (STP_BRIDGE_CONFIG_MSG *)msg;
@@ -1537,6 +2035,20 @@ static void stpmgr_process_bridge_config_msg(void *msg)
     }
 }
 
+/**
+ * @brief Включает поддержку протокола STP для указанного VLAN.
+ *
+ * Эта функция обрабатывает сообщение конфигурации VLAN, включающее параметры
+ * для активации STP. Она проверяет корректность параметров, создаёт или
+ * обновляет экземпляр STP для данного VLAN и включает его работу.
+ *
+ * @param pmsg Указатель на структуру сообщения конфигурации VLAN.
+ *             Структура содержит информацию о VLAN, такую как идентификатор VLAN
+ *             и параметры конфигурации STP.
+ *
+ * @return `true`, если STP был успешно активирован для VLAN,
+ *         `false`, если произошла ошибка.
+ */
 static bool stpmgr_vlan_stp_enable(STP_VLAN_CONFIG_MSG *pmsg)
 {
     PORT_ATTR *attr;
@@ -1582,12 +2094,40 @@ static bool stpmgr_vlan_stp_enable(STP_VLAN_CONFIG_MSG *pmsg)
     return true;
 }
 
+/**
+ * @brief Отключает поддержку протокола STP для указанного VLAN.
+ *
+ * Эта функция обрабатывает сообщение конфигурации VLAN, отключающее STP для данного VLAN.
+ * Она удаляет или деактивирует экземпляр STP, связанный с VLAN, и выполняет
+ * соответствующую очистку ресурсов.
+ *
+ * @param pmsg Указатель на структуру сообщения конфигурации VLAN.
+ *             Структура содержит информацию о VLAN, такую как идентификатор VLAN
+ *             и параметры конфигурации STP.
+ *
+ * @return `true`, если STP был успешно отключён для VLAN,
+ *         `false`, если произошла ошибка.
+ */
 static bool stpmgr_vlan_stp_disable(STP_VLAN_CONFIG_MSG *pmsg)
 {
     stpmgr_release_index(pmsg->inst_id);
     return true;
 }
 
+/**
+ * @brief Обрабатывает сообщение конфигурации VLAN.
+ *
+ * Эта функция обрабатывает входящее сообщение конфигурации VLAN, определяя,
+ * требуется ли включить или отключить поддержку STP для указанного VLAN.
+ * В зависимости от содержимого сообщения выполняется активация или
+ * деактивация протокола STP для данного VLAN.
+ *
+ * @param msg Указатель на сообщение конфигурации VLAN. Ожидается, что
+ *            сообщение приведено к структуре `STP_VLAN_CONFIG_MSG`,
+ *            содержащей информацию о VLAN и требуемых действиях.
+ *
+ * @return void
+ */
 static void stpmgr_process_vlan_config_msg(void *msg)
 {
     STP_VLAN_CONFIG_MSG *pmsg = (STP_VLAN_CONFIG_MSG *)msg;
@@ -1620,6 +2160,19 @@ static void stpmgr_process_vlan_config_msg(void *msg)
         STP_LOG_ERR("invalid opcode %d", pmsg->opcode);
 }
 
+/**
+ * @brief Отправляет ответное сообщение через UNIX-сокет.
+ *
+ * Эта функция используется для отправки данных в ответ на запрос через
+ * UNIX-сокет. Она принимает адрес клиента, указатель на сообщение и его длину,
+ * отправляет сообщение и логирует результат.
+ *
+ * @param addr Указатель на структуру `sockaddr_un`, содержащую адрес клиента.
+ * @param msg Указатель на сообщение, которое нужно отправить.
+ * @param len Длина сообщения в байтах.
+ *
+ * @return void
+ */
 static void stpmgr_send_reply(struct sockaddr_un addr, void *msg, int len)
 {
     int rc;
@@ -1632,6 +2185,19 @@ static void stpmgr_send_reply(struct sockaddr_un addr, void *msg, int len)
         STP_LOG_DEBUG("reply sent");
 }
 
+/**
+ * @brief Обрабатывает сообщение конфигурации интерфейса VLAN.
+ *
+ * Эта функция используется для обработки сообщений, содержащих параметры конфигурации
+ * интерфейсов VLAN. Она анализирует переданные данные, вносит изменения в текущую
+ * конфигурацию и выполняет соответствующие действия для интерфейсов VLAN.
+ *
+ * @param msg Указатель на сообщение конфигурации интерфейса VLAN.
+ *            Ожидается, что сообщение приведено к структуре, содержащей информацию
+ *            о VLAN и соответствующем интерфейсе.
+ *
+ * @return void
+ */
 static void stpmgr_process_vlan_intf_config_msg(void *msg)
 {
     STP_VLAN_PORT_CONFIG_MSG *pmsg = (STP_VLAN_PORT_CONFIG_MSG *)msg;
@@ -1662,6 +2228,18 @@ static void stpmgr_process_vlan_intf_config_msg(void *msg)
         stpmgr_config_port_path_cost(pmsg->inst_id, port_id, false, pmsg->path_cost, false);
 }
 
+/**
+ * @brief Обрабатывает сообщение конфигурации интерфейса.
+ *
+ * Эта функция используется для обработки сообщений, связанных с изменениями конфигурации
+ * интерфейсов. Она анализирует переданные данные, выполняет соответствующие изменения
+ * в конфигурации интерфейса и, при необходимости, обновляет состояние STP для данного интерфейса.
+ *
+ * @param msg Указатель на сообщение конфигурации интерфейса. Ожидается, что сообщение
+ *            приведено к структуре, содержащей данные о конфигурации интерфейса.
+ *
+ * @return void
+ */
 static void stpmgr_process_intf_config_msg(void *msg)
 {
     STP_PORT_CONFIG_MSG *pmsg = (STP_PORT_CONFIG_MSG *)msg;
@@ -1756,6 +2334,19 @@ static void stpmgr_process_intf_config_msg(void *msg)
     }
 }
 
+/**
+ * @brief Обрабатывает сообщение конфигурации членства VLAN.
+ *
+ * Эта функция используется для обработки сообщений, которые управляют членством
+ * портов в VLAN. Она анализирует переданные данные, выполняет добавление или
+ * удаление порта из указанного VLAN и обновляет связанные параметры STP.
+ *
+ * @param msg Указатель на сообщение конфигурации членства VLAN. Ожидается, что
+ *            сообщение приведено к структуре, содержащей идентификатор VLAN,
+ *            порт и действие.
+ *
+ * @return void
+ */
 static void stpmgr_process_vlan_mem_config_msg(void *msg)
 {
     STP_VLAN_MEM_CONFIG_MSG *pmsg = (STP_VLAN_MEM_CONFIG_MSG *)msg;
@@ -1822,6 +2413,22 @@ static void stpmgr_process_vlan_mem_config_msg(void *msg)
     }
 }
 
+/**
+ * @brief Обрабатывает входящее IPC-сообщение от клиента.
+ *
+ * Эта функция отвечает за обработку сообщений межпроцессного взаимодействия (IPC),
+ * полученных от клиента. В зависимости от типа сообщения, она вызывает
+ * соответствующие функции для выполнения запрошенного действия и отправляет
+ * ответ клиенту.
+ *
+ * @param msg Указатель на структуру IPC-сообщения. Содержит информацию о типе
+ *            команды и связанных данных.
+ * @param len Длина сообщения в байтах.
+ * @param client_addr Структура `sockaddr_un`, содержащая адрес клиента,
+ *                    отправившего сообщение.
+ *
+ * @return void
+ */
 static void stpmgr_process_ipc_msg(STP_IPC_MSG *msg, int len, struct sockaddr_un client_addr)
 {
     int ret;
@@ -1891,6 +2498,20 @@ static void stpmgr_process_ipc_msg(STP_IPC_MSG *msg, int len, struct sockaddr_un
 }
 
 /* Process all messages from clients (STPMGRd) */
+/**
+ * @brief Обрабатывает входящее сообщение от клиента через IPC-сокет.
+ *
+ * Эта функция вызывается, когда приходит сообщение от клиента через IPC-сокет.
+ * Она считывает данные, определяет тип сообщения и вызывает соответствующую
+ * функцию для обработки. После выполнения запроса отправляет ответ клиенту.
+ *
+ * @param fd Сокетный дескриптор, через который было получено сообщение.
+ * @param what Тип события, связанный с сокетом (например, готовность к чтению).
+ * @param arg Указатель на дополнительные данные, связанные с контекстом STP
+ *            (обычно структура, управляющая IPC).
+ *
+ * @return void
+ */
 void stpmgr_recv_client_msg(evutil_socket_t fd, short what, void *arg)
 {
     char buffer[4096];

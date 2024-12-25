@@ -1,18 +1,20 @@
-/*
- * Copyright 2019 Broadcom. The term "Broadcom" refers to Broadcom Inc. and/or
- * its subsidiaries.
+/**
+ * @file stp_pkt.c
+ * @brief Реализация функций для обработки сетевых пакетов STP (Spanning Tree Protocol).
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Этот файл содержит функции для работы с сокетами, фильтрацией пакетов,
+ * их передачей и обработкой входящих сообщений. Используется для управления
+ * взаимодействием между интерфейсами и протоколом STP.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * @details
+ * Реализованные функции:
+ * - Создание и закрытие сокетов.
+ * - Фильтрация пакетов STP и PVST.
+ * - Обработка входящих сообщений.
+ * - Передача пакетов.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * @author
+ * Broadcom, 2019. Лицензия Apache License 2.0.
  */
 
 #include <net/if.h>
@@ -50,6 +52,40 @@ MAC_ADDRESS pvst_bridge_group_address = {0x01000cccL, 0xcccd};
  */
 // next - next instruction
 // next+n - nth instruction after next
+
+/**
+ * @brief Фильтр BPF (Berkeley Packet Filter) для обработки пакетов STP и PVST.
+ *
+ * Эта структура определяет последовательность инструкций BPF, используемых
+ * для фильтрации сетевых пакетов, принимаемых интерфейсами. Фильтр проверяет,
+ * соответствуют ли пакеты протоколам STP или PVST, и возвращает результат
+ * для дальнейшей обработки.
+ *
+ * @details
+ * Структура фильтра выполняет следующие шаги:
+ * 1. Проверяет размер пакета.
+ * 2. Сравнивает MAC-адрес назначения с адресами, используемыми STP и PVST.
+ * 3. Проверяет соответствие идентификатора протокола (Protocol ID) значению,
+ * используемому STP.
+ *
+ * ### Логика фильтрации:
+ * - Если пакет превышает допустимый размер Ethernet-кадра (1500 байт), он
+ *   считается недействительным.
+ * - Если MAC-адрес назначения соответствует PVST, пакет пропускается.
+ * - Если MAC-адрес назначения соответствует STP, также выполняется проверка
+ *   поля `Protocol ID`, чтобы подтвердить принадлежность пакета к STP.
+ * - В случае успешного совпадения пакет передаётся для дальнейшей обработки.
+ * - Если ни одно условие не выполнено, пакет игнорируется.
+ *
+ * @code
+ * Пример использования:
+ * struct sock_fprog bpf_program = {
+ *     .len = sizeof(g_stp_filter) / sizeof(struct sock_filter),
+ *     .filter = g_stp_filter,
+ * };
+ * setsockopt(sock_fd, SOL_SOCKET, SO_ATTACH_FILTER, &bpf_program, sizeof(bpf_program));
+ * @endcode
+ */
 struct sock_filter g_stp_filter[] = {
     // 1. Load Half-Word @12 into BPF register
     BPF_STMT(BPF_LD | BPF_ABS | BPF_H, 0xc),
@@ -81,6 +117,14 @@ struct sock_filter g_stp_filter[] = {
     BPF_STMT(BPF_RET | BPF_K, 0),
 };
 
+/**
+ * @brief Закрывает сокет для заданного сетевого интерфейса.
+ *
+ * Эта функция удаляет привязанный сокет из списка событий, закрывает его
+ * и очищает связанные ресурсы.
+ *
+ * @param intf_node Указатель на структуру сетевого интерфейса, связанного с сокетом.
+ */
 void stp_pkt_sock_close(INTERFACE_NODE *intf_node)
 {
     stpmgr_libevent_destroy(intf_node->ev);
@@ -89,6 +133,15 @@ void stp_pkt_sock_close(INTERFACE_NODE *intf_node)
     STP_LOG_INFO("SOCKET closed for port : %u kif : %u", intf_node->port_id, intf_node->kif_index);
 }
 
+/**
+ * @brief Создаёт сокет для обработки пакетов STP на заданном интерфейсе.
+ *
+ * Эта функция инициализирует сокет с использованием сырых пакетов (raw packets),
+ * настраивает фильтры и добавляет обработчик событий для чтения пакетов.
+ *
+ * @param intf_node Указатель на структуру интерфейса, для которого создаётся сокет.
+ * @return Дескриптор сокета или -1 в случае ошибки.
+ */
 int stp_pkt_sock_create(INTERFACE_NODE *intf_node)
 {
     int val = 0;
@@ -149,6 +202,15 @@ int stp_pkt_sock_create(INTERFACE_NODE *intf_node)
     return intf_node->sock;
 }
 
+/**
+ * @brief Выводит информацию о передаваемом или принимаемом пакете в лог.
+ *
+ * @param intf_node Указатель на структуру интерфейса, связанного с пакетом.
+ * @param vlan_id Идентификатор VLAN пакета.
+ * @param pkt Указатель на данные пакета.
+ * @param pkt_len Длина пакета.
+ * @param is_rx Флаг, указывающий, является ли пакет входящим (true) или исходящим (false).
+ */
 static void stp_pkt_dump(INTERFACE_NODE *intf_node, VLAN_ID vlan_id, char *pkt, uint16_t pkt_len, bool is_rx)
 {
     static char pkt_str[256];
@@ -173,6 +235,14 @@ static void stp_pkt_dump(INTERFACE_NODE *intf_node, VLAN_ID vlan_id, char *pkt, 
     }
 }
 
+/**
+ * @brief Заполняет буфер для передачи пакета с учётом VLAN-тегов.
+ *
+ * @param size Размер исходного пакета.
+ * @param vlan_id Идентификатор VLAN (если используется тегирование).
+ * @param buffer Исходные данные пакета.
+ * @param tx_buf Буфер для передачи пакета.
+ */
 static void stp_pkt_fill_tx_buf(uint16_t size, VLAN_ID vlan_id, char *buffer, char *tx_buf)
 {
     uint8_t prio = (7 << 5);
@@ -200,6 +270,19 @@ static void stp_pkt_fill_tx_buf(uint16_t size, VLAN_ID vlan_id, char *buffer, ch
 }
 
 /* buffer : contains the entire packet including mac */
+/**
+ * @brief Обрабатывает передачу пакета на заданный порт.
+ *
+ * Эта функция отправляет пакет через сокет, связанный с заданным портом,
+ * с учётом тегирования VLAN.
+ *
+ * @param port_id Идентификатор порта, через который передаётся пакет.
+ * @param vlan_id Идентификатор VLAN.
+ * @param buffer Исходные данные пакета.
+ * @param size Размер пакета.
+ * @param tagged Флаг, указывающий на необходимость добавления VLAN-тега.
+ * @return 0 в случае успеха, -1 при ошибке.
+ */
 int stp_pkt_tx_handler(uint32_t port_id, VLAN_ID vlan_id, char *buffer, uint16_t size, bool tagged)
 {
     int i = 0;
@@ -242,6 +325,19 @@ int stp_pkt_tx_handler(uint32_t port_id, VLAN_ID vlan_id, char *buffer, uint16_t
     return ret;
 }
 
+/**
+ * @brief Обрабатывает входящие пакеты STP.
+ *
+ * Эта функция вызывается, когда сокет готов для чтения. Она считывает входящие
+ * пакеты STP с сокета, определяет их тип, проверяет корректность и передаёт
+ * их для дальнейшей обработки.
+ *
+ * @param fd Сокетный дескриптор, на котором были получены данные.
+ * @param what Тип события, вызвавшего обработчик (например, `EV_READ`).
+ * @param arg Указатель на дополнительные данные, связанные с сокетом или контекстом.
+ *
+ * @return void
+ */
 void stp_pkt_rx_handler(evutil_socket_t fd, short what, void *arg)
 {
     g_stpd_stats_libev_pktrx++;

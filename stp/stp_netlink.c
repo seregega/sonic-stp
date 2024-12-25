@@ -1,18 +1,22 @@
-/*
- * Copyright 2019 Broadcom. The term "Broadcom" refers to Broadcom Inc. and/or
- * its subsidiaries.
+/**
+ * @file stp_netlink.c
+ * @brief Реализация взаимодействия демона STP с Netlink API ядра Linux.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Этот файл содержит функции для обработки Netlink-сообщений, отправки запросов,
+ * получения обновлений состояния сетевых интерфейсов и обработки событий Netlink.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Основные задачи:
+ * - Инициализация Netlink-сокета.
+ * - Отправка и получение сообщений через Netlink.
+ * - Разбор атрибутов сообщений и обработка изменений интерфейсов.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * @details
+ * Включает обработку событий Netlink для изменений состояния интерфейсов Ethernet
+ * и PortChannel. Используется для мониторинга состояния портов и управления
+ * сетевыми объектами в контексте протокола STP (Spanning Tree Protocol).
+ *
+ * @author
+ * Broadcom, 2019. Лицензия Apache License 2.0.
  */
 
 #include "stp_netlink.h"
@@ -21,12 +25,15 @@ int stp_intf_get_netlink_fd();
 stp_netlink_cb_ptr *stp_netlink_cb;
 
 /**
- * @brief используется для настройки размера буфера сокета (как для приема, так и для передачи данных). Она позволяет установить оптимальный размер буфера для повышения производительности передачи или приема данных через сокет.
+ * @brief Устанавливает размер буфера для сокета Netlink.
  *
- * @param sock Дескриптор сокета, для которого устанавливается размер буфера.
- * @param optname Имя опции сокета, определяющее, для какого буфера (приемного или передающего) изменяется размер. SO_RCVBUF Установка размера буфера для приема данных. /SO_SNDBUF — Установка размера буфера для передачи данных.
+ * Функция настраивает оптимальный размер буфера для приема или передачи данных
+ * через Netlink-сокет.
+ *
+ * @param sock Дескриптор сокета.
+ * @param optname Тип буфера (например, SO_RCVBUF для приемного буфера).
  * @param size Новый размер буфера в байтах.
- * @return int
+ * @return int Новый размер буфера в случае успеха, -1 в случае ошибки.
  */
 int stp_set_sock_buf_size(int sock, int optname, int size)
 {
@@ -60,10 +67,13 @@ int stp_set_sock_buf_size(int sock, int optname, int size)
 }
 
 /**
- * @brief используется для инициализации Netlink-сокета и настройки механизма обработки сообщений Netlink в контексте демона STP (Spanning Tree Protocol). Она также регистрирует функцию обратного вызова (callback) для обработки событий Netlink.
+ * @brief Инициализирует Netlink-сокет для взаимодействия с ядром Linux.
  *
- * @param fn Указатель на функцию обратного вызова (callback), которая вызывается при получении сообщений Netlink.
- * @return int 0/-1 Ошибка инициализации (например, не удалось создать сокет или настроить обработку событий).
+ * Создает Netlink-сокет, настраивает параметры и регистрирует функцию
+ * обратного вызова для обработки событий Netlink.
+ *
+ * @param fn Указатель на функцию обратного вызова для обработки событий Netlink.
+ * @return int Дескриптор сокета в случае успеха, -1 в случае ошибки.
  */
 int stp_netlink_init(stp_netlink_cb_ptr *fn)
 {
@@ -111,10 +121,13 @@ int stp_netlink_init(stp_netlink_cb_ptr *fn)
 }
 
 /**
- * @brief используется для отправки запроса через Netlink-сокет (идентифицированный дескриптором nl_fd) к ядру Linux. Этот запрос инициирует получение данных о сетевых объектах, таких как интерфейсы, маршруты или адреса.
+ * @brief Отправляет запрос через Netlink-сокет.
  *
- * @param nl_fd Дескриптор Netlink-сокета, через который будет отправлен запрос.
- * @return int -1 — Ошибка при отправке запроса (например, проблема с сокетом или недостаточные ресурсы).
+ * Используется для инициализации получения данных о сетевых интерфейсах
+ * или других объектах через Netlink.
+ *
+ * @param nl_fd Дескриптор Netlink-сокета.
+ * @return int Код результата отправки: >=0 в случае успеха, -1 в случае ошибки.
  */
 int stp_netlink_request(int nl_fd)
 {
@@ -156,12 +169,15 @@ int stp_netlink_request(int nl_fd)
 }
 
 /**
- * @brief для разбора вложенных атрибутов в Netlink-сообщении. Она извлекает атрибуты, упакованные в структуру struct rtattr, и организует их в массив указателей для удобного доступа.
+ * @brief Разбирает атрибуты Netlink-сообщения.
  *
- * @param tb  Выходной параметр. Массив, в который будут записаны указатели на атрибуты. Индекс массива соответствует типу атрибута (rta_type).
- * @param max Максимальное количество атрибутов, которые можно разобрать. Ограничивает размер массива tb.
- * @param rta Указатель на первый атрибут в Netlink-сообщении.
- * @param len Длина данных, содержащих атрибуты. Обеспечивает контроль корректного разбора сообщения.
+ * Извлекает атрибуты из сообщения и организует их в массив указателей
+ * для удобного доступа.
+ *
+ * @param tb Массив указателей на атрибуты.
+ * @param max Максимальное количество атрибутов.
+ * @param rta Указатель на первый атрибут.
+ * @param len Длина данных, содержащих атрибуты.
  */
 void stp_netlink_parse_rtattr(struct rtattr *tb[], int max, struct rtattr *rta, int len)
 {
@@ -177,11 +193,10 @@ void stp_netlink_parse_rtattr(struct rtattr *tb[], int max, struct rtattr *rta, 
 }
 
 /**
- * @brief проверяет, является ли сетевой интерфейс с заданным именем (name) допустимым в контексте работы демона STP (Spanning Tree Protocol). Она помогает определить, следует ли учитывать этот интерфейс для обработки протокола STP.
+ * @brief Проверяет, является ли интерфейс допустимым для обработки STP.
  *
- * @param name  Указатель на строку, содержащую имя интерфейса.
- * @return true  Интерфейс является допустимым для обработки STP.
- * @return false
+ * @param name Имя сетевого интерфейса.
+ * @return true Если интерфейс допустим, false в противном случае.
  */
 bool stp_netlink_intf_is_valid(char *name)
 {
@@ -193,11 +208,14 @@ bool stp_netlink_intf_is_valid(char *name)
 }
 
 /**
- * @brief отвечает за прием сообщений через Netlink-сокет (nl_fd). Она обрабатывает полученные данные, разбирая сообщения Netlink, и вызывает зарегистрированные функции для обработки каждого сообщения.
+ * @brief Принимает и обрабатывает сообщения Netlink.
  *
- * @param nl_fd Дескриптор, созданный с помощью socket(AF_NETLINK, SOCK_RAW, NETLINK_ROUTE).
- * @param read_all  Флаг, указывающий, следует ли читать все доступные данные из сокета.
- * @return int Количество обработанных сообщений в случае успеха. -1 при ошибке.
+ * Функция читает сообщения из Netlink-сокета, разбирает их и вызывает
+ * функцию обратного вызова для каждого сообщения.
+ *
+ * @param nl_fd Дескриптор Netlink-сокета.
+ * @param read_all Флаг, указывающий, следует ли читать все доступные сообщения.
+ * @return int Количество обработанных сообщений, -1 в случае ошибки.
  */
 static int stp_netlink_recv(int nl_fd, bool read_all)
 {
@@ -434,6 +452,12 @@ static int stp_netlink_recv(int nl_fd, bool read_all)
 }
 
 // process all netlink msgs until EAGAIN/EWOULDBLOCK
+/**
+ * @brief Принимает все доступные сообщения Netlink.
+ *
+ * @param nl_fd Дескриптор Netlink-сокета.
+ * @return int Код результата операции: >=0 в случае успеха, -1 в случае ошибки.
+ */
 int stp_netlink_recv_all(int nl_fd)
 {
     if (stp_netlink_request(nl_fd) == -1)
@@ -443,12 +467,27 @@ int stp_netlink_recv_all(int nl_fd)
 }
 
 // process one msg only
+/**
+ * @brief Принимает одно сообщение Netlink.
+ *
+ * @param nl_fd Дескриптор Netlink-сокета.
+ * @return int Код результата операции: >=0 в случае успеха, -1 в случае ошибки.
+ */
 int stp_netlink_recv_msg(int nl_fd)
 {
     return stp_netlink_recv(nl_fd, false);
 }
 
 // Libevent callback for netlink socket
+/**
+ * @brief Обработчик событий Netlink для libevent.
+ *
+ * Функция вызывается libevent при наличии события на Netlink-сокете.
+ *
+ * @param fd Дескриптор сокета.
+ * @param what Тип события (например, EV_READ).
+ * @param arg Дополнительные данные.
+ */
 void stp_netlink_events_cb(evutil_socket_t fd, short what, void *arg)
 {
     const char *data = arg;

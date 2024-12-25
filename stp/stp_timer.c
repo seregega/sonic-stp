@@ -1,22 +1,31 @@
-/*
- * Copyright 2019 Broadcom. The term "Broadcom" refers to Broadcom Inc. and/or
- * its subsidiaries.
+/**
+ * @file stp_timer.c
+ * @brief Реализация таймеров для протокола STP (Spanning Tree Protocol).
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Этот файл содержит функции управления таймерами, которые используются
+ * для различных операций протокола STP, таких как управление задержками
+ * и отслеживание времени.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * @details
+ * Реализованные функции:
+ * - Запуск и остановка таймеров.
+ * - Проверка активности таймеров.
+ * - Проверка истечения времени таймеров.
+ * - Получение текущего значения таймера.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * @author
+ * Broadcom, 2019. Лицензия Apache License 2.0.
  */
 #include "stp_inc.h"
 
-// get time in secs
+/**
+ * @brief Возвращает текущее время в секундах.
+ *
+ * Эта функция получает текущее время с использованием системного таймера
+ * (CLOCK_MONOTONIC) и возвращает его в секундах.
+ *
+ * @return Текущее время в секундах.
+ */
 uint32_t sys_get_seconds()
 {
 	struct timespec ts = {0, 0};
@@ -28,18 +37,44 @@ uint32_t sys_get_seconds()
 	return ts.tv_sec;
 }
 
+/**
+ * @brief Запускает таймер с заданным значением.
+ *
+ * Эта функция активирует таймер и инициализирует его начальным значением.
+ *
+ * @param timer Указатель на структуру таймера.
+ * @param value Начальное значение таймера.
+ */
 void start_timer(TIMER *timer, UINT32 value)
 {
 	timer->active = true;
 	timer->value = value;
 }
 
+/**
+ * @brief Останавливает таймер.
+ *
+ * Эта функция деактивирует таймер и сбрасывает его значение.
+ *
+ * @param timer Указатель на структуру таймера.
+ */
 void stop_timer(TIMER *timer)
 {
 	timer->active = false;
 	timer->value = 0;
 }
 
+/**
+ * @brief Проверяет, истёк ли таймер.
+ *
+ * Эта функция увеличивает значение таймера, если он активен. Если значение
+ * таймера превышает заданный лимит, таймер останавливается, и возвращается
+ * true.
+ *
+ * @param timer Указатель на структуру таймера.
+ * @param timer_limit Лимит времени, после которого таймер считается истекшим.
+ * @return true, если таймер истёк; иначе false.
+ */
 bool timer_expired(TIMER *timer, UINT32 timer_limit)
 {
 	if (timer->active)
@@ -55,11 +90,28 @@ bool timer_expired(TIMER *timer, UINT32 timer_limit)
 	return false;
 }
 
+/**
+ * @brief Проверяет, активен ли таймер.
+ *
+ * Эта функция возвращает состояние активности таймера.
+ *
+ * @param timer Указатель на структуру таймера.
+ * @return true, если таймер активен; иначе false.
+ */
 bool is_timer_active(TIMER *timer)
 {
 	return ((timer->active) ? true : false);
 }
 
+/**
+ * @brief Получает текущее значение таймера.
+ *
+ * Эта функция возвращает текущее значение таймера, если он активен.
+ *
+ * @param timer Указатель на структуру таймера.
+ * @param value_in_ticks Указатель для записи текущего значения таймера в тиках.
+ * @return true, если таймер активен и значение успешно получено; иначе false.
+ */
 bool get_timer_value(TIMER *timer, UINT32 *value_in_ticks)
 {
 	if (!timer->active)
