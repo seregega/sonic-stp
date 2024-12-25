@@ -76,21 +76,72 @@ typedef uint32_t PORT_ID;
 #define L2_PROTO_INDEX_MASKS (L2_MAX_PROTOCOL_INSTANCES >> 5)
 #define L2_PROTO_INDEX_INVALID 0xFFFF
 
+/**
+ * @struct INTERFACE_NODE
+ * @brief Представляет интерфейс в контексте STP (Spanning Tree Protocol).
+ *
+ * Структура используется для хранения информации об интерфейсе и его параметрах
+ * в рамках управления протоколом STP. Включает данные о конфигурации интерфейса,
+ * состоянии, приоритете, стоимости пути и связанных сокетах.
+ *
+ * @var INTERFACE_NODE::ifname
+ * Имя интерфейса (например, "Ethernet50"). Максимальная длина задаётся как `IFNAMSIZ + 1`.
+ *
+ * @var INTERFACE_NODE::kif_index
+ * Индекс интерфейса в ядре (Kernel Interface Index).
+ *
+ * @var INTERFACE_NODE::port_id
+ * Локальный идентификатор порта в системе.
+ *
+ * @var INTERFACE_NODE::mac
+ * MAC-адрес интерфейса. Размер задаётся как `L2_ETH_ADD_LEN`.
+ *
+ * @var INTERFACE_NODE::speed
+ * Скорость интерфейса в Мбит/с.
+ *
+ * @var INTERFACE_NODE::oper_state
+ * Оперативное состояние интерфейса:
+ * - `1` — Активно.
+ * - `0` — Неактивно.
+ *
+ * @var INTERFACE_NODE::is_valid
+ * Флаг, указывающий, является ли интерфейс валидным:
+ * - `1` — Интерфейс валиден.
+ * - `0` — Интерфейс невалиден (например, LAG без участников).
+ *
+ * @var INTERFACE_NODE::member_port_count
+ * Количество участников (портов) в LAG.
+ *
+ * @var INTERFACE_NODE::master_ifindex
+ * Индекс мастера интерфейса, применимо только к участникам LAG.
+ *
+ * @var INTERFACE_NODE::priority
+ * Приоритет интерфейса. Более низкое значение означает более высокий приоритет.
+ *
+ * @var INTERFACE_NODE::path_cost
+ * Стоимость пути интерфейса. Используется в алгоритме STP.
+ *
+ * @var INTERFACE_NODE::sock
+ * Сокет, связанный с данным интерфейсом.
+ *
+ * @var INTERFACE_NODE::ev
+ * Указатель на libevent-объект для обработки событий на данном сокете.
+ */
 typedef struct
 {
-    char ifname[IFNAMSIZ + 1];
-    uint32_t kif_index; // kernel if index
-    uint32_t port_id;   // local port if index
-    char mac[L2_ETH_ADD_LEN];
-    uint32_t speed;
-    uint8_t oper_state;
-    uint8_t is_valid;           /* PO with no member ports are invalid  */
-    uint16_t member_port_count; /* No of member ports in case of LAG */
-    uint32_t master_ifindex;    /*Applicable only for Member port of LAG */
-    uint16_t priority;
-    uint32_t path_cost;
-    int sock;         // socket created for this kif_index
-    struct event *ev; // libevent to handle this sock
+    char ifname[IFNAMSIZ + 1];  /**< Имя интерфейса. */
+    uint32_t kif_index;         /**< Индекс интерфейса в ядре. */
+    uint32_t port_id;           /**< Локальный идентификатор порта. */
+    char mac[L2_ETH_ADD_LEN];   /**< MAC-адрес интерфейса. */
+    uint32_t speed;             /**< Скорость интерфейса (в Мбит/с). */
+    uint8_t oper_state;         /**< Оперативное состояние интерфейса. */
+    uint8_t is_valid;           /**< Флаг валидности интерфейса. */
+    uint16_t member_port_count; /**< Количество участников в LAG. */
+    uint32_t master_ifindex;    /**< Индекс мастера интерфейса (для LAG). */
+    uint16_t priority;          /**< Приоритет интерфейса. */
+    uint32_t path_cost;         /**< Стоимость пути интерфейса. */
+    int sock;                   /**< Сокет, связанный с интерфейсом. */
+    struct event *ev;           /**< Libevent для обработки событий сокета. */
 } INTERFACE_NODE;
 
 typedef struct
@@ -109,10 +160,52 @@ typedef struct
 #define IS_MGMT_SLOT(slot) (((slot) >= FIRST_MGMT_SLOT) && ((slot) <= LAST_MGMT_SLOT))
 #define IS_MGMT_PORT(port) (((port) >= FIRST_MGMT_PORT) && ((port) <= LAST_MGMT_PORT))
 
-/*
- *  * PORT_SPEED
- *   */
-
+/**
+ * @enum STP_PORT_SPEED
+ * @brief Перечисление скоростей портов для протокола STP (Spanning Tree Protocol).
+ *
+ * Данное перечисление определяет возможные скорости портов, поддерживаемые STP.
+ * Каждое значение соответствует скорости в Мбит/с.
+ *
+ * @var STP_SPEED_NONE
+ * Отсутствие заданной скорости.
+ *
+ * @var STP_SPEED_1M
+ * Скорость порта: 1 Мбит/с.
+ *
+ * @var STP_SPEED_10M
+ * Скорость порта: 10 Мбит/с.
+ *
+ * @var STP_SPEED_100M
+ * Скорость порта: 100 Мбит/с.
+ *
+ * @var STP_SPEED_1G
+ * Скорость порта: 1 Гбит/с (1000 Мбит/с).
+ *
+ * @var STP_SPEED_10G
+ * Скорость порта: 10 Гбит/с (10000 Мбит/с).
+ *
+ * @var STP_SPEED_25G
+ * Скорость порта: 25 Гбит/с (25000 Мбит/с).
+ *
+ * @var STP_SPEED_40G
+ * Скорость порта: 40 Гбит/с (40000 Мбит/с).
+ *
+ * @var STP_SPEED_100G
+ * Скорость порта: 100 Гбит/с (100000 Мбит/с).
+ *
+ * @var STP_SPEED_400G
+ * Скорость порта: 400 Гбит/с (400000 Мбит/с).
+ *
+ * @var STP_SPEED_1T
+ * Скорость порта: 1 Тбит/с (1000000 Мбит/с).
+ *
+ * @var STP_SPEED_10T
+ * Скорость порта: 10 Тбит/с (10000000 Мбит/с).
+ *
+ * @var STP_SPEED_LAST
+ * Последнее значение для определения границ перечисления.
+ */
 typedef enum STP_PORT_SPEED
 {
     STP_SPEED_NONE = 0L,
