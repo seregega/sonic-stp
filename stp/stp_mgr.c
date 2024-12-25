@@ -1,18 +1,20 @@
-/*
- * Copyright 2019 Broadcom. The term "Broadcom" refers to Broadcom Inc. and/or
- * its subsidiaries.
+/**
+ * @file stp_mgr.c
+ * @brief Реализация менеджера управления протоколом STP (Spanning Tree Protocol).
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Этот файл содержит функции для управления состояниями портов, синхронизации данных,
+ * обработки сообщений и управления топологией в рамках работы STP.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * @details
+ * Реализованы следующие основные функции:
+ * - Управление портами (добавление, удаление, изменение состояния).
+ * - Обработка сообщений STP и синхронизация с другими модулями.
+ * - Управление изменениями топологии сети.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * @author
+ * Broadcom, 2019. Лицензия Apache License 2.0.
+ *
+ * @see stp_mgr.h
  */
 
 #include "stp_inc.h"
@@ -79,11 +81,14 @@ struct event *stpmgr_libevent_create(struct event_base *base,
     return NULL;
 }
 
-/* FUNCTION
- *		stpmgr_init()
+
+/**
+ * @brief Инициализирует менеджер STP.
  *
- * SYNOPSIS
- *	    initializes stp global data
+ * Устанавливает начальные параметры менеджера STP, включая создание внутренних
+ * структур данных и инициализацию зависимостей.
+ *
+ * @return 0 в случае успешной инициализации, отрицательное значение в случае ошибки.
  */
 void stpmgr_init(UINT16 max_stp_instances)
 {
@@ -99,11 +104,17 @@ void stpmgr_init(UINT16 max_stp_instances)
     STP_LOG_INFO("init done, max stp instances %d", max_stp_instances);
 }
 
-/* FUNCTION
- *		stpmgr_initialize_stp_class()
+/**
+ * @brief Инициализирует экземпляр STP для указанного VLAN.
  *
- * SYNOPSIS
- *		initialize an inactive stp class.
+ * Функция выполняет настройку и инициализацию параметров структуры `STP_CLASS`
+ * для заданного VLAN. Устанавливает значения по умолчанию и готовит экземпляр
+ * STP к работе в указанной VLAN.
+ *
+ * @param stp_class Указатель на структуру `STP_CLASS`, представляющую экземпляр STP.
+ * @param vlan_id Идентификатор VLAN, связанного с данным экземпляром STP.
+ *
+ * @return void
  */
 void stpmgr_initialize_stp_class(STP_CLASS *stp_class, VLAN_ID vlan_id)
 {
@@ -132,12 +143,17 @@ void stpmgr_initialize_stp_class(STP_CLASS *stp_class, VLAN_ID vlan_id)
     SET_ALL_BITS(stp_class->modified_fields);
 }
 
-/* FUNCTION
- *		stpmgr_initialize_control_port()
+/**
+ * @brief Инициализирует порт управления для указанного экземпляра STP.
  *
- * SYNOPSIS
- *		initialize the ports in the input control mask. filters out those
- *		ports that are already part of the control mask.
+ * Функция выполняет настройку и инициализацию параметров управления для
+ * конкретного порта в заданном экземпляре STP. Устанавливает значения по умолчанию
+ * и готовит порт к работе в рамках протокола STP.
+ *
+ * @param stp_class Указатель на структуру `STP_CLASS`, представляющую экземпляр STP.
+ * @param port_number Идентификатор порта, который нужно инициализировать.
+ *
+ * @return void
  */
 void stpmgr_initialize_control_port(STP_CLASS *stp_class, PORT_ID port_number)
 {
@@ -154,12 +170,15 @@ void stpmgr_initialize_control_port(STP_CLASS *stp_class, PORT_ID port_number)
     stp_port_class->auto_config = true;
 }
 
-/* FUNCTION
- *		stpmgr_activate_stp_class()
+/**
+ * @brief Активирует указанный экземпляр STP.
  *
- * SYNOPSIS
- *		takes the stp class from stp config state to the stp class active
- *		state.
+ * Функция переводит экземпляр STP в активное состояние, что позволяет ему
+ * начать обработку BPDU и управлять портами в рамках протокола STP.
+ *
+ * @param stp_class Указатель на структуру `STP_CLASS`, представляющую экземпляр STP.
+ *
+ * @return void
  */
 void stpmgr_activate_stp_class(STP_CLASS *stp_class)
 {
@@ -176,11 +195,15 @@ void stpmgr_activate_stp_class(STP_CLASS *stp_class)
     stptimer_start(&stp_class->hello_timer, 0);
 }
 
-/* FUNCTION
- *		stpmgr_deactivate_stp_class()
+/**
+ * @brief Деактивирует указанный экземпляр STP.
  *
- * SYNOPSIS
- *		moves the stp class from active to config state.
+ * Функция переводит экземпляр STP в неактивное состояние, останавливая обработку
+ * BPDU и отключая управление портами в рамках протокола STP.
+ *
+ * @param stp_class Указатель на структуру `STP_CLASS`, представляющую экземпляр STP.
+ *
+ * @return void
  */
 void stpmgr_deactivate_stp_class(STP_CLASS *stp_class)
 {
