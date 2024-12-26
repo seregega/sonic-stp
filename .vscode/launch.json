@@ -5,10 +5,10 @@
       "name": "Remote Debug",
       "type": "cppdbg",
       "request": "launch",
-      "program": "/home/admin/sonic-stp/stpd", // Полный путь на удалённой машине
+      "program": "${workspaceFolder}/stpd", // Полный путь на удалённой машине
       "args": [],
       "stopAtEntry": false,
-      "cwd": "/home/admin/sonic-stp", // Рабочая директория на удалённой машине
+      "cwd": "${workspaceFolder}", // Рабочая директория на удалённой машине
       "environment": [],
       "externalConsole": false,
       "MIMode": "gdb",
@@ -22,8 +22,8 @@
         }
       ],
       "sourceFileMap":{
-        "remote/src": "/home/admin/sonic-stp/stp",
-        "remote/include": "/home/admin/sonic-stp/include",
+        "remote/src": "${workspaceFolder}/stp",
+        "remote/include": "${workspaceFolder}/include",
       }
     }
   ]
