@@ -20,11 +20,7 @@
           "text": "-enable-pretty-printing",
           "ignoreFailures": true
         }
-      ],
-      "sourceFileMap":{
-        "remote/src": "${workspaceFolder}/stp",
-        "remote/include": "${workspaceFolder}/include",
-      }
+      ]
     }
   ]
 }

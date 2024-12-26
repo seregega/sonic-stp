@@ -2,7 +2,7 @@ import socket
 import struct
 
 # Константы
-SOCKET_PATH = "/tmp/stpmgr_socket"  # Путь к сокету IPC-сервера
+SOCKET_PATH = "/var/run/stpipc.sock"  # Путь к сокету IPC-сервера
 
 # Пример типов команд (должны соответствовать вашим определениям в коде)
 ENABLE_STP = 1

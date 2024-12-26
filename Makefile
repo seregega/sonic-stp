@@ -254,7 +254,7 @@ AUTOMAKE = ${SHELL} '/home/pi/rabota/sonic-stp/config/missing' automake-1.16
 AWK = mawk
 CC = gcc
 CCDEPMODE = depmode=gcc3
-CFLAGS = -g -O2
+CFLAGS = -g -O0
 CFLAGS_COMMON = -std=c++11 -Wall -fPIC -Wno-write-strings -I/usr/include/libnl3 -I/usr/include/swss -I/usr/include -Werror -I/home/pi/rabota/sonic-swss-common/common/
 CPP = gcc -E
 CPPFLAGS = 
