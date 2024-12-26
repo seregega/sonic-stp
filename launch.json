@@ -1,0 +1,26 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Remote Debug",
+      "type": "cppdbg",
+      "request": "launch",
+      "program": "/home/admin/sonic-stp/stpd", // Полный путь на удалённой машине
+      "args": [],
+      "stopAtEntry": false,
+      "cwd": "/home/admin/sonic-stp", // Рабочая директория на удалённой машине
+      "environment": [],
+      "externalConsole": false,
+      "MIMode": "gdb",
+      "miDebuggerServerAddress": "10.27.194.44:1234", // IP и порт gdbserver
+      "miDebuggerPath": "/usr/bin/gdb", // Путь к GDB на локальной машине
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ]
+    }
+  ]
+}
