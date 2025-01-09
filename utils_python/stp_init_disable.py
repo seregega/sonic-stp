@@ -7,7 +7,7 @@ IPC_SOCKET_PATH = "/var/run/stpipc.sock"
 # Константы для сообщения
 STP_MSG_TYPE = 1  # идентификатор окончания инициализации системы int
 MSG_LEN  = 3 #3 байта? uint
-OPCODE = 1       # enable/disable uin8_t
+OPCODE = 0       # enable/disable uin8_t
 MAX_STP_INSTANCES = 16  # количество инстансов для демона uint16_t
 
 def send_stp_ipc_msg(socket_path, type_m,len_m, code, max_i):

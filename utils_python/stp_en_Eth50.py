@@ -49,10 +49,10 @@ PATH_COST=800
 COUNT = 1
 INST_ID = 1         #int
 PATH_COST = 800     #int
-PRIORITY = 32768    #int
+PRIORITY = 128    #int
 INST_ID=1
 VLAN_ID=1
-MODE = 2          # Режим активации (например, tagged или untagged)
+MODE = 4          # Режим активации (например, tagged или untagged)
 
 def send_stp_ipc_msg(socket_path, vlan_id, port_name, mode):
     """

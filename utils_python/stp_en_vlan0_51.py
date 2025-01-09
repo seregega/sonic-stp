@@ -43,14 +43,14 @@ STP_MSG_TYPE = 3  # Тип сообщения, соответствующий к
 LEN_MSG=52          #msg len for processing
 OPCODE = 1          #enable uint8_t 
 NEW_INST = 1 
-VLAN_ID = 0
+VLAN_ID = 1
 INST_ID = 1
 FORWARD_DELAY = 15
 HELLO_TIME = 2
 MAX_AGE =20
 PRIORITY = 4096
 COUNT = 1
-PORT_NAME = "Ethernet50"  # Имя порта
+PORT_NAME = "Ethernet51"  # Имя порта
 MODE = 4          # Режим активации (например, tagged или untagged)
 ENABLED = 1
 

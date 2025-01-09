@@ -55,6 +55,7 @@ def send_stp_ipc_msg(socket_path, vlan_id, port_name, mode):
         # Например: тип сообщения (int), VLAN ID (int), длина имени порта (int), имя порта (string), режим (int)
         message_format = "<i I B B i B B B B B B"
         message = struct.pack(message_format, STP_MSG_TYPE, LEN_MSG, OPCODE, MODE, TIMEOUT, M1, M2, M3, M4, M5, M6)
+        #message = struct.pack(message_format, STP_MSG_TYPE, LEN_MSG, OPCODE, MODE, TIMEOUT, M6, M5, M4, M3, M2, M1)
 
         # Отправляем сообщение
         client_socket.sendto(message, socket_path)
