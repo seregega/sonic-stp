@@ -1,27 +1,61 @@
 @startuml
-actor User
-participant "STP Daemon" as Daemon
-participant "Kernel" as Kernel
-participant "CONFIG_DB" as ConfigDB
-participant "STATE_DB" as StateDB
 
-User -> Daemon : Запуск демона
-Daemon -> ConfigDB : Чтение конфигурации STP
-Daemon -> Kernel : Установка сокетов для BPDU
-Daemon -> StateDB : Инициализация состояния
+header Диаграмма последовательностей для демона STP
+footer Page %page% of %lastpage%
 
-loop Ожидание событий
-    Kernel -> Daemon : Приём BPDU
-    Daemon -> Kernel : Обработка BPDU
-    Daemon -> StateDB : Обновление состояния порта
-    Daemon -> ConfigDB : Проверка конфигурации
+skinparam shadowing<<no_shadow>> false
+skinparam shadowing<<with_shadow>> true
+skinparam sequenceMessageAlign direction
+
+skinparam ParticipantPadding 12
+skinparam BoxPadding 15
+
+skinparam defaultFontSize 16
+skinparam defaultFontName Aapex
+
+participant "STP Daemon" as Daemon #99FF99
+box "Linux" #LightBlue
+queue "Kernel" as Kernel #006fdf
+collections "NETLINK_IF" as Netlink #dfa800
+end box
+box "RDPD" #BlanchedAlmond
+control "RDP_STPMANAGER" as RDPD #bc78ff
+boundary "ASICd" as ASIC #b4506e
+end box
+
+
+[o-> Daemon : Запуск демона
+
+Daemon /[#green]- Daemon : Инициализация
+Daemon -[#purple]> RDPD : Оповещение [STPd_Cold_Start]
+RDPD <-[#b4506e]> ASIC : Sync FP ASIC
+Daemon -[#green]/ Daemon : Ожидание конфигурации
+
+loop#Gold Цикл конфигурационный
+    RDPD -[#purple]> Daemon : Установка конфигурации [RDPD config msg]
+    Daemon -[#purple]> RDPD : Response [RDPD config msg]
+    Netlink --[#df7000]> Daemon : Получение всех актуальных интерфейсов системы
+    RDPD -[#purple]-> Daemon : Обновление конфигурации
+    Daemon -[#purple]> RDPD : Валидация Field-Processor ASIC
+    RDPD <-[#b4506e]> ASIC : Sync FP ASIC
 end
 
-User -> Daemon : Остановка демона
-Daemon -> Kernel : Закрытие сокетов
-Daemon -> StateDB : Очистка состояния
+Daemon -[#0000FF]> Kernel : Установка сокетов для BPDU
+Daemon -[#purple]> RDPD : Оповещение [STPd_STATE_WORKING]
+
+
+loop#Gold Цикл рабочий
+    Kernel -[#0000FF]> Daemon : Приём BPDU
+    Daemon /[#green]-  Daemon : Обработка BPDU
+    Netlink --[#df7000]> Daemon : Обновление состояний интерфейсов
+    RDPD --[#purple]> Daemon : Обновление конфигурации
+    Daemon -[#green]/ Daemon : Вычислениe состояний и переходов
+    Daemon -[#purple]> RDPD : Валидация Field-Processor ASIC
+    RDPD <-[#b4506e]> ASIC : Sync FP ASIC
+    Daemon -[#0000FF]> Kernel : Отправка BPDU
+end
+
+RDPD -[#purple]> Daemon : Сигнал [DEBUG_RESTART]
+Daemon -[#0000FF]> Kernel : Закрытие сокетов
+Daemon -[#purple]> RDPD : Оповещение [Power_OFF]
 @enduml
-
-' Она показывает взаимодействие между пользователем, демоном STP, ядром Linux и базами данных CONFIG_DB и STATE_DB. Эта диаграмма иллюстрирует поток событий от запуска демона до его остановки, включая обработку пакетов BPDU.
-
-' Эти диаграммы можно сгенерировать, вставив указанный код в любую утилиту, поддерживающую PlantUML.
