@@ -1,0 +1,118 @@
+@startuml
+
+header Диаграмма последовательностей для менеджера STP
+footer Page %page% of %lastpage%
+
+skinparam shadowing<<no_shadow>> false
+skinparam shadowing<<with_shadow>> true
+skinparam sequenceMessageAlign direction
+
+skinparam ParticipantPadding 12
+skinparam BoxPadding 15
+
+skinparam defaultFontSize 16
+skinparam defaultFontName Papyrus
+
+
+box "RDPD" #BlanchedAlmond
+control "RDP_STPMANAGER" as RDPD #bc78ff
+boundary "ASICd" as ASIC #b4506e
+end box
+
+box "Config.json" #LightGrey
+database "spanning\nconfig" as CONFIG #e1ddeb
+' collections "NETLINK_IF" as Netlink #dfa800
+end box
+
+box "  Socket\r127.0.0.1"#def1f1
+queue ":6042?" as Socket #SteelBlue
+' collections "NETLINK_IF" as Netlink #dfa800
+end box
+
+participant "STP Daemon" as Daemon #99FF99
+
+
+group#LightSlateGrey Цикл Init
+    [o-> RDPD : stp_mgr.c INIT
+    RDPD <-[#SlateGrey]-> CONFIG : Загрузка статической конфигурации
+    RDPD -[#purple]-> RDPD : Вычисление статического\r вектора конфигурации
+    RDPD -[#SteelBlue]> Socket : Ping [STPD show state_v]
+    activate Socket
+
+    activate Daemon
+    group#IndianRed Цикл WARMSTART
+        ref over RDPD, ASIC : STPD работает, отрабатываем горячий старт
+        Daemon -[#green]> Socket : Pong[STPD show state_v]
+        Socket -[#SteelBlue]> RDPD : Pong[STPD show state_v]
+        RDPD <-[#SlateGrey]-> CONFIG : Восстановление динамической\r конфигурации STPD_state_v
+        RDPD <-[#SlateGrey]-> ASIC : Восстановление ветктора\r состояния asic_state_v
+        RDPD -[#purple]-> RDPD : Вычисление весторов\r состояний STPD_state_v/asic_state_v
+        RDPD -[#SteelBlue]> Socket : Синхронизация состояния\r [STPD sync state_v]
+        Daemon [#green]-> Socket : Init done\r [START_OPERATION]
+
+
+        ' Daemon <-[#green]-> Socket : recv timeout
+
+
+    end
+    deactivate Socket
+    deactivate Daemon
+
+    group#SlateBlue Цикл COLDSTART
+        ref over Socket, Daemon : Таймаут ответа STPD, отрабатываем холодный старт
+        Socket -[#SteelBlue]> RDPD : Response timeout\r[STPD show state_v]
+        RDPD -[#green]> Daemon : Reload [STPD debug restart]
+        RDPD <-[#SlateGrey]-> CONFIG : Сброс динамической конфигурации
+        RDPD <-[#purple]-> ASIC : Валидация/создание правил FP
+        RDPD -[#purple]-> RDPD : Вычисление вектора\r конфигурации asic_state_v
+        Daemon [#green]-> Socket : STPD [COLDSTART]
+        activate Socket
+        activate Daemon
+        RDPD --[#SteelBlue]> Socket : Config [STPD_state_v]
+        RDPD --[#SteelBlue]> Socket : Config [STPD_asic_v]
+        Daemon [#green]-> Socket : Config [OK]
+        Daemon [#green]-> Socket : Init done\r [START_OPERATION]
+
+
+
+    end
+    ' Netlink --[#df7000]> Daemon : Получение всех актуальных интерфейсов системы
+    ' Daemon -[#purple]> RDPD : Валидация Field-Processor ASIC
+    ' RDPD <-[#b4506e]> ASIC : Sync FP ASIC
+end
+
+
+group#ce8ce7 Цикл основной
+    [o-> RDPD : Init done\r [START_OPERATION]
+    Socket -[#SteelBlue]> RDPD : Response timeout\r[STPD show state_v]
+    RDPD -[#green]> Daemon : Reload [STPD debug restart]
+    RDPD <-[#SlateGrey]-> CONFIG : Сброс динамической конфигурации
+    deactivate Socket
+    deactivate Daemon
+end
+
+
+group#PaleGoldenRod Цикл show
+    [o-> RDPD : show\nspanning-tree ...
+    Socket -[#SteelBlue]> RDPD : Response timeout\r[STPD show state_v]
+    RDPD -[#green]> Daemon : Reload [STPD debug restart]
+    RDPD <-[#SlateGrey]-> CONFIG : Сброс динамической конфигурации
+end
+
+
+group#PaleGoldenRod Цикл config
+    [o-> RDPD : config\nspanning-tree ...
+    Socket -[#SteelBlue]> RDPD : Response timeout\r[STPD show state_v]
+    RDPD -[#green]> Daemon : Reload [STPD debug restart]
+    RDPD <-[#SlateGrey]-> CONFIG : Сброс динамической конфигурации
+end
+
+group#PaleGoldenRod Цикл debug
+    [o-> RDPD : debug\nspanning-tree ...
+    Socket -[#SteelBlue]> RDPD : Response timeout\r[STPD show state_v]
+    RDPD -[#green]> Daemon : Reload [STPD debug restart]
+    RDPD <-[#SlateGrey]-> CONFIG : Сброс динамической конфигурации
+end
+
+
+@enduml
