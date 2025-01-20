@@ -37,24 +37,21 @@ group#LightSlateGrey Цикл Init
     [o-> RDPD : stp_mgr.c INIT
     RDPD <-[#SlateGrey]-> CONFIG : Загрузка статической конфигурации
     RDPD -[#purple]-> RDPD : Вычисление статического\r вектора конфигурации
-    RDPD -[#SteelBlue]> Socket : Ping [STPD show state_v]
+    RDPD -[#SteelBlue]> Socket : GET [mng_state_v]
     activate Socket
-
     activate Daemon
     group#IndianRed Цикл WARMSTART
         ref over RDPD, ASIC : STPD работает, отрабатываем горячий старт
-        Daemon -[#green]> Socket : Pong[STPD show state_v]
-        Socket -[#SteelBlue]> RDPD : Pong[STPD show state_v]
+        Daemon <[#green]- Socket : Translate GET[stpd_state_v]
+        Daemon -[#green]> Socket : Response GET[stpd_state_v]
+        Socket -[#SteelBlue]> RDPD : Response GET[mng_state_v]
         RDPD <-[#SlateGrey]-> CONFIG : Восстановление динамической\r конфигурации STPD_state_v
-        RDPD <-[#SlateGrey]-> ASIC : Восстановление ветктора\r состояния asic_state_v
+        RDPD <-[#purple]-> ASIC : Восстановление вектора\r состояния [mng_asic_state_v]/[mng_fp_state_v]
         RDPD -[#purple]-> RDPD : Вычисление весторов\r состояний STPD_state_v/asic_state_v
-        RDPD -[#SteelBlue]> Socket : Синхронизация состояния\r [STPD sync state_v]
-        Daemon [#green]-> Socket : Init done\r [START_OPERATION]
-
-
-        ' Daemon <-[#green]-> Socket : recv timeout
-
-
+        RDPD -[#SteelBlue]> Socket : Синхронизация состояния\r SYNC[mng_state_v]
+        Daemon <[#green]- Socket : Translate SYNC[stpd_state_v]
+        Daemon [#green]-> Socket : Init done\r SYNC Response[stpd_state_v]
+        Socket -[#SteelBlue]> RDPD : SYNC Response[mng_state_v]
     end
     deactivate Socket
     deactivate Daemon
@@ -62,21 +59,25 @@ group#LightSlateGrey Цикл Init
     group#SlateBlue Цикл COLDSTART
         ref over Socket, Daemon : Таймаут ответа STPD, отрабатываем холодный старт
         Socket -[#SteelBlue]> RDPD : Response timeout\r[STPD show state_v]
-        RDPD -[#green]> Daemon : Reload [STPD debug restart]
-        RDPD <-[#SlateGrey]-> CONFIG : Сброс динамической конфигурации
-        RDPD <-[#purple]-> ASIC : Валидация/создание правил FP
-        RDPD -[#purple]-> RDPD : Вычисление вектора\r конфигурации asic_state_v
-        Daemon [#green]-> Socket : STPD [COLDSTART]
         activate Socket
+        deactivate Socket
+        RDPD -[#green]> Daemon : DEBUG restart [STPD debug restart]
         activate Daemon
-        RDPD --[#SteelBlue]> Socket : Config [STPD_state_v]
-        RDPD --[#SteelBlue]> Socket : Config [STPD_asic_v]
-        Daemon [#green]-> Socket : Config [OK]
-        Daemon [#green]-> Socket : Init done\r [START_OPERATION]
+        RDPD <-[#SlateGrey]-> CONFIG : Сброс динамической конфигурации
+        RDPD <-[#purple]-> ASIC : Валидация/создание правил FP\r RESTORE [mng_fp_state_v]
+        RDPD -[#purple]-> RDPD : Вычисление вектора\r конфигурации [asic_state_v]
+        Daemon [#green]-> Socket : COLDSTART [stpd_state_v]
+        activate Socket
+        Socket -[#SteelBlue]> RDPD : COLDSTART init[mng_state_v]
+        RDPD --[#SteelBlue]> Socket : SET Config [mng_state_v]
+        RDPD --[#SteelBlue]> Socket : SET Config [mng_asic_v]
+        Daemon <[#green]- Socket : Translate SET Config[stpd_state_v]
+        Daemon <[#green]- Socket : Translate SET Config[stpd_asic_v]
+        Daemon [#green]-> Daemon : Config [OK]
+        Daemon [#green]-> Socket : SET config response \r Init done [stpd_state_v]
+        Socket -[#SteelBlue]> RDPD : SET config response[mng_state_v]
         deactivate Socket
         deactivate Daemon
-
-
     end
     ' Netlink --[#df7000]> Daemon : Получение всех актуальных интерфейсов системы
     ' Daemon -[#purple]> RDPD : Валидация Field-Processor ASIC
@@ -164,7 +165,7 @@ group#PaleGoldenRod Цикл config
     [o<- RDPD : response cli
 end
 
-group#PaleGoldenRod Цикл debug
+group#Orange Цикл debug
     ref over Socket, Daemon : Отладочные и сервисные команды для разработки и наладки
     [o-> RDPD : debug\nspanning-tree ...
     RDPD -[#SteelBlue]> Socket : DEBUG status [STPD_state_v]
@@ -178,6 +179,22 @@ group#PaleGoldenRod Цикл debug
     RDPD <[#SlateGrey]-> CONFIG : Валидация динамической конфигурации
     deactivate CONFIG
     [o<- RDPD : response cli
+end
+
+
+group#Red Цикл Error
+    ref over Socket, Daemon : Оповещение и обработка ошибок
+    activate Daemon
+    Daemon /-[#green] Daemon : Регистрация ошибки\r [stpd_error_v]
+    Daemon [#green]-> Socket : Трансляция состояния ошибки\r + аргументы ERROR[stpd_error_v]
+    deactivate Daemon
+    RDPD <-[#SteelBlue]Socket : Statistic ERROR [mng_error_v]
+    deactivate Socket
+    RDPD <[#SlateGrey]-> CONFIG : UPDATE [mng_error_v]
+    RDPD -[#SteelBlue]> RDPD : Error Handle [mng_error_v]
+    RDPD -[#green]> Daemon : Reload [STPD debug restart]
+    [o<- RDPD : [INIT]
+    deactivate RDPD
 end
 
 
