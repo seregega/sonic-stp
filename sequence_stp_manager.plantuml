@@ -85,6 +85,10 @@ group#LightSlateGrey Цикл Init
 end
 
 
+newpage
+
+
+
 group#ce8ce7 Цикл основной
     ref over Socket, Daemon : Отрабатываем пакеты со статистикой и командами для ASIC
     [o-> RDPD : Init done\r [START_OPERATION]
@@ -103,11 +107,9 @@ group#ce8ce7 Цикл основной
     RDPD <-[#SteelBlue]Socket : Statistic UPDATE [mng_statistic_v]
     deactivate Socket
     RDPD <[#SlateGrey]-> CONFIG : UPDATE [mng_statistic_v]
-
     RDPD -[#SteelBlue]> RDPD : Statistic UPDATE [mng_statistic_v]
     RDPD <-[#SteelBlue]RDPD : Timeout watchdog
     RDPD -[#green]> Daemon : Reload [STPD debug restart]
-
     [o<- RDPD : [INIT]
     deactivate RDPD
 end
@@ -129,7 +131,6 @@ group#PaleGoldenRod Цикл show
     deactivate Socket
     RDPD <[#SlateGrey]-> CONFIG : Валидация динамической конфигурации
     deactivate CONFIG
-
     RDPD -[#SteelBlue]> Socket : GET statistic [mng_statistic_v]
     activate CONFIG
     activate Socket
@@ -143,6 +144,8 @@ group#PaleGoldenRod Цикл show
     deactivate CONFIG
     [o<- RDPD : response cli
 end
+
+newpage
 
 
 group#PaleGoldenRod Цикл config
