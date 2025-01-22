@@ -1,0 +1,76 @@
+@startuml
+title Syslog Protocol Fields (RFC 5424)
+
+entity "Syslog Message" as Syslog {
+    + PRI: Priority 
+    + VERSION: Protocol version
+    + TIMESTAMP: Event time e.g., 2025-01-20T12:34:56Z
+    + HOSTNAME: Host sending the message
+    + APP-NAME: Application name
+    + PROCID: Process ID
+    + MSGID: Message identifier
+    + STRUCTURED-DATA: Key-value pairs for metadata
+    + MSG: Human-readable message
+}
+
+note as NotePRI
+
+**PRI**: Priority (e.g., <30>)  
+*Facility*: 3 (Daemon)  
+*Severity*: 6 (Informational)
+Priority=Facility * 8 + Severity
+Example: `<30>` (daemon.info)
+end note
+
+note as NoteVERSION
+**VERSION**: Protocol version (integer)
+Example: `1`(for RFC5424)
+end note
+
+note as NoteTIMESTAMP
+**TIMESTAMP**: Time of the event
+Format: `YYYY-MM-DDTHH:MM:SSZ`
+Example: `2025-01-20T12:34:56.000Z`
+end note
+
+note as NoteHOSTNAME
+**HOSTNAME**: Source hostname or IP
+Example: `myserver` or `192.168.1.1`
+end note
+
+note as NoteAPPNAME
+**APP-NAME**: Name of the sending application
+Example: `myapp`, `nginx`
+end note
+
+note as NotePROCID
+**PROCID**: Process ID
+Example: `12345`, `-` (if not applicable)
+end note
+
+note as NoteMSGID
+**MSGID**: Identifier of the message type
+Example: `USER_LOGIN`, `-` (if not used)
+end note
+
+note as NoteSD
+**STRUCTURED-DATA**: Metadata (key-v>alue pairs)
+Example: `[exampleSDID@32473 iut="3" eventSource="app" eventID="1011"]`
+end note
+
+note as NoteMSG
+**MSG**: Free-text message content
+Example: `"User login successful: user=john"`
+end note
+
+Syslog --> NotePRI
+Syslog --> NoteVERSION
+Syslog --> NoteTIMESTAMP
+Syslog --> NoteHOSTNAME
+Syslog --> NoteAPPNAME
+Syslog --> NotePROCID
+Syslog --> NoteMSGID
+Syslog --> NoteSD
+Syslog --> NoteMSG
+
+@enduml
