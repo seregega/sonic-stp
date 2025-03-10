@@ -129,6 +129,7 @@ int stpd_main()
     /* Инициализация системы логирования */
     stpd_log_init();
 
+    //TODO - убрать при отлучении от swss
     /* Очистка таблиц STP в APP_DB */
     stpsync_clear_appdb_stp_tables();
 
@@ -136,7 +137,7 @@ int stpd_main()
     memset(&stpd_context, 0, sizeof(STPD_CONTEXT));
 
     /* Установка расширенного режима */
-    stpmgr_set_extend_mode(true);
+    stpmgr_set_extend_mode(true); //STP<->RSTP?
 
     /* Создание конфигурации для libevent */
     cfg = event_config_new();
@@ -172,6 +173,7 @@ int stpd_main()
     }
 
     /* Инициализация IPC для взаимодействия с менеджером STP */
+    //TODO переписать для работы по порту UDP
     rc = stpd_ipc_init();
     if (rc < 0)
     {
