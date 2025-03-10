@@ -104,7 +104,7 @@ void stpd_log_init()
      * @brief Установка уровня логирования на основе наличия файла /stpd_dbg_reload
      *
      */
-    STP_LOG_INIT();
+    STP_LOG_INIT(); //TODO! не работает - переделать
     if (fopen("/stpd_dbg_reload", "r"))
     {
         STP_LOG_SET_LEVEL(STP_LOG_LEVEL_DEBUG);
@@ -208,7 +208,7 @@ int stpd_main()
         return -1;
     }
 
-    STP_LOG_INFO("STP Daemon Running");
+    STP_LOG_INFO("STP Daemon Started");
 
     event_base_dispatch(g_stpd_evbase);
 
