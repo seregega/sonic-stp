@@ -117,7 +117,7 @@ int stpd_ipc_wbos_init(int PORT_UDP_R_WBOS)
 
     // Включение SO_REUSEADDR
     int reuse = 1;
-    if (setsockopt(g_stpd_ipc_handle, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)) {
+    if (setsockopt(g_stpd_ipc_handle, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse))) {
         STP_LOG_ERR("WBOS setsockopt SO_REUSEADDR  error %s", strerror(errno));
         return 1;
     }
