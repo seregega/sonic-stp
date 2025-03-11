@@ -14,7 +14,7 @@
 /* Глобальная структура контекста STP */
 STPD_CONTEXT stpd_context;
 
-#define UDP_PORT 6945         // для приема wbos msg
+#define UDP_PORT 6954         // для приема wbos msg
 #define BUFFER_SIZE 64 * 1024 // максимальное значениедлинны пакета данных
 #define RECV_BUF_SIZE 212992  // размер буфера приема от соника
 
@@ -169,8 +169,9 @@ int stpd_ipc_wbos_init(int PORT_UDP_R_WBOS)
 
     if (bind(g_stpd_ipc_handle, (struct sockaddr*)&addr, sizeof(addr)) == -1)
     {
-        perror("bind()");
-        return 1;
+        //perror("bind()");
+        STP_LOG_ERR("WBOS_init bind(g_stpd_ipc_handle  error %s", strerror(errno));
+        return -1;
     }
 
     /* Настройка структуры адреса сокета */

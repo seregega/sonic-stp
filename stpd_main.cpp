@@ -26,6 +26,8 @@ extern "C" void stpd_main();
  */
 int main(int argc, char **argv)
 {
+    //TODO remove after debug
+    printf("starting stpd stpd main ()");
     stpd_main();
     return 0;
 }
