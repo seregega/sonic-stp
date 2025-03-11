@@ -46,7 +46,7 @@ int applog_init()
   applog_level_map[APP_LOG_LEVEL_INFO] = LOG_INFO;
   applog_level_map[APP_LOG_LEVEL_DEBUG] = LOG_DEBUG;
 
-  openlog("stpd", LOG_NDELAY | LOG_CONS, LOG_DAEMON);
+  openlog("stpd_wbos", LOG_NDELAY | LOG_CONS, LOG_DAEMON);
 
   applog_inited = 1;
   applog_config_level = APP_LOG_LEVEL_DEFAULT;
