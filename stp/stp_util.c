@@ -1473,6 +1473,7 @@ void stptimer_tick()
                 stptimer_update(stp_class);
 
             if (stp_class->state == STP_CLASS_ACTIVE || stp_class->state == STP_CLASS_CONFIG)
+                //TODO! refactor когда отлучение
                 stptimer_sync_db(stp_class);
         }
 
