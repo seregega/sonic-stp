@@ -33,20 +33,20 @@ char msgtype_str[][64] = {
     "STP_STPCTL_MSG",
     "STP_MAX_MSG"};
 
-void stpmgr_libevent_destroy(struct event *ev)
+void stpmgr_libevent_destroy(struct event* ev)
 {
     g_stpd_stats_libev_no_of_sockets--;
     event_del(ev);
 }
 
-struct event *stpmgr_libevent_create(struct event_base *base,
+struct event* stpmgr_libevent_create(struct event_base* base,
                                      evutil_socket_t sock,
                                      short flags,
-                                     void *cb_fn,
-                                     void *arg,
-                                     const struct timeval *tv)
+                                     void* cb_fn,
+                                     void* arg,
+                                     const struct timeval* tv)
 {
-    struct event *ev = 0;
+    struct event* ev = 0;
     int prio;
 
     g_stpd_stats_libev_no_of_sockets++;
@@ -70,7 +70,7 @@ struct event *stpmgr_libevent_create(struct event_base *base,
 
         if (-1 != event_add(ev, tv))
         {
-            STP_LOG_DEBUG("Event Added : ev-%p, arg : %s", ev, (char *)arg);
+            STP_LOG_DEBUG("Event Added : ev-%p, arg : %s", ev, (char*)arg);
             STP_LOG_DEBUG("base : %p, sock : %d, flags : %x, cb_fn : %p", base, sock, flags, cb_fn);
             if (tv)
                 STP_LOG_DEBUG("tv.sec : %u, tv.usec : %u", tv->tv_sec, tv->tv_usec);
@@ -115,7 +115,7 @@ void stpmgr_init(UINT16 max_stp_instances)
  *
  * @return void
  */
-void stpmgr_initialize_stp_class(STP_CLASS *stp_class, VLAN_ID vlan_id)
+void stpmgr_initialize_stp_class(STP_CLASS* stp_class, VLAN_ID vlan_id)
 {
     STP_INDEX stp_index;
 
@@ -154,9 +154,9 @@ void stpmgr_initialize_stp_class(STP_CLASS *stp_class, VLAN_ID vlan_id)
  *
  * @return void
  */
-void stpmgr_initialize_control_port(STP_CLASS *stp_class, PORT_ID port_number)
+void stpmgr_initialize_control_port(STP_CLASS* stp_class, PORT_ID port_number)
 {
-    STP_PORT_CLASS *stp_port_class;
+    STP_PORT_CLASS* stp_port_class;
 
     stp_port_class = GET_STP_PORT_CLASS(stp_class, port_number);
     memset(stp_port_class, 0, sizeof(STP_PORT_CLASS));
@@ -179,7 +179,7 @@ void stpmgr_initialize_control_port(STP_CLASS *stp_class, PORT_ID port_number)
  *
  * @return void
  */
-void stpmgr_activate_stp_class(STP_CLASS *stp_class)
+void stpmgr_activate_stp_class(STP_CLASS* stp_class)
 {
     stp_class->state = STP_CLASS_ACTIVE;
 
@@ -204,7 +204,7 @@ void stpmgr_activate_stp_class(STP_CLASS *stp_class)
  *
  * @return void
  */
-void stpmgr_deactivate_stp_class(STP_CLASS *stp_class)
+void stpmgr_deactivate_stp_class(STP_CLASS* stp_class)
 {
     if (stp_class->state == STP_CLASS_CONFIG)
         return;
@@ -242,9 +242,9 @@ void stpmgr_deactivate_stp_class(STP_CLASS *stp_class)
  *
  * @return void
  */
-void stpmgr_initialize_port(STP_CLASS *stp_class, PORT_ID port_number)
+void stpmgr_initialize_port(STP_CLASS* stp_class, PORT_ID port_number)
 {
-    STP_PORT_CLASS *stp_port_class;
+    STP_PORT_CLASS* stp_port_class;
 
     stp_port_class = GET_STP_PORT_CLASS(stp_class, port_number);
     STP_LOG_DEBUG("vlan %d port %d", stp_class->vlan_id, port_number);
@@ -277,9 +277,9 @@ void stpmgr_initialize_port(STP_CLASS *stp_class, PORT_ID port_number)
  *
  * @return void
  */
-void stpmgr_enable_port(STP_CLASS *stp_class, PORT_ID port_number)
+void stpmgr_enable_port(STP_CLASS* stp_class, PORT_ID port_number)
 {
-    STP_PORT_CLASS *stp_port_class;
+    STP_PORT_CLASS* stp_port_class;
     bool result = false;
 
     if (is_member(stp_class->enable_mask, port_number))
@@ -304,10 +304,10 @@ void stpmgr_enable_port(STP_CLASS *stp_class, PORT_ID port_number)
  *
  * @return void
  */
-void stpmgr_disable_port(STP_CLASS *stp_class, PORT_ID port_number)
+void stpmgr_disable_port(STP_CLASS* stp_class, PORT_ID port_number)
 {
     bool root;
-    STP_PORT_CLASS *stp_port_class;
+    STP_PORT_CLASS* stp_port_class;
 
     if (!is_member(stp_class->enable_mask, port_number))
         return;
@@ -377,11 +377,11 @@ void stpmgr_disable_port(STP_CLASS *stp_class, PORT_ID port_number)
  *
  * @return void
  */
-void stpmgr_set_bridge_priority(STP_CLASS *stp_class, BRIDGE_IDENTIFIER *bridge_id)
+void stpmgr_set_bridge_priority(STP_CLASS* stp_class, BRIDGE_IDENTIFIER* bridge_id)
 {
     bool root;
     PORT_ID port_number;
-    STP_PORT_CLASS *stp_port_class;
+    STP_PORT_CLASS* stp_port_class;
 
     root = root_bridge(stp_class);
 
@@ -442,9 +442,9 @@ void stpmgr_set_bridge_priority(STP_CLASS *stp_class, BRIDGE_IDENTIFIER *bridge_
  *
  * @return void
  */
-void stpmgr_set_port_priority(STP_CLASS *stp_class, PORT_ID port_number, UINT16 priority)
+void stpmgr_set_port_priority(STP_CLASS* stp_class, PORT_ID port_number, UINT16 priority)
 {
-    STP_PORT_CLASS *stp_port_class = GET_STP_PORT_CLASS(stp_class, port_number);
+    STP_PORT_CLASS* stp_port_class = GET_STP_PORT_CLASS(stp_class, port_number);
 
     if (designated_port(stp_class, port_number))
     {
@@ -481,9 +481,9 @@ void stpmgr_set_port_priority(STP_CLASS *stp_class, PORT_ID port_number, UINT16 
  *
  * @return void
  */
-void stpmgr_set_path_cost(STP_CLASS *stp_class, PORT_ID port_number, bool auto_config, UINT32 path_cost)
+void stpmgr_set_path_cost(STP_CLASS* stp_class, PORT_ID port_number, bool auto_config, UINT32 path_cost)
 {
-    STP_PORT_CLASS *stp_port_class = GET_STP_PORT_CLASS(stp_class, port_number);
+    STP_PORT_CLASS* stp_port_class = GET_STP_PORT_CLASS(stp_class, port_number);
 
     stp_port_class->path_cost = path_cost;
     stp_port_class->auto_config = auto_config;
@@ -505,9 +505,9 @@ void stpmgr_set_path_cost(STP_CLASS *stp_class, PORT_ID port_number, bool auto_c
  *
  * @return void
  */
-void stpmgr_enable_change_detection(STP_CLASS *stp_class, PORT_ID port_number)
+void stpmgr_enable_change_detection(STP_CLASS* stp_class, PORT_ID port_number)
 {
-    STP_PORT_CLASS *stp_port_class = GET_STP_PORT_CLASS(stp_class, port_number);
+    STP_PORT_CLASS* stp_port_class = GET_STP_PORT_CLASS(stp_class, port_number);
     stp_port_class->change_detection_enabled = true;
 }
 
@@ -524,9 +524,9 @@ void stpmgr_enable_change_detection(STP_CLASS *stp_class, PORT_ID port_number)
  *
  * @return void
  */
-void stpmgr_disable_change_detection(STP_CLASS *stp_class, PORT_ID port_number)
+void stpmgr_disable_change_detection(STP_CLASS* stp_class, PORT_ID port_number)
 {
-    STP_PORT_CLASS *stp_port_class = GET_STP_PORT_CLASS(stp_class, port_number);
+    STP_PORT_CLASS* stp_port_class = GET_STP_PORT_CLASS(stp_class, port_number);
     stp_port_class->change_detection_enabled = false;
 }
 
@@ -547,7 +547,7 @@ void stpmgr_disable_change_detection(STP_CLASS *stp_class, PORT_ID port_number)
  *
  * @return void
  */
-void stpmgr_set_bridge_params(STP_CLASS *stp_class)
+void stpmgr_set_bridge_params(STP_CLASS* stp_class)
 {
     if (root_bridge(stp_class))
     {
@@ -579,7 +579,7 @@ void stpmgr_set_bridge_params(STP_CLASS *stp_class)
  */
 bool stpmgr_config_bridge_priority(STP_INDEX stp_index, UINT16 priority)
 {
-    STP_CLASS *stp_class;
+    STP_CLASS* stp_class;
     BRIDGE_IDENTIFIER bridge_id;
 
     if (stp_index == STP_INDEX_INVALID)
@@ -633,7 +633,7 @@ bool stpmgr_config_bridge_priority(STP_INDEX stp_index, UINT16 priority)
  */
 bool stpmgr_config_bridge_max_age(STP_INDEX stp_index, UINT16 max_age)
 {
-    STP_CLASS *stp_class;
+    STP_CLASS* stp_class;
 
     if (stp_index == STP_INDEX_INVALID)
     {
@@ -671,7 +671,7 @@ bool stpmgr_config_bridge_max_age(STP_INDEX stp_index, UINT16 max_age)
  */
 bool stpmgr_config_bridge_hello_time(STP_INDEX stp_index, UINT16 hello_time)
 {
-    STP_CLASS *stp_class;
+    STP_CLASS* stp_class;
 
     if (stp_index == STP_INDEX_INVALID)
     {
@@ -710,7 +710,7 @@ bool stpmgr_config_bridge_hello_time(STP_INDEX stp_index, UINT16 hello_time)
  */
 bool stpmgr_config_bridge_forward_delay(STP_INDEX stp_index, UINT16 fwd_delay)
 {
-    STP_CLASS *stp_class;
+    STP_CLASS* stp_class;
 
     if (stp_index == STP_INDEX_INVALID)
     {
@@ -753,8 +753,8 @@ bool stpmgr_config_bridge_forward_delay(STP_INDEX stp_index, UINT16 fwd_delay)
  */
 bool stpmgr_config_port_priority(STP_INDEX stp_index, PORT_ID port_number, UINT16 priority, bool is_global)
 {
-    STP_CLASS *stp_class;
-    STP_PORT_CLASS *stp_port;
+    STP_CLASS* stp_class;
+    STP_PORT_CLASS* stp_port;
 
     if (stp_index == STP_INDEX_INVALID)
     {
@@ -821,8 +821,8 @@ bool stpmgr_config_port_priority(STP_INDEX stp_index, PORT_ID port_number, UINT1
 bool stpmgr_config_port_path_cost(STP_INDEX stp_index, PORT_ID port_number, bool auto_config,
                                   UINT32 path_cost, bool is_global)
 {
-    STP_CLASS *stp_class;
-    STP_PORT_CLASS *stp_port;
+    STP_CLASS* stp_class;
+    STP_PORT_CLASS* stp_port;
     UINT32 def_path_cost;
 
     if (stp_index == STP_INDEX_INVALID)
@@ -887,9 +887,9 @@ bool stpmgr_config_port_path_cost(STP_INDEX stp_index, PORT_ID port_number, bool
  *
  * @return void
  */
-static void stpmgr_clear_port_statistics(STP_CLASS *stp_class, PORT_ID port_number)
+static void stpmgr_clear_port_statistics(STP_CLASS* stp_class, PORT_ID port_number)
 {
-    STP_PORT_CLASS *stp_port = NULL;
+    STP_PORT_CLASS* stp_port = NULL;
 
     if (port_number == BAD_PORT_ID)
     {
@@ -945,7 +945,7 @@ static void stpmgr_clear_port_statistics(STP_CLASS *stp_class, PORT_ID port_numb
 void stpmgr_clear_statistics(VLAN_ID vlan_id, PORT_ID port_number)
 {
     STP_INDEX stp_index;
-    STP_CLASS *stp_class;
+    STP_CLASS* stp_class;
 
     if (vlan_id == VLAN_ID_INVALID)
     {
@@ -986,7 +986,7 @@ void stpmgr_clear_statistics(VLAN_ID vlan_id, PORT_ID port_number)
  */
 bool stpmgr_release_index(STP_INDEX stp_index)
 {
-    STP_CLASS *stp_class;
+    STP_CLASS* stp_class;
     PORT_ID port_number;
 
     if (stp_index == STP_INDEX_INVALID)
@@ -1044,8 +1044,8 @@ bool stpmgr_release_index(STP_INDEX stp_index)
  */
 bool stpmgr_add_control_port(STP_INDEX stp_index, PORT_ID port_number, uint8_t mode)
 {
-    STP_CLASS *stp_class;
-    STP_PORT_CLASS *stp_port_class;
+    STP_CLASS* stp_class;
+    STP_PORT_CLASS* stp_port_class;
 
     STP_LOG_DEBUG("add_control_port inst %d port %d", stp_index, port_number);
     if (stp_index == STP_INDEX_INVALID)
@@ -1113,9 +1113,9 @@ bool stpmgr_add_control_port(STP_INDEX stp_index, PORT_ID port_number, uint8_t m
  */
 bool stpmgr_delete_control_port(STP_INDEX stp_index, PORT_ID port_number, bool del_stp_port)
 {
-    STP_CLASS *stp_class;
-    STP_PORT_CLASS *stp_port;
-    char *if_name;
+    STP_CLASS* stp_class;
+    STP_PORT_CLASS* stp_port;
+    char* if_name;
 
     if (stp_index == STP_INDEX_INVALID)
     {
@@ -1181,7 +1181,7 @@ bool stpmgr_delete_control_port(STP_INDEX stp_index, PORT_ID port_number, bool d
  */
 bool stpmgr_add_enable_port(STP_INDEX stp_index, PORT_ID port_number)
 {
-    STP_CLASS *stp_class;
+    STP_CLASS* stp_class;
 
     if (stp_index == STP_INDEX_INVALID)
     {
@@ -1231,7 +1231,7 @@ bool stpmgr_add_enable_port(STP_INDEX stp_index, PORT_ID port_number)
  */
 bool stpmgr_delete_enable_port(STP_INDEX stp_index, PORT_ID port_number)
 {
-    STP_CLASS *stp_class;
+    STP_CLASS* stp_class;
 
     if (stp_index == STP_INDEX_INVALID)
     {
@@ -1273,16 +1273,16 @@ bool stpmgr_delete_enable_port(STP_INDEX stp_index, PORT_ID port_number)
  *
  * @return void
  */
-static void stpmgr_update_stats(STP_INDEX stp_index, PORT_ID port_number, void *buffer, bool pvst)
+static void stpmgr_update_stats(STP_INDEX stp_index, PORT_ID port_number, void* buffer, bool pvst)
 {
-    STP_CLASS *stp_class;
-    STP_PORT_CLASS *stp_port;
-    STP_CONFIG_BPDU *bpdu;
-    UINT8 *typestring = NULL;
+    STP_CLASS* stp_class;
+    STP_PORT_CLASS* stp_port;
+    STP_CONFIG_BPDU* bpdu;
+    UINT8* typestring = NULL;
 
     stp_class = GET_STP_CLASS(stp_index);
     stp_port = GET_STP_PORT_CLASS(stp_class, port_number);
-    bpdu = (STP_CONFIG_BPDU *)buffer;
+    bpdu = (STP_CONFIG_BPDU*)buffer;
 
     switch (bpdu->type)
     {
@@ -1321,10 +1321,10 @@ static void stpmgr_update_stats(STP_INDEX stp_index, PORT_ID port_number, void *
  *
  * @return void
  */
-void stpmgr_process_pvst_bpdu(STP_INDEX stp_index, PORT_ID port_number, void *buffer)
+void stpmgr_process_pvst_bpdu(STP_INDEX stp_index, PORT_ID port_number, void* buffer)
 {
-    STP_CONFIG_BPDU *bpdu;
-    STP_CLASS *stp_class;
+    STP_CONFIG_BPDU* bpdu;
+    STP_CLASS* stp_class;
 
     stp_class = GET_STP_CLASS(stp_index);
     if (!is_member(stp_class->enable_mask, port_number))
@@ -1339,11 +1339,11 @@ void stpmgr_process_pvst_bpdu(STP_INDEX stp_index, PORT_ID port_number, void *bu
 
     // hack the pointer to make it appear as a config bpdu so that the
     // rest of the routines can be called without any problems.
-    bpdu = (STP_CONFIG_BPDU *)(((UINT8 *)buffer) + 5);
+    bpdu = (STP_CONFIG_BPDU*)(((UINT8*)buffer) + 5);
 
     stputil_decode_bpdu(bpdu);
     stpmgr_update_stats(stp_index, port_number, bpdu, true /* pvst */);
-    stputil_process_bpdu(stp_index, port_number, (void *)bpdu);
+    stputil_process_bpdu(stp_index, port_number, (void*)bpdu);
 }
 
 /* FUNCTION
@@ -1367,10 +1367,10 @@ void stpmgr_process_pvst_bpdu(STP_INDEX stp_index, PORT_ID port_number, void *bu
  *
  * @return void
  */
-void stpmgr_process_stp_bpdu(STP_INDEX stp_index, PORT_ID port_number, void *buffer)
+void stpmgr_process_stp_bpdu(STP_INDEX stp_index, PORT_ID port_number, void* buffer)
 {
-    STP_CONFIG_BPDU *bpdu = (STP_CONFIG_BPDU *)buffer;
-    STP_CLASS *stp_class = GET_STP_CLASS(stp_index);
+    STP_CONFIG_BPDU* bpdu = (STP_CONFIG_BPDU*)buffer;
+    STP_CLASS* stp_class = GET_STP_CLASS(stp_index);
 
     if (!is_member(stp_class->enable_mask, port_number))
     {
@@ -1687,8 +1687,8 @@ void stpmgr_set_extend_mode(bool enable)
 void stpmgr_port_event(PORT_ID port_number, bool up)
 {
     STP_INDEX index;
-    STP_CLASS *stp_class;
-    STP_PORT_CLASS *stp_port;
+    STP_CLASS* stp_class;
+    STP_PORT_CLASS* stp_port;
     UINT32 path_cost;
     bool (*func)(STP_INDEX, PORT_ID);
 
@@ -1751,10 +1751,10 @@ void stpmgr_port_event(PORT_ID port_number, bool up)
  *
  * @return void
  */
-void stpmgr_rx_stp_bpdu(uint16_t vlan_id, uint32_t port_id, char *pkt)
+void stpmgr_rx_stp_bpdu(uint16_t vlan_id, uint32_t port_id, char* pkt)
 {
     STP_INDEX stp_index = STP_INDEX_INVALID;
-    STP_CONFIG_BPDU *bpdu = NULL;
+    STP_CONFIG_BPDU* bpdu = NULL;
     bool flag = true;
 
     // check for stp protect configuration.
@@ -1763,7 +1763,7 @@ void stpmgr_rx_stp_bpdu(uint16_t vlan_id, uint32_t port_id, char *pkt)
         return;
     }
 
-    bpdu = (STP_CONFIG_BPDU *)pkt;
+    bpdu = (STP_CONFIG_BPDU*)pkt;
 
     // validate bpdu
     if (!stputil_validate_bpdu(bpdu))
@@ -1854,10 +1854,10 @@ void stpmgr_rx_stp_bpdu(uint16_t vlan_id, uint32_t port_id, char *pkt)
  *
  * @return void
  */
-void stpmgr_rx_pvst_bpdu(uint16_t vlan_id, uint32_t port_id, void *pkt)
+void stpmgr_rx_pvst_bpdu(uint16_t vlan_id, uint32_t port_id, void* pkt)
 {
     STP_INDEX stp_index = STP_INDEX_INVALID;
-    PVST_CONFIG_BPDU *bpdu = NULL;
+    PVST_CONFIG_BPDU* bpdu = NULL;
 
     // check for stp protect configuration.
     if (stpmgr_protect_process(port_id, vlan_id))
@@ -1872,7 +1872,7 @@ void stpmgr_rx_pvst_bpdu(uint16_t vlan_id, uint32_t port_id, void *pkt)
     }
 
     // validate pvst bpdu
-    bpdu = (PVST_CONFIG_BPDU *)(((UINT8 *)pkt));
+    bpdu = (PVST_CONFIG_BPDU*)(((UINT8*)pkt));
     if (!stputil_validate_pvst_bpdu(bpdu))
     {
         if (STP_DEBUG_BPDU_RX(vlan_id, port_id))
@@ -1934,7 +1934,7 @@ void stpmgr_rx_pvst_bpdu(uint16_t vlan_id, uint32_t port_id, void *pkt)
  *
  * @return void
  */
-void stpmgr_process_rx_bpdu(uint16_t vlan_id, uint32_t port_id, unsigned char *pkt)
+void stpmgr_process_rx_bpdu(uint16_t vlan_id, uint32_t port_id, unsigned char* pkt)
 {
     // sanity checks
     if (!IS_VALID_VLAN(vlan_id))
@@ -1967,9 +1967,9 @@ void stpmgr_process_rx_bpdu(uint16_t vlan_id, uint32_t port_id, unsigned char *p
  *
  * @return void
  */
-void stpmgr_100ms_timer(evutil_socket_t fd, short what, void *arg)
+void stpmgr_100ms_timer(evutil_socket_t fd, short what, void* arg)
 {
-    const char *data = (char *)arg;
+    const char* data = (char*)arg;
     g_stpd_stats_libev_timer++;
     stptimer_tick();
 }
@@ -1987,11 +1987,11 @@ void stpmgr_100ms_timer(evutil_socket_t fd, short what, void *arg)
  *
  * @return void
  */
-static void stpmgr_process_bridge_config_msg(void *msg)
+static void stpmgr_process_bridge_config_msg(void* msg)
 {
-    STP_BRIDGE_CONFIG_MSG *pmsg = (STP_BRIDGE_CONFIG_MSG *)msg;
+    STP_BRIDGE_CONFIG_MSG* pmsg = (STP_BRIDGE_CONFIG_MSG*)msg;
     int i;
-    STP_CLASS *stp_class;
+    STP_CLASS* stp_class;
 
     if (!pmsg)
     {
@@ -2011,9 +2011,9 @@ static void stpmgr_process_bridge_config_msg(void *msg)
 
         stpmgr_config_root_protect_timeout(pmsg->rootguard_timeout);
 
-        memcpy((char *)&g_stp_base_mac_addr._ulong, pmsg->base_mac_addr, sizeof(g_stp_base_mac_addr._ulong));
-        memcpy((char *)&g_stp_base_mac_addr._ushort,
-               (char *)(pmsg->base_mac_addr + 4),
+        memcpy((char*)&g_stp_base_mac_addr._ulong, pmsg->base_mac_addr, sizeof(g_stp_base_mac_addr._ulong));
+        memcpy((char*)&g_stp_base_mac_addr._ushort,
+               (char*)(pmsg->base_mac_addr + 4),
                sizeof(g_stp_base_mac_addr._ushort));
     }
     else if (pmsg->opcode == STP_DEL_COMMAND)
@@ -2049,9 +2049,9 @@ static void stpmgr_process_bridge_config_msg(void *msg)
  * @return `true`, если STP был успешно активирован для VLAN,
  *         `false`, если произошла ошибка.
  */
-static bool stpmgr_vlan_stp_enable(STP_VLAN_CONFIG_MSG *pmsg)
+static bool stpmgr_vlan_stp_enable(STP_VLAN_CONFIG_MSG* pmsg)
 {
-    PORT_ATTR *attr;
+    PORT_ATTR* attr;
     int port_count;
     uint32_t port_id;
 
@@ -2108,7 +2108,7 @@ static bool stpmgr_vlan_stp_enable(STP_VLAN_CONFIG_MSG *pmsg)
  * @return `true`, если STP был успешно отключён для VLAN,
  *         `false`, если произошла ошибка.
  */
-static bool stpmgr_vlan_stp_disable(STP_VLAN_CONFIG_MSG *pmsg)
+static bool stpmgr_vlan_stp_disable(STP_VLAN_CONFIG_MSG* pmsg)
 {
     stpmgr_release_index(pmsg->inst_id);
     return true;
@@ -2128,9 +2128,9 @@ static bool stpmgr_vlan_stp_disable(STP_VLAN_CONFIG_MSG *pmsg)
  *
  * @return void
  */
-static void stpmgr_process_vlan_config_msg(void *msg)
+static void stpmgr_process_vlan_config_msg(void* msg)
 {
-    STP_VLAN_CONFIG_MSG *pmsg = (STP_VLAN_CONFIG_MSG *)msg;
+    STP_VLAN_CONFIG_MSG* pmsg = (STP_VLAN_CONFIG_MSG*)msg;
 
     if (!pmsg)
     {
@@ -2173,12 +2173,12 @@ static void stpmgr_process_vlan_config_msg(void *msg)
  *
  * @return void
  */
-static void stpmgr_send_reply(struct sockaddr_un addr, void *msg, int len)
+static void stpmgr_send_reply(struct sockaddr_un addr, void* msg, int len)
 {
     int rc;
 
     STP_LOG_INFO("sending msg to %s", addr.sun_path);
-    rc = sendto(g_stpd_ipc_handle, msg, len, 0, (struct sockaddr *)&addr, sizeof(addr));
+    rc = sendto(g_stpd_ipc_handle, msg, len, 0, (struct sockaddr*)&addr, sizeof(addr));
     if (rc == -1)
         STP_LOG_ERR("reply send error %s", strerror(errno));
     else
@@ -2198,9 +2198,9 @@ static void stpmgr_send_reply(struct sockaddr_un addr, void *msg, int len)
  *
  * @return void
  */
-static void stpmgr_process_vlan_intf_config_msg(void *msg)
+static void stpmgr_process_vlan_intf_config_msg(void* msg)
 {
-    STP_VLAN_PORT_CONFIG_MSG *pmsg = (STP_VLAN_PORT_CONFIG_MSG *)msg;
+    STP_VLAN_PORT_CONFIG_MSG* pmsg = (STP_VLAN_PORT_CONFIG_MSG*)msg;
     uint32_t port_id;
 
     if (!pmsg)
@@ -2240,12 +2240,12 @@ static void stpmgr_process_vlan_intf_config_msg(void *msg)
  *
  * @return void
  */
-static void stpmgr_process_intf_config_msg(void *msg)
+static void stpmgr_process_intf_config_msg(void* msg)
 {
-    STP_PORT_CONFIG_MSG *pmsg = (STP_PORT_CONFIG_MSG *)msg;
+    STP_PORT_CONFIG_MSG* pmsg = (STP_PORT_CONFIG_MSG*)msg;
     uint32_t port_id;
     int inst_count;
-    VLAN_ATTR *attr;
+    VLAN_ATTR* attr;
     UINT32 path_cost;
 
     if (!pmsg)
@@ -2347,12 +2347,12 @@ static void stpmgr_process_intf_config_msg(void *msg)
  *
  * @return void
  */
-static void stpmgr_process_vlan_mem_config_msg(void *msg)
+static void stpmgr_process_vlan_mem_config_msg(void* msg)
 {
-    STP_VLAN_MEM_CONFIG_MSG *pmsg = (STP_VLAN_MEM_CONFIG_MSG *)msg;
+    STP_VLAN_MEM_CONFIG_MSG* pmsg = (STP_VLAN_MEM_CONFIG_MSG*)msg;
     uint32_t port_id;
-    STP_CLASS *stp_class;
-    STP_PORT_CLASS *stp_port_class;
+    STP_CLASS* stp_class;
+    STP_PORT_CLASS* stp_port_class;
 
     if (!pmsg)
     {
@@ -2429,9 +2429,10 @@ static void stpmgr_process_vlan_mem_config_msg(void *msg)
  *
  * @return void
  */
-static void stpmgr_process_ipc_msg(STP_IPC_MSG *msg, int len, struct sockaddr_un client_addr)
+static void stpmgr_process_ipc_msg(STP_IPC_MSG* msg, int len, struct sockaddr_un client_addr)
 {
     int ret;
+    //! TODO переписать парсер IPC msg
     STP_LOG_INFO("rcvd %s msg type", msgtype_str[msg->msg_type]);
 
     /* Temp code until warm boot is handled */
@@ -2448,7 +2449,7 @@ static void stpmgr_process_ipc_msg(STP_IPC_MSG *msg, int len, struct sockaddr_un
     {
     case STP_INIT_READY:
     {
-        STP_INIT_READY_MSG *pmsg = (STP_INIT_READY_MSG *)msg->data;
+        STP_INIT_READY_MSG* pmsg = (STP_INIT_READY_MSG*)msg->data;
         /* All ports are initialized in the system. Now build IF DB in STP */
         ret = stp_intf_event_mgr_init();
         if (ret == -1)
@@ -2488,7 +2489,7 @@ static void stpmgr_process_ipc_msg(STP_IPC_MSG *msg, int len, struct sockaddr_un
     {
         STP_LOG_INFO("Server received from %s", client_addr.sun_path);
         stpdbg_process_ctl_msg(msg->data);
-        stpmgr_send_reply(client_addr, (void *)msg, len);
+        stpmgr_send_reply(client_addr, (void*)msg, len);
         break;
     }
 
@@ -2512,7 +2513,7 @@ static void stpmgr_process_ipc_msg(STP_IPC_MSG *msg, int len, struct sockaddr_un
  *
  * @return void
  */
-void stpmgr_recv_client_msg(evutil_socket_t fd, short what, void *arg)
+void stpmgr_recv_client_msg(evutil_socket_t fd, short what, void* arg)
 {
     char buffer[4096];
     int len;
@@ -2521,13 +2522,21 @@ void stpmgr_recv_client_msg(evutil_socket_t fd, short what, void *arg)
     g_stpd_stats_libev_ipc++;
 
     len = sizeof(struct sockaddr_un);
-    len = recvfrom(fd, buffer, 4096, 0, (struct sockaddr *)&client_sock, &len);
+    len = recvfrom(fd, buffer, 4096, 0, (struct sockaddr*)&client_sock, &len);
     if (len == -1)
     {
         STP_LOG_ERR("recv  message error %s", strerror(errno));
     }
+    else if (len < 10)
+    {
+        STP_LOG_ERR("stpmgr_recv_client_msg  message error, len too small= %d", len);
+    }
+    else if (!((buffer[0]=='w')&&(buffer[1]=='b')&&(buffer[2]=='o')&&(buffer[3]=='s')))
+    {
+        STP_LOG_ERR("stpmgr_recv_client_msg  message error, magic is wrong = %.*s", 4, buffer);
+    }
     else
     {
-        stpmgr_process_ipc_msg((STP_IPC_MSG *)buffer, len, client_sock);
+        stpmgr_process_ipc_msg((STP_IPC_MSG*)(buffer+4), (len-4), client_sock);
     }
 }
