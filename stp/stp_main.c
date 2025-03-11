@@ -18,6 +18,28 @@ STPD_CONTEXT stpd_context;
 #define BUFFER_SIZE 64 * 1024 // максимальное значениедлинны пакета данных
 #define RECV_BUF_SIZE 212992  // размер буфера приема от соника
 
+void cleanup()
+{
+    if (g_stpd_ipc_handle != -1)
+    {
+        close(g_stpd_ipc_handle);
+        g_stpd_ipc_handle = -1;
+    }
+    if (g_stpd_evbase != NULL)
+    {
+        event_base_free(g_stpd_evbase);
+        g_stpd_evbase = NULL;
+    }
+    printf("Ресурсы g_stpd_ipc_handle g_stpd_evbase освобождены.\n");
+}
+
+void signal_handler(int sig)
+{
+    fprintf(stderr, "Получен сигнал %d. Завершение...\n", sig);
+    cleanup();
+    exit(0);
+}
+
 /**
  * @brief служит для инициализации механизмов межпроцессного взаимодействия (IPC, Inter-Process Communication). Это взаимодействие необходимо для обмена данными между демоном STP (stpd) и другими компонентами системы, такими как базы данных SONiC (CONFIG_DB, STATE_DB)
  * Основные задачи функции stpd_ipc_init:
@@ -103,7 +125,7 @@ int stpd_ipc_init()
 /// @return 0 - OK
 int stpd_ipc_wbos_init(int PORT_UDP_R_WBOS)
 {
-    //struct sockaddr_un sa;
+    // struct sockaddr_un sa;
     struct sockaddr_in addr;
     int ret;
     struct event* ipc_event = 0;
@@ -117,7 +139,8 @@ int stpd_ipc_wbos_init(int PORT_UDP_R_WBOS)
 
     // Включение SO_REUSEADDR
     int reuse = 1;
-    if (setsockopt(g_stpd_ipc_handle, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse))) {
+    if (setsockopt(g_stpd_ipc_handle, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse)))
+    {
         STP_LOG_ERR("WBOS setsockopt SO_REUSEADDR  error %s", strerror(errno));
         return 1;
     }
@@ -126,17 +149,17 @@ int stpd_ipc_wbos_init(int PORT_UDP_R_WBOS)
     socklen_t optlen = sizeof(actual_rcv_buf);
     getsockopt(g_stpd_ipc_handle, SOL_SOCKET, SO_RCVBUF, &actual_rcv_buf, &optlen);
     STP_LOG_INFO("Размер буфера приема: %d байт\n", actual_rcv_buf);
-    if (actual_rcv_buf!=RECV_BUF_SIZE)
+    if (actual_rcv_buf != RECV_BUF_SIZE)
     {
         actual_rcv_buf = RECV_BUF_SIZE;
         // sudo sysctl -w net.core.rmem_max=212992
         // Установка размера буфера приема
-        if (setsockopt(g_stpd_ipc_handle, SOL_SOCKET, SO_RCVBUF, &actual_rcv_buf, sizeof(actual_rcv_buf)) {
+        if (setsockopt(g_stpd_ipc_handle, SOL_SOCKET, SO_RCVBUF, &actual_rcv_buf, sizeof(actual_rcv_buf)))
+        {
             STP_LOG_ERR("WBOS  setsockopt(SO_RCVBUF)  error %s", strerror(errno));
             return 1;
         }
     }
-    
 
     // Настройка адреса
     memset(&addr, 0, sizeof(addr));
@@ -144,12 +167,11 @@ int stpd_ipc_wbos_init(int PORT_UDP_R_WBOS)
     addr.sin_port = htons(UDP_PORT);
     addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 
-    if (bind(g_stpd_ipc_handle, (struct sockaddr*)&addr, sizeof(addr)) == -1) {
+    if (bind(g_stpd_ipc_handle, (struct sockaddr*)&addr, sizeof(addr)) == -1)
+    {
         perror("bind()");
         return 1;
     }
-
-
 
     /* Настройка структуры адреса сокета */
     // memset(&sa, 0, sizeof(struct sockaddr_un));
@@ -167,7 +189,7 @@ int stpd_ipc_wbos_init(int PORT_UDP_R_WBOS)
 
     /* Создание события для обработки сообщений через IPC */
     ipc_event = stpmgr_libevent_create(g_stpd_evbase, g_stpd_ipc_handle,
-                                       EV_READ | EV_PERSIST, stpmgr_recv_client_msg, (char *)"IPC", NULL);
+                                       EV_READ | EV_PERSIST, stpmgr_recv_client_msg, (char*)"IPC", NULL);
     if (!ipc_event)
     {
         STP_LOG_ERR("ipc_event Create failed");
