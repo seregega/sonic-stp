@@ -287,7 +287,8 @@ int stpd_main()
     /* Инициализация IPC для взаимодействия с менеджером STP */
     // TODO переписать для работы по порту UDP
     // rc = stpd_ipc_init();
-    rc = stpd_ipc_wbos_init(6945) if (rc < 0)
+    rc = stpd_ipc_wbos_init(6945);
+    if (rc < 0)
     {
         STP_LOG_ERR("ipc init failed");
         return -1;
