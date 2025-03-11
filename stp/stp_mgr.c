@@ -2529,11 +2529,11 @@ void stpmgr_recv_client_msg(evutil_socket_t fd, short what, void* arg)
     }
     else if (len < 10)
     {
-        STP_LOG_ERR("stpmgr_recv_client_msg  message error, len too small= %d", len);
+        STP_LOG_ERR("message error, len too small= %d", len);
     }
     else if (!((buffer[0]=='w')&&(buffer[1]=='b')&&(buffer[2]=='o')&&(buffer[3]=='s')))
     {
-        STP_LOG_ERR("stpmgr_recv_client_msg  message error, magic is wrong = %.*s", 4, buffer);
+        STP_LOG_ERR("message error, magic is wrong = %.*s", 4, buffer);
     }
     else
     {

@@ -18,6 +18,12 @@ STPD_CONTEXT stpd_context;
 #define BUFFER_SIZE 64 * 1024 // максимальное значениедлинны пакета данных
 #define RECV_BUF_SIZE 212992  // размер буфера приема от соника
 
+#ifndef STPD_WBOS_RELEASE
+#define STPD_WBOS_DEBUG 1
+#else
+#define STPD_WBOS_DEBUG 0
+#endif // !STPD_WBOS_RELEASE
+
 void cleanup()
 {
     if (g_stpd_ipc_handle != -1)
@@ -169,7 +175,7 @@ int stpd_ipc_wbos_init(int PORT_UDP_R_WBOS)
 
     if (bind(g_stpd_ipc_handle, (struct sockaddr*)&addr, sizeof(addr)) == -1)
     {
-        //perror("bind()");
+        // perror("bind()");
         STP_LOG_ERR("WBOS_init bind(g_stpd_ipc_handle  error %s", strerror(errno));
         return -1;
     }
@@ -212,13 +218,22 @@ void stpd_log_init()
      * @brief Установка уровня логирования на основе наличия файла /stpd_dbg_reload
      *
      */
-    STP_LOG_INIT(); // TODO! не работает - переделать
-    if (fopen("/stpd_dbg_reload", "r"))
+    STP_LOG_INIT();
+    // if (fopen("/stpd_dbg_reload", "r"))
+    // {
+    //     STP_LOG_SET_LEVEL(STP_LOG_LEVEL_DEBUG);
+    // }
+    // else
+    //     STP_LOG_SET_LEVEL(STP_LOG_LEVEL_INFO);
+
+    if (STPD_WBOS_DEBUG)
     {
         STP_LOG_SET_LEVEL(STP_LOG_LEVEL_DEBUG);
     }
     else
+    {
         STP_LOG_SET_LEVEL(STP_LOG_LEVEL_INFO);
+    }
 }
 
 int stpd_main()
