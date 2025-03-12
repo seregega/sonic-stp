@@ -277,7 +277,7 @@ int stpd_response_send_wbos_init_ctx(STPD_CONTEXT* ctx, int PORT_UDP_R_WBOS)
 }
 
 // Функция отправки пакета с повторами
-int send_udp_packet(STPD_CONTEXT* ctx, const char* message)
+int send_resp_ipc_packet(STPD_CONTEXT* ctx, const char* message)
 {
     if (!ctx || ctx->response_ipc_fd < 0 || !message)
     {
