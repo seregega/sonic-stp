@@ -201,7 +201,7 @@ typedef struct STPD_CONTEXT
     STPD_DEBUG_STATS dbg_stats; // Статистика для мониторинга работы демона STP (например, принятые пакеты, события IPC, Netlink и ошибки).
 
     struct sockaddr_in addr_resp_ipc; //структура для хранения адреса посылок для send_resp_ipc_packet
-    int (*send_resp_ipc_packet)(struct STPD_CONTEXT*, const char*);  //функция для отправки пакета данных в ответ на команду или событие в WBOS
+    int (*send_resp_ipc_packet)(struct STPD_CONTEXT*, const char*, size_t);  //функция для отправки пакета данных в ответ на команду или событие в WBOS
 } STPD_CONTEXT;
 
 extern char msgtype_str[][64];

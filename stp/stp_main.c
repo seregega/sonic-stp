@@ -12,7 +12,7 @@
 #include "stp_main.h"
 
 // Прототип функции отправки
-int send_resp_ipc_packet(STPD_CONTEXT* ctx, const char* message);
+int send_resp_ipc_packet(STPD_CONTEXT* ctx, const char* message, size_t len);
 
 /* Глобальная структура контекста STP */
 STPD_CONTEXT stpd_context;
@@ -277,7 +277,7 @@ int stpd_response_send_wbos_init_ctx(STPD_CONTEXT* ctx, int PORT_UDP_R_WBOS)
 }
 
 // Функция отправки пакета с повторами
-int send_resp_ipc_packet(STPD_CONTEXT* ctx, const char* message)
+int send_resp_ipc_packet(STPD_CONTEXT* ctx, const char* message, size_t len)
 {
     if (!ctx || ctx->response_ipc_fd < 0 || !message)
     {
@@ -288,9 +288,8 @@ int send_resp_ipc_packet(STPD_CONTEXT* ctx, const char* message)
 
     int retries = 0;
     ssize_t bytes_sent;
-    socklen_t addr_len = sizeof(ctx->addr_resp_ipc);
 
-    bytes_sent = sendto(ctx->response_ipc_fd, message, strlen(message), 0, (struct sockaddr*)&ctx->addr_resp_ipc, addr_len);
+    bytes_sent = sendto(ctx->response_ipc_fd, message, strlen(message), 0, (struct sockaddr*)&ctx->addr_resp_ipc, len);
 
     if (bytes_sent == -1)
     {
@@ -399,7 +398,7 @@ int stpd_main()
 
     /* Инициализация IPC для взаимодействия с менеджером STP <- WBOS_CLI */
     // rc = stpd_ipc_init();
-    rc = stpd_ipc_wbos_init(UDP_PORT_RCV);
+    rc = stpd_ipc_wbos_init(6954);
     if (rc < 0)
     {
         STP_LOG_ERR("ipc init failed");
@@ -408,12 +407,17 @@ int stpd_main()
 
     /* Инициализация IPC для взаимодействия с менеджером STP <- WBOS_CLI */
     // rc = stpd_ipc_init();
-    rc = stpd_response_send_wbos_init_ctx(&stpd_context, UDP_PORT_SND);
+    rc = stpd_response_send_wbos_init_ctx(&stpd_context, 6945);
     if (rc < 0)
     {
         STP_LOG_ERR("ctx send init failed");
         return -1;
     }
+
+    const char test_messages[] = {
+        "Hello WBOS from stpd!"};
+
+        stpd_context.send_resp_ipc_packet(&stpd_context,test_messages, sizeof(test_messages));
 
     /* Создание базы данных интерфейсов STP */
     g_stpd_intf_db = avl_create(&stp_intf_avl_compare, NULL, NULL);
