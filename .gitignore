@@ -24,6 +24,8 @@ config.h.in~
 config.log
 config.status
 libtool
+Makefile
+Makefile.in
 stpd
 stpd-stp_sync.o
 stpd-stpd_main.o
@@ -111,4 +113,3 @@ stpctl/.deps/stpctl.Po
 stp/.deps/libstp_a-stp.Po
 stp/.deps/libstp_a-stp_util.Po
 stpctl/.deps/stpctl.Po
-stp/.deps/libstp_a-stp_main.Tpo

@@ -11,20 +11,20 @@
 #define _STP_MAIN_H_
 
 /* Подключение необходимых библиотек */
-#include <event2/event.h>
-#include <linux/if.h>
+#include <sys/socket.h>                                                                                                                                                                                                              
+#include <sys/un.h>                                                                                                                                                                                                                 
+#include <event2/event.h>                                                                                                                                                                                                             
+#include <unistd.h>                                                                                                                                                                                                                    
+#include <stdint.h>                                                                                                                                                                                                                     
+#include <sys/ioctl.h>                                                                                                                                                                                                                  
+#include <linux/if.h>                                                                                                                                                                                                                    
 #include <signal.h>
-#include <stdint.h>
-#include <sys/ioctl.h>
-#include <sys/socket.h>
-#include <sys/un.h>
-#include <unistd.h>
 
 /* Заголовочные файлы STP */
 #include "applog.h"
+#include "stp_ipc.h"
 #include "avl.h"
 #include "stp_inc.h"
-#include "stp_ipc.h"
 
 #define STP_LOG_CRITICAL APP_LOG_CRITICAL
 #define STP_LOG_DEBUG APP_LOG_DEBUG

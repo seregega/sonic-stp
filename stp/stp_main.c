@@ -290,7 +290,7 @@ int send_udp_packet(STPD_CONTEXT* ctx, const char* message)
     ssize_t bytes_sent;
     socklen_t addr_len = sizeof(ctx->addr_resp_ipc);
 
-    bytes_sent = sendto(ctx->response_ipc_fd, message, strlen(message), 0, &ctx->addr_resp_ipc, addr_len);
+    bytes_sent = sendto(ctx->response_ipc_fd, message, strlen(message), 0, (struct sockaddr*)&ctx->addr_resp_ipc, addr_len);
 
     if (bytes_sent == -1)
     {
