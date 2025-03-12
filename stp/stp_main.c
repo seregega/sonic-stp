@@ -36,12 +36,37 @@ void cleanup()
         event_base_free(g_stpd_evbase);
         g_stpd_evbase = NULL;
     }
+    if (g_stpd_netlink_handle != NULL)
+    {
+        close(g_stpd_netlink_handle);
+        g_stpd_netlink_handle = -1;
+    }
+    if (g_stpd_pkt_handle != NULL)
+    {
+        close(g_stpd_pkt_handle);
+        g_stpd_pkt_handle = -1;
+    }
+    if (g_stpd_ioctl_sock != NULL)
+    {
+        close(g_stpd_ioctl_sock);
+        g_stpd_ioctl_sock = -1;
+    }
+    if (g_stpd_intf_db != NULL)
+    {
+        vl_destroy(g_stpd_intf_db, NULL);
+        g_stpd_intf_db = NULL;
+    }
+
+#ifdef STPD_WBOS_DEBUG
     printf("Ресурсы g_stpd_ipc_handle g_stpd_evbase освобождены.\n");
+#endif // STPD_WBOS_DEBUG
 }
 
 void signal_handler(int sig)
 {
+#ifdef STPD_WBOS_DEBUG
     fprintf(stderr, "Получен сигнал %d. Завершение...\n", sig);
+#endif // STPD_WBOS_DEBUG
     cleanup();
     exit(0);
 }
