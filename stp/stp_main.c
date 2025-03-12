@@ -299,7 +299,7 @@ int send_udp_packet(STPD_CONTEXT* ctx, const char* message)
     }
     else
     {
-        STP_LOG_DEBUG("Sent %zd bytes to %s:%d\n", bytes_sent, inet_ntoa(ctx->addr_resp_ipc.sin_addr), ntohs(ctx->addr_resp_ipc.sin_port));
+        STP_LOG_DEBUG("Sent %zd bytes to WBOS:%d", bytes_sent, ntohs(ctx->addr_resp_ipc.sin_port));
         return 0;
     }
 }
