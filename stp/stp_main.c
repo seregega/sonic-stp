@@ -11,12 +11,17 @@
 
 #include "stp_main.h"
 
+// Прототип функции отправки
+int send_resp_ipc_packet(STPD_CONTEXT* ctx, const char* message);
+
 /* Глобальная структура контекста STP */
 STPD_CONTEXT stpd_context;
 
-#define UDP_PORT 6954         // для приема wbos msg
+#define UDP_PORT_SND 6954     // для отправки в wbos msg
+#define UDP_PORT_RCV 6945     // для приема wbos msg
 #define BUFFER_SIZE 64 * 1024 // максимальное значениедлинны пакета данных
 #define RECV_BUF_SIZE 212992  // размер буфера приема от соника
+// #define MAX_RETRIES 3         // количество попыток на отправку
 
 #ifndef STPD_WBOS_RELEASE
 #define STPD_WBOS_DEBUG 1
@@ -55,6 +60,11 @@ void cleanup()
     {
         vl_destroy(g_stpd_intf_db, NULL);
         g_stpd_intf_db = NULL;
+    }
+    if (g_stpd_response_ipc_handle != -1)
+    {
+        close(g_stpd_response_ipc_handle);
+        g_stpd_response_ipc_handle = -1;
     }
 
 #ifdef STPD_WBOS_DEBUG
@@ -180,7 +190,7 @@ int stpd_ipc_wbos_init(int PORT_UDP_R_WBOS)
     socklen_t optlen = sizeof(actual_rcv_buf);
     getsockopt(g_stpd_ipc_handle, SOL_SOCKET, SO_RCVBUF, &actual_rcv_buf, &optlen);
     STP_LOG_INFO("Размер буфера приема: %d байт\n", actual_rcv_buf);
-    if (actual_rcv_buf != RECV_BUF_SIZE)
+    if (actual_rcv_buf < RECV_BUF_SIZE)
     {
         actual_rcv_buf = RECV_BUF_SIZE;
         // sudo sysctl -w net.core.rmem_max=212992
@@ -195,7 +205,7 @@ int stpd_ipc_wbos_init(int PORT_UDP_R_WBOS)
     // Настройка адреса
     memset(&addr, 0, sizeof(addr));
     addr.sin_family = AF_INET;
-    addr.sin_port = htons(UDP_PORT);
+    addr.sin_port = htons(PORT_UDP_R_WBOS);
     addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 
     if (bind(g_stpd_ipc_handle, (struct sockaddr*)&addr, sizeof(addr)) == -1)
@@ -204,20 +214,6 @@ int stpd_ipc_wbos_init(int PORT_UDP_R_WBOS)
         STP_LOG_ERR("WBOS_init bind(g_stpd_ipc_handle  error %s", strerror(errno));
         return -1;
     }
-
-    /* Настройка структуры адреса сокета */
-    // memset(&sa, 0, sizeof(struct sockaddr_un));
-    // sa.sun_family = AF_UNIX;
-    // strncpy(sa.sun_path, STPD_SOCK_NAME, sizeof(sa.sun_path) - 1);
-
-    // /* Привязка сокета к адресу */
-    // ret = bind(g_stpd_ipc_handle, (struct sockaddr *)&sa, sizeof(struct sockaddr_un));
-    // if (ret == -1)
-    // {
-    //     STP_LOG_ERR("ipc bind error %s", strerror(errno));
-    //     close(g_stpd_ipc_handle);
-    //     return -1;
-    // }
 
     /* Создание события для обработки сообщений через IPC */
     ipc_event = stpmgr_libevent_create(g_stpd_evbase, g_stpd_ipc_handle,
@@ -231,6 +227,81 @@ int stpd_ipc_wbos_init(int PORT_UDP_R_WBOS)
     STP_LOG_DEBUG("ipc init done");
 
     return 0;
+}
+
+/// @brief функция для отправки реакций на события и запросов чтения команд[STPD->WBOS]
+/// @param PORT_UDP_R_WBOS порт для отправки
+/// @return 0 - OK
+int stpd_response_send_wbos_init_ctx(STPD_CONTEXT* ctx, int PORT_UDP_R_WBOS)
+{
+
+    int ret;
+
+    ctx->response_ipc_fd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (!ctx->response_ipc_fd)
+    {
+        STP_LOG_ERR(" socket error %s", strerror(errno));
+        return -1;
+    }
+
+    // Проверка фактического размера буфера
+    int actual_rcv_buf;
+    socklen_t optlen = sizeof(actual_rcv_buf);
+    getsockopt(ctx->response_ipc_fd, SOL_SOCKET, SO_RCVBUF, &actual_rcv_buf, &optlen);
+    STP_LOG_INFO("SO_RCVBUF = %d B", actual_rcv_buf);
+    if (actual_rcv_buf < RECV_BUF_SIZE)
+    {
+        actual_rcv_buf = RECV_BUF_SIZE;
+        // sudo sysctl -w net.core.rmem_max=212992
+        // Установка размера буфера приема
+        if (setsockopt(ctx->response_ipc_fd, SOL_SOCKET, SO_RCVBUF, &actual_rcv_buf, sizeof(actual_rcv_buf)))
+        {
+            STP_LOG_ERR("WBOS  setsockopt(SO_RCVBUF)  error %s", strerror(errno));
+            return -1;
+        }
+    }
+
+    // struct sockaddr_un sa;
+
+    // Настройка адреса
+    memset(&ctx->addr_resp_ipc, sizeof(ctx->addr_resp_ipc));
+    .sin_family = AF_INET;
+    ctx->addr_resp_ipc.sin_port = htons(UDP_PORT_SND);
+    ctx->addr_resp_ipc.sin_addr.s_addr = INADDR_LOOPBACK;
+
+    // Привязка функции отправки
+    ctx->send_resp_ipc_packet = send_udp_packet;
+    STP_LOG_DEBUG("ipc init done");
+
+    return 0;
+}
+
+// Функция отправки пакета с повторами
+int send_udp_packet(STPD_CONTEXT* ctx, const char* message)
+{
+    if (!ctx || ctx->response_ipc_fd < 0 || !message)
+    {
+        // fprintf(stderr, "Invalid arguments\n");
+        STP_LOG_ERR("Invalid context or message");
+        return -1;
+    }
+
+    int retries = 0;
+    ssize_t bytes_sent;
+    socklen_t addr_len = sizeof(ctx->addr_resp_ipc);
+
+    bytes_sent = sendto(ctx->response_ipc_fd, message, strlen(message), 0, &ctx->addr_resp_ipc, addr_len);
+
+    if (bytes_sent == -1)
+    {
+        STP_LOG_ERR("sendto() failed)  error");
+        return -1;
+    }
+    else
+    {
+        STP_LOG_DEBUG("Sent %zd bytes to %s:%d\n", bytes_sent, inet_ntoa(ctx->addr_resp_ipc.sin_addr), ntohs(ctx->addr_resp_ipc.sin_port));
+        return 0;
+    }
 }
 
 /**
@@ -326,17 +397,23 @@ int stpd_main()
         return -1;
     }
 
-    /* Инициализация IPC для взаимодействия с менеджером STP */
-    // TODO переписать для работы по порту UDP
+    /* Инициализация IPC для взаимодействия с менеджером STP <- WBOS_CLI */
     // rc = stpd_ipc_init();
-    rc = stpd_ipc_wbos_init(6945);
+    rc = stpd_ipc_wbos_init(UDP_PORT_RCV);
     if (rc < 0)
     {
         STP_LOG_ERR("ipc init failed");
         return -1;
     }
 
-    //
+    /* Инициализация IPC для взаимодействия с менеджером STP <- WBOS_CLI */
+    // rc = stpd_ipc_init();
+    rc = stpd_response_send_wbos_init_ctx(&stpd_context, UDP_PORT_SND);
+    if (rc < 0)
+    {
+        STP_LOG_ERR("ctx send init failed");
+        return -1;
+    }
 
     /* Создание базы данных интерфейсов STP */
     g_stpd_intf_db = avl_create(&stp_intf_avl_compare, NULL, NULL);

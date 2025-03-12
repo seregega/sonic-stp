@@ -11,20 +11,20 @@
 #define _STP_MAIN_H_
 
 /* Подключение необходимых библиотек */
-#include <sys/socket.h>
-#include <sys/un.h>
 #include <event2/event.h>
-#include <unistd.h>
-#include <stdint.h>
-#include <sys/ioctl.h>
 #include <linux/if.h>
 #include <signal.h>
+#include <stdint.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <unistd.h>
 
 /* Заголовочные файлы STP */
 #include "applog.h"
-#include "stp_ipc.h"
 #include "avl.h"
 #include "stp_inc.h"
+#include "stp_ipc.h"
 
 #define STP_LOG_CRITICAL APP_LOG_CRITICAL
 #define STP_LOG_DEBUG APP_LOG_DEBUG
@@ -48,6 +48,7 @@ struct netlink_db_s;
 #define g_stpd_evbase stpd_context.evbase
 #define g_stpd_netlink_handle stpd_context.netlink_fd
 #define g_stpd_ipc_handle stpd_context.ipc_fd
+#define g_stpd_response_ipc_handle stpd_context.response_ipc_fd
 #define g_stpd_pkt_handle stpd_context.pkt_fd
 #define g_stpd_netlink_ibuf_sz stpd_context.netlink_init_buf_sz
 #define g_stpd_netlink_cbuf_sz stpd_context.netlink_curr_buf_sz
@@ -157,7 +158,7 @@ typedef struct
  */
 typedef struct
 {
-    STPD_INTF_STATS **intf; // Двумерный массив указателей на объекты типа STPD_INTF_STATS, где каждый элемент хранит статистику для конкретного интерфейса.
+    STPD_INTF_STATS** intf; // Двумерный массив указателей на объекты типа STPD_INTF_STATS, где каждый элемент хранит статистику для конкретного интерфейса.
     STPD_LIBEV_STATS libev; // Статистика, связанная с работой библиотеки libevent. Включает данные о количестве активных сокетов, таймерах, обработанных пакетах, IPC, и событиях Netlink.
 } STPD_DEBUG_STATS;
 
@@ -168,12 +169,11 @@ typedef struct
 typedef struct STPD_CONTEXT
 {
     /*Libevent base to monitor all socket Fd's*/
-    struct event_base *evbase; // Указатель на базу libevent, которая используется для мониторинга всех сокетов и событий.
-
-    /*Fd's used by STP*/
-    int netlink_fd; // Дескриптор Netlink-сокета для взаимодействия с ядром Linux (например, получение событий о состоянии интерфейсов).
-    int ipc_fd;     // Дескриптор сокета IPC для взаимодействия с другими процессами, такими как stpmgrd.
-    int pkt_fd;     // Дескриптор сокета для передачи/приема пакетов BPDU
+    struct event_base* evbase; // Указатель на базу libevent, которая используется для мониторинга всех сокетов и событий.
+    int netlink_fd;            // Дескриптор Netlink-сокета для взаимодействия с ядром Linux (например, получение событий о состоянии интерфейсов).
+    int ipc_fd;                // Дескриптор сокета IPC для взаимодействия с другими процессами, такими как stpmgrd WBOS
+    int response_ipc_fd;       // Дескриптор сокета IPC отправки данных в WBOS в ответ на события
+    int pkt_fd;                // Дескриптор сокета для передачи/приема пакетов BPDU
 
     uint8_t port_init_done : 1;   // Указывает, завершена ли инициализация портов.
     uint8_t extend_mode : 1;      //  Указывает, включен ли расширенный режим.
@@ -186,26 +186,29 @@ typedef struct STPD_CONTEXT
     // Key := Interface name
     // Will hold a node for each Interface(Ethernet/PO) in the System.
     // PO node will be created only when 1st Member port is added to the system.
-    struct avl_table *intf_avl_tree; // AVL-дерево, в котором хранятся данные об интерфейсах. Ключ — имя интерфейса (например, "Ethernet0").
+    struct avl_table* intf_avl_tree; // AVL-дерево, в котором хранятся данные об интерфейсах. Ключ — имя интерфейса (например, "Ethernet0").
 
     // TODO : for performance optimization
     // array of pointers to nodes in avl tree.
     // for faster access by avoiding parsing avl tree.
-    int **intf_ptr_to_avl_node; // Массив указателей для быстрого доступа к узлам AVL-дерева, что позволяет избежать перебора дерева.
+    int** intf_ptr_to_avl_node; // Массив указателей для быстрого доступа к узлам AVL-дерева, что позволяет избежать перебора дерева.
 
     // Local port-id for Port-channel.
-    struct BITMAP_S *po_id_pool; // Пул идентификаторов для управления агрегированными каналами (Port-Channel).
+    struct BITMAP_S* po_id_pool; // Пул идентификаторов для управления агрегированными каналами (Port-Channel).
     uint32_t ioctl_sock;         // Сокет для выполнения операций IOCTL (взаимодействие с ядром для настройки интерфейсов).
     // Max Phy ports in system. calculated using netlink dump
     uint16_t sys_max_port;      // Максимальное количество физических портов в системе, определяемое через Netlink при запуске.
     STPD_DEBUG_STATS dbg_stats; // Статистика для мониторинга работы демона STP (например, принятые пакеты, события IPC, Netlink и ошибки).
+
+    struct sockaddr_in addr_resp_ipc; //структура для хранения адреса посылок для send_resp_ipc_packet
+    int (*send_resp_ipc_packet)(struct STPD_CONTEXT*, const char*);  //функция для отправки пакета данных в ответ на команду или событие в WBOS
 } STPD_CONTEXT;
 
 extern char msgtype_str[][64];
 
 // Function declaration
-int stpmgr_avl_compare(const void *user_p, const void *data_p, void *param);             // сравнение данных в дереве
-void stpmgr_interface_update(struct netlink_db_s *if_db, uint8_t add);                   // обновление интерфейса через netlink_db_s
-uint32_t stpmgr_update_if_avl_tree(struct netlink_db_s *if_db, uint8_t add);             // обновление интерфейса в дереве
-void stpmgr_update_portclass(uint32_t port_id, struct netlink_db_s *if_db, uint8_t add); // обновление через мэнеджер
+int stpmgr_avl_compare(const void* user_p, const void* data_p, void* param);             // сравнение данных в дереве
+void stpmgr_interface_update(struct netlink_db_s* if_db, uint8_t add);                   // обновление интерфейса через netlink_db_s
+uint32_t stpmgr_update_if_avl_tree(struct netlink_db_s* if_db, uint8_t add);             // обновление интерфейса в дереве
+void stpmgr_update_portclass(uint32_t port_id, struct netlink_db_s* if_db, uint8_t add); // обновление через мэнеджер
 #endif

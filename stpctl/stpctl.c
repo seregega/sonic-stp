@@ -33,36 +33,7 @@ CMD_LIST g_cmd_list[] = {
     {"clrstsintf", STP_CTL_CLEAR_INTF},
     {"clrstsvlanintf", STP_CTL_CLEAR_VLAN_INTF},
 };
-// CMD_LIST g_cmd_list[] = {
-//     "help",
-//     STP_CTL_HELP,
-//     "all",
-//     STP_CTL_DUMP_ALL,
-//     "global",
-//     STP_CTL_DUMP_GLOBAL,
-//     "vlan",
-//     STP_CTL_DUMP_VLAN,
-//     "port",
-//     STP_CTL_DUMP_INTF,
-//     "dbglvl",
-//     STP_CTL_SET_LOG_LVL,
-//     "nldb",
-//     STP_CTL_DUMP_NL_DB,
-//     "nlintf",
-//     STP_CTL_DUMP_NL_DB_INTF,
-//     "lstats",
-//     STP_CTL_DUMP_LIBEV_STATS,
-//     "dbg",
-//     STP_CTL_SET_DBG,
-//     "clrstsall",
-//     STP_CTL_CLEAR_ALL,
-//     "clrstsvlan",
-//     STP_CTL_CLEAR_VLAN,
-//     "clrstsintf",
-//     STP_CTL_CLEAR_INTF,
-//     "clrstsvlanintf",
-//     STP_CTL_CLEAR_VLAN_INTF,
-// };
+
 
 /**
  * @brief Выводит список поддерживаемых команд.
