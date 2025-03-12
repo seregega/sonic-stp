@@ -24,8 +24,6 @@ config.h.in~
 config.log
 config.status
 libtool
-Makefile
-Makefile.in
 stpd
 stpd-stp_sync.o
 stpd-stpd_main.o
