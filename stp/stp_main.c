@@ -41,24 +41,24 @@ void cleanup()
         event_base_free(g_stpd_evbase);
         g_stpd_evbase = NULL;
     }
-    if (g_stpd_netlink_handle != NULL)
+    if (g_stpd_netlink_handle != -1)
     {
         close(g_stpd_netlink_handle);
         g_stpd_netlink_handle = -1;
     }
-    if (g_stpd_pkt_handle != NULL)
+    if (g_stpd_pkt_handle != -1)
     {
         close(g_stpd_pkt_handle);
         g_stpd_pkt_handle = -1;
     }
-    if (g_stpd_ioctl_sock != NULL)
+    if (g_stpd_ioctl_sock != -1)
     {
         close(g_stpd_ioctl_sock);
         g_stpd_ioctl_sock = -1;
     }
     if (g_stpd_intf_db != NULL)
     {
-        vl_destroy(g_stpd_intf_db, NULL);
+        avl_destroy(g_stpd_intf_db, NULL);
         g_stpd_intf_db = NULL;
     }
     if (g_stpd_response_ipc_handle != -1)
@@ -264,13 +264,13 @@ int stpd_response_send_wbos_init_ctx(STPD_CONTEXT* ctx, int PORT_UDP_R_WBOS)
     // struct sockaddr_un sa;
 
     // Настройка адреса
-    memset(&ctx->addr_resp_ipc, sizeof(ctx->addr_resp_ipc));
-    .sin_family = AF_INET;
+    memset(&ctx->addr_resp_ipc, 0, sizeof(ctx->addr_resp_ipc));
+    ctx->addr_resp_ipc.sin_family = AF_INET;
     ctx->addr_resp_ipc.sin_port = htons(UDP_PORT_SND);
     ctx->addr_resp_ipc.sin_addr.s_addr = INADDR_LOOPBACK;
 
     // Привязка функции отправки
-    ctx->send_resp_ipc_packet = send_udp_packet;
+    ctx->send_resp_ipc_packet = send_resp_ipc_packet;
     STP_LOG_DEBUG("ipc init done");
 
     return 0;
