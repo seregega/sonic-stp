@@ -18,9 +18,9 @@
 
 #include "stp_inc.h"
 
-FILE *dbgfp = NULL;
+FILE* dbgfp = NULL;
 
-#define STP_DUMP_START dbgfp = fopen("/var/log/stp_dmp.log", "w+")
+#define STP_DUMP_START dbgfp = fopen("/var/log/stpd_wbos_dmp.log", "w+")
 #define STP_DUMP(fmt, ...)                  \
     do                                      \
     {                                       \
@@ -33,7 +33,7 @@ FILE *dbgfp = NULL;
     (is_timer_active(timer_ptr) ? "ACTIVE" : "INACTIVE")
 #define L2_STATE_STRING(s, p) l2_port_state_to_string(s, p)
 
-char *l2_port_state_string[] =
+char* l2_port_state_string[] =
     {
         "DISABLED",
         "BLOCKING",
@@ -52,7 +52,7 @@ char *l2_port_state_string[] =
  *
  * @return void
  */
-void stpdbg_dump_nl_db_node(INTERFACE_NODE *node)
+void stpdbg_dump_nl_db_node(INTERFACE_NODE* node)
 {
     STP_DUMP("-------------------------\n");
     STP_DUMP("Name           : %s\n", node->ifname);
@@ -68,7 +68,6 @@ void stpdbg_dump_nl_db_node(INTERFACE_NODE *node)
     STP_DUMP("\n");
 }
 
-
 /**
  * @brief Выводит данные о конкретном интерфейсе по его имени.
  *
@@ -79,10 +78,10 @@ void stpdbg_dump_nl_db_node(INTERFACE_NODE *node)
  *
  * @return void
  */
-void stpdbg_dump_nl_db_intf(char *name)
+void stpdbg_dump_nl_db_intf(char* name)
 {
     INTERFACE_NODE search_node;
-    INTERFACE_NODE *node = 0;
+    INTERFACE_NODE* node = 0;
 
     memset(&search_node, 0, sizeof(INTERFACE_NODE));
     memcpy(search_node.ifname, name, IFNAMSIZ);
@@ -91,7 +90,6 @@ void stpdbg_dump_nl_db_intf(char *name)
     else
         STP_DUMP("Interface : %s not Found\n", name);
 }
-
 
 /**
  * @brief Выводит всю базу данных Netlink, связанную с интерфейсами.
@@ -104,14 +102,13 @@ void stpdbg_dump_nl_db_intf(char *name)
  */
 void stpdbg_dump_nl_db()
 {
-    INTERFACE_NODE *node = 0;
+    INTERFACE_NODE* node = 0;
     struct avl_traverser trav;
     avl_t_init(&trav, g_stpd_intf_db);
 
     while (NULL != (node = avl_t_next(&trav)))
         stpdbg_dump_nl_db_node(node);
 }
-
 
 /**
  * @brief Выводит глобальную статистику работы STP.
@@ -239,7 +236,7 @@ void stpdm_global()
  *
  * @return void
  */
-void stpdm_class(STP_CLASS *stp_class)
+void stpdm_class(STP_CLASS* stp_class)
 {
     UINT8 s1[256], s2[256], s3[256];
 
@@ -308,7 +305,6 @@ void stpdm_class(STP_CLASS *stp_class)
     STP_DUMP("\n");
 }
 
-
 /**
  * @brief Выводит информацию о состоянии порта для заданного экземпляра STP.
  *
@@ -320,9 +316,9 @@ void stpdm_class(STP_CLASS *stp_class)
  *
  * @return void
  */
-void stpdm_port_class(STP_CLASS *stp_class, PORT_ID port_number)
+void stpdm_port_class(STP_CLASS* stp_class, PORT_ID port_number)
 {
-    STP_PORT_CLASS *stp_port;
+    STP_PORT_CLASS* stp_port;
     UINT8 s1[50], s2[50];
 
     stp_port = GET_STP_PORT_CLASS(stp_class, port_number);
@@ -383,8 +379,7 @@ void stpdm_port_class(STP_CLASS *stp_class, PORT_ID port_number)
              stp_port->tx_tcn_bpdu);
 }
 
-
-char *l2_port_state_to_string(uint8_t state, uint32_t port)
+char* l2_port_state_to_string(uint8_t state, uint32_t port)
 {
     if (state >= L2_MAX_PORT_STATE)
         return ("BROKEN");
@@ -534,11 +529,11 @@ void stp_debug_global_enable_vlan(uint16_t vlan_id, uint8_t flag)
  *
  * @return void
  */
-void stpdbg_process_ctl_msg(void *msg)
+void stpdbg_process_ctl_msg(void* msg)
 {
-    STP_CTL_MSG *pmsg = (STP_CTL_MSG *)msg;
+    STP_CTL_MSG* pmsg = (STP_CTL_MSG*)msg;
     int detail = 0;
-    STP_CLASS *stp_class;
+    STP_CLASS* stp_class;
     int i, vlan_id;
     uint32_t port_id;
 

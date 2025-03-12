@@ -5,6 +5,7 @@
         "unistd.h": "c",
         "iterator": "c",
         "memory": "c",
-        "xutility": "c"
+        "xutility": "c",
+        "stp_inc.h": "c"
     }
 }
