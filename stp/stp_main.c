@@ -250,6 +250,7 @@ int stpd_main()
     atexit(cleanup);
     signal(SIGINT, signal_handler);
     signal(SIGTERM, signal_handler);
+    signal(SIGSEGV, signal_handler); // Segmentation Fault
 
     /* Игнорирование сигнала SIGPIPE */
     signal(SIGPIPE, SIG_IGN);
