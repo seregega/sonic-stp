@@ -342,7 +342,7 @@ int stpd_main()
         return -1;
     }
 
-    STP_LOG_INFO("STP Daemon Started");
+    STP_LOG_INFO("-------------------------------STP wbos Daemon Started-----------------------------------------------");
 
     event_base_dispatch(g_stpd_evbase);
 
