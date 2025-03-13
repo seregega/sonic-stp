@@ -289,7 +289,7 @@ int send_resp_ipc_packet(STPD_CONTEXT* ctx, const char* message, size_t len)
     int retries = 0;
     ssize_t bytes_sent;
 
-    bytes_sent = sendto(ctx->response_ipc_fd, message, strlen(message), 0, (struct sockaddr*)&ctx->addr_resp_ipc, len);
+    bytes_sent = sendto(ctx->response_ipc_fd, message, len, 0, (struct sockaddr*)&ctx->addr_resp_ipc, sizeof(ctx->addr_resp_ipc));
 
     if (bytes_sent == -1)
     {
@@ -405,7 +405,7 @@ int stpd_main()
         return -1;
     }
 
-    /* Инициализация IPC для взаимодействия с менеджером STP <- WBOS_CLI */
+    /* Инициализация IPC для взаимодействия с менеджером STP -> WBOS_CLI */
     // rc = stpd_ipc_init();
     rc = stpd_response_send_wbos_init_ctx(&stpd_context, 6945);
     if (rc < 0)
