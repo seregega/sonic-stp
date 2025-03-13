@@ -267,7 +267,7 @@ int stpd_response_send_wbos_init_ctx(STPD_CONTEXT* ctx, int PORT_UDP_R_WBOS)
     memset(&ctx->addr_resp_ipc, 0, sizeof(ctx->addr_resp_ipc));
     ctx->addr_resp_ipc.sin_family = AF_INET;
     ctx->addr_resp_ipc.sin_port = htons(PORT_UDP_R_WBOS);
-    ctx->addr_resp_ipc.sin_addr.s_addr = htonl(LOOPBACK_ADDR);
+    ctx->addr_resp_ipc.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 
     // Привязка функции отправки
     ctx->send_resp_ipc_packet = send_resp_ipc_packet;
