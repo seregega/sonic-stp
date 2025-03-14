@@ -435,7 +435,7 @@ int stpd_main()
      * @brief инициализация функции переодической отправки статуса в wbos для статистики и контроля состояния
      *
      */
-    evtimer_3000ms = stpmgr_libevent_create(g_stpd_evbase, -1, EV_PERSIST, stpmgr_3000ms_timer, (void*)&stpd_context, &stp_3000ms_tv);
+    evtimer_3000ms = stpmgr_libevent_create_periodic_sender(g_stpd_evbase, -1, EV_PERSIST, stpmgr_3000ms_timer, (void*)&stpd_context, &stp_3000ms_tv);
     if (!evtimer_3000ms)
     {
         STP_LOG_ERR("evtimer_3000ms for periodic send Create failed");

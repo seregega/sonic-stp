@@ -81,6 +81,40 @@ struct event* stpmgr_libevent_create(struct event_base* base,
     return NULL;
 }
 
+struct event* stpmgr_libevent_create_periodic_sender(struct event_base* base,
+                                                     evutil_socket_t sock,
+                                                     short flags,
+                                                     void* cb_fn,
+                                                     void* arg,
+                                                     const struct timeval* tv)
+{
+    struct event* ev = 0;
+    int prio;
+
+    prio = STP_LIBEV_LOW_PRI_Q;
+
+    ev = event_new(base, sock, flags, cb_fn, arg);
+    if (ev)
+    {
+        if (-1 == event_priority_set(ev, prio))
+        {
+            STP_LOG_ERR("event_priority_set failed");
+            return NULL;
+        }
+
+        if (-1 != event_add(ev, tv))
+        {
+            STP_LOG_DEBUG("Event Added for periodic sender : ev-%p, arg", ev);
+            STP_LOG_DEBUG("base : %p, sock : %d, flags : %x, cb_fn : %p", base, sock, flags, cb_fn);
+            if (tv)
+                STP_LOG_DEBUG("tv.sec : %u, tv.usec : %u", tv->tv_sec, tv->tv_usec);
+
+            return ev;
+        }
+    }
+    return NULL;
+}
+
 /**
  * @brief Инициализирует менеджер STP.
  *
@@ -2531,12 +2565,12 @@ void stpmgr_recv_client_msg(evutil_socket_t fd, short what, void* arg)
     {
         STP_LOG_ERR("message error, len too small= %d", len);
     }
-    else if (!((buffer[0]=='w')&&(buffer[1]=='b')&&(buffer[2]=='o')&&(buffer[3]=='s')&&(buffer[4]==' ')))
+    else if (!((buffer[0] == 'w') && (buffer[1] == 'b') && (buffer[2] == 'o') && (buffer[3] == 's') && (buffer[4] == ' ')))
     {
         STP_LOG_ERR("message error, magic is wrong = %.*s", 4, buffer);
     }
     else
     {
-        stpmgr_process_ipc_msg((STP_IPC_MSG*)(buffer+5), (len-5), client_sock);
+        stpmgr_process_ipc_msg((STP_IPC_MSG*)(buffer + 5), (len - 5), client_sock);
     }
 }
