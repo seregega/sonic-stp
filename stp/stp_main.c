@@ -398,7 +398,7 @@ int stpd_main()
 
     /* Инициализация IPC для взаимодействия с менеджером STP <- WBOS_CLI */
     // rc = stpd_ipc_init();
-    rc = stpd_ipc_wbos_init(6954);
+    rc = stpd_ipc_wbos_init(UDP_PORT_SND);
     if (rc < 0)
     {
         STP_LOG_ERR("ipc init failed");
@@ -407,7 +407,7 @@ int stpd_main()
 
     /* Инициализация IPC для взаимодействия с менеджером STP -> WBOS_CLI */
     // rc = stpd_ipc_init();
-    rc = stpd_response_send_wbos_init_ctx(&stpd_context, 6945);
+    rc = stpd_response_send_wbos_init_ctx(&stpd_context, UDP_PORT_RCV);
     if (rc < 0)
     {
         STP_LOG_ERR("ctx send init failed");
@@ -415,9 +415,18 @@ int stpd_main()
     }
 
     const char test_messages[] = {
-        "Hello WBOS from stpd with automatic debugi"};
+        "stpd info start"};
 
-        stpd_context.send_resp_ipc_packet(&stpd_context,test_messages, sizeof(test_messages));
+    stpd_context.send_resp_ipc_packet(&stpd_context, test_messages, sizeof(test_messages));
+
+
+
+    rc = stpd_response_send_wbos_init_ctx(&stpd_context, UDP_PORT_RCV);
+    if (rc < 0)
+    {
+        STP_LOG_ERR("ctx send init failed");
+        return -1;
+    }
 
     /* Создание базы данных интерфейсов STP */
     g_stpd_intf_db = avl_create(&stp_intf_avl_compare, NULL, NULL);
@@ -447,6 +456,8 @@ int stpd_main()
         STP_LOG_ERR("Create g_stpd_pkt_tx_handle, errno : %s", strerror(errno));
         return -1;
     }
+
+    // создаем ассинхонный
 
     STP_LOG_INFO("-------------------------------STP wbos Daemon Started-----------------------------------------------");
 
