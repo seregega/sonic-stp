@@ -345,7 +345,7 @@ int stpd_main()
 {
     int rc = 0;
     struct timeval stp_100ms_tv = {0, STPD_100MS_TIMEOUT};
-    struct timeval stp_3000ms_tv = {0, STPD_3SEC_TIMEOUT};
+    struct timeval stp_3000ms_tv = {3, 100};
     struct timeval msec_50 = {0, 50 * 1000};
     struct event* evtimer_100ms = 0;
     struct event* evtimer_3000ms = 0;
