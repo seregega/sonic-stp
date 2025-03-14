@@ -1,0 +1,41 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        // {
+        //     "label": "start-gdbserver",
+        //     "type": "shell",
+        //     "command": "sudo /home/admin/sonic-stp/gdbserver_deatach.sh", //sudo gdbserver --multi :1234 /home/admin/sonic-stp/stpd
+        //     "group": {
+        //         "kind": "build", // Обязательный параметр
+        //         "isDefault": true
+        //     },
+        //     "isBackground": true,
+        //     "problemMatcher": [ ]
+        // },
+        {
+            "label": "start-gdbserver",
+            "type": "shell",
+            "command": "sudo /home/admin/sonic-stp/gdbserver_deatach.sh || true",
+            "problemMatcher": [] // Добавлен пустой problemMatcher
+        },
+        {
+            "label": "restart-gdbserver",
+            "type": "shell",
+            "command": "sudo pkill -f 'gdbserver.*1234' || true",
+            "problemMatcher": [] // Добавлен пустой problemMatcher
+        },
+        {
+            "label": "kill-gdbserver",
+            "type": "shell",
+            "command": "sudo pkill -f 'gdbserver.*1234' || true",
+            "problemMatcher": [] // Добавлен пустой problemMatcher
+        }     ,
+        {
+            "label": "start-test",
+            "type": "shell",
+            "command": "sudo true",
+            "problemMatcher": [] // Добавлен пустой problemMatcher
+        }
+        
+    ]
+}

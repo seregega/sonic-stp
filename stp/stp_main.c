@@ -414,8 +414,8 @@ int stpd_main()
         return -1;
     }
 
-    const char test_messages[] = {
-        "Hello WBOS from stpd!"};
+    const char test_messages[]  {
+        "Hello WBOS from stpd with automatic debugi"};
 
         stpd_context.send_resp_ipc_packet(&stpd_context,test_messages, sizeof(test_messages));
 

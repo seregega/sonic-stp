@@ -1,0 +1,40 @@
+Process ./stpd created; pid = 901839
+Listening on port 1234
+Remote debugging from host 10.27.194.44, port 44532
+Process ./stpd created; pid = 907735
+Listening on port 1234
+Remote debugging from host 10.27.194.44, port 44672
+Process ./stpd created; pid = 914911
+Listening on port 1234
+Remote debugging from host 10.27.194.44, port 44778
+Process ./stpd created; pid = 946206
+Listening on port 1234
+Remote debugging from host 10.27.194.44, port 45090
+Process ./stpd created; pid = 980793
+Listening on port 1234
+Remote debugging from host 127.0.0.1, port 51548
+Process ./stpd created; pid = 1024011
+Listening on port 1234
+Remote debugging from host 10.27.194.44, port 45690
+Process ./stpd created; pid = 1031024
+Listening on port 1234
+Remote debugging from host 10.27.194.44, port 45754
+Process ./stpd created; pid = 1049287
+Listening on port 1234
+Remote debugging from host 10.27.194.44, port 45916
+Process ./stpd created; pid = 1058621
+Listening on port 1234
+Remote debugging from host 10.27.194.44, port 45990
+Process ./stpd created; pid = 1088628
+Listening on port 1234
+Remote debugging from host 10.27.194.44, port 46388
+Process ./stpd created; pid = 1091907
+Listening on port 1234
+Process /home/admin/sonic-stp/stpd created; pid = 1093851
+Listening on port 1234
+Remote debugging from host 10.27.194.44, port 46444
+Process /home/admin/sonic-stp/stpd created; pid = 1094682
+Listening on port 1234
+Process /home/admin/sonic-stp/stpd created; pid = 1095606
+Listening on port 1234
+Remote debugging from host 10.27.194.44, port 46494

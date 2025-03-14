@@ -1,4 +1,7 @@
 {
+    "terminal.integrated.env.linux": {
+        "SHELL": null
+    },
     "files.associations": {
         "stp_main.h": "c",
         "applog.h": "c",
@@ -7,5 +10,7 @@
         "memory": "c",
         "xutility": "c",
         "stp_inc.h": "c"
-    }
+    },
+    "C_Cpp.default.compilerPath": "/usr/bin/gcc",
+    "C_Cpp.errorSquiggles": "disabled"
 }

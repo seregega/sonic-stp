@@ -2,17 +2,17 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Remote Debug",
+      "name": "GDB Remote Debug",
       "type": "cppdbg",
       "request": "launch",
-      "program": "${workspaceFolder}/stpd", // Полный путь на удалённой машине
+      "program": "/home/admin/sonic-stp/stpd", // Полный путь к бинарнику на удалённой машине
       "args": [],
-      "stopAtEntry": false,
-      "cwd": "${workspaceFolder}", // Рабочая директория на удалённой машине
+      "stopAtEntry": false, // Остановка на входе в программу (можно включить, если нужно)
+      "cwd": "/home/admin/sonic-stp", // Рабочая директория на удалённой машине
       "environment": [],
       "externalConsole": false,
       "MIMode": "gdb",
-      "miDebuggerServerAddress": "10.27.194.44:1234", // IP и порт gdbserver
+      "miDebuggerServerAddress": "127.0.0.1:1234", // IP и порт gdbserver
       "miDebuggerPath": "/usr/bin/gdb", // Путь к GDB на локальной машине
       "setupCommands": [
         {
@@ -20,7 +20,10 @@
           "text": "-enable-pretty-printing",
           "ignoreFailures": true
         }
-      ]
+      ],
+      "preLaunchTask": "start-gdbserver", // Задача для запуска gdbserver
+      // "preLaunchTask": "start-gdbserver", // Задача для запуска gdbserver
+      "postDebugTask": "kill-gdbserver" // Задача для остановки gdbserver
     }
   ]
 }
