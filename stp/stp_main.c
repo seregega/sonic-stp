@@ -276,6 +276,16 @@ int stpd_response_send_wbos_init_ctx(STPD_CONTEXT* ctx, int PORT_UDP_R_WBOS)
     return 0;
 }
 
+void stpmgr_3000ms_timer(evutil_socket_t fd, short what, void* arg)
+{
+    STPD_CONTEXT* ctx = (STPD_CONTEXT*)arg;
+
+    const char test_messages_periodic[] = {
+        "stpd periodic 3000 message"};
+
+    ctx->send_resp_ipc_packet(ctx, test_messages_periodic, sizeof(test_messages_periodic));
+}
+
 // Функция отправки пакета с повторами
 int send_resp_ipc_packet(STPD_CONTEXT* ctx, const char* message, size_t len)
 {
@@ -335,8 +345,10 @@ int stpd_main()
 {
     int rc = 0;
     struct timeval stp_100ms_tv = {0, STPD_100MS_TIMEOUT};
+    struct timeval stp_3000ms_tv = {0, STPD_3SEC_TIMEOUT};
     struct timeval msec_50 = {0, 50 * 1000};
     struct event* evtimer_100ms = 0;
+    struct event* evtimer_3000ms = 0;
     struct event* evpkt = 0;
     struct event_config* cfg = 0;
     int8_t ret = 0;
@@ -419,12 +431,14 @@ int stpd_main()
 
     stpd_context.send_resp_ipc_packet(&stpd_context, test_messages, sizeof(test_messages));
 
-
-
-    rc = stpd_response_send_wbos_init_ctx(&stpd_context, UDP_PORT_RCV);
-    if (rc < 0)
+    /**
+     * @brief инициализация функции переодической отправки статуса в wbos для статистики и контроля состояния
+     *
+     */
+    evtimer_3000ms = stpmgr_libevent_create(g_stpd_evbase, -1, EV_PERSIST, stpmgr_3000ms_timer, (void*)&stpd_context, &stp_3000ms_tv);
+    if (!evtimer_3000ms)
     {
-        STP_LOG_ERR("ctx send init failed");
+        STP_LOG_ERR("evtimer_3000ms for periodic send Create failed");
         return -1;
     }
 

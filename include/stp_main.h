@@ -60,6 +60,7 @@ struct netlink_db_s;
 #define g_stpd_extend_mode stpd_context.extend_mode
 
 #define STPD_100MS_TIMEOUT 100000
+#define STPD_3SEC_TIMEOUT 3000000
 
 #define STP_ETH_NAME_PREFIX_LEN 8
 
