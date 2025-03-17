@@ -226,6 +226,85 @@ void stpdm_global()
         g_max_stp_port);
 }
 
+void stpdm_global_wbos()
+{
+    UINT8 enable_string[500];
+    UINT8 enable_admin_string[500];
+    UINT8 fastspan_string[500];
+    UINT8 fastspan_admin_string[500];
+    UINT8 fastuplink_admin_string[500];
+    UINT8 protect_string[500];
+    UINT8 protect_do_disable_string[500];
+    UINT8 protect_disabled_string[500];
+    UINT8 root_protect_string[500];
+
+    mask_to_string(g_stp_enable_mask, enable_string, sizeof(enable_string)); // PORT_MASK BITMAP_T
+    mask_to_string(g_stp_enable_config_mask, enable_admin_string, sizeof(enable_admin_string));
+    mask_to_string(stp_global.protect_mask, protect_string, sizeof(protect_string));
+    mask_to_string(stp_global.protect_do_disable_mask, protect_do_disable_string, sizeof(protect_do_disable_string));
+    mask_to_string(stp_global.protect_disabled_mask, protect_disabled_string, sizeof(protect_disabled_string));
+    mask_to_string(stp_global.root_protect_mask, root_protect_string, sizeof(root_protect_string));
+    mask_to_string(g_fastspan_mask, fastspan_string, sizeof(fastspan_string));
+    mask_to_string(g_fastspan_config_mask, fastspan_admin_string, sizeof(fastspan_admin_string));
+    mask_to_string(g_fastuplink_mask, fastuplink_admin_string, sizeof(fastuplink_admin_string));
+
+    STP_DUMP("STP GLOBAL DATA STRUCTURE\n");
+    
+    STP_DUMP("==============================\n\n\t");
+
+    STP_DUMP(
+        "sizeof(STP_GLOBAL)     = %lu bytes\n\t"
+        "sizeof(STP_CLASS)      = %lu bytes\n\t"
+        "sizeof(STP_PORT_CLASS) = %lu bytes\n\t"
+        "max_instances          = %d\n\t"
+        "active_instances       = %d\n\t"
+        "tick_id                = %d\n\t"
+        "fast_span              = %d\n\t"
+        "class_array            = 0x%p\n\t"
+        "config_bpdu            = 0x%p\n\t"
+        "tcn_bpdu               = 0x%p\n\t"
+        "pvst_config_bpdu       = 0x%p\n\t"
+        "pvst_tcn_bpdu          = 0x%p\n\t"
+        "enable_mask            = %s\n\t"
+        "enable_admin_mask      = %s\n\t"
+        "protect_mask           = %s\n\t"
+        "protect_do_disable_mask= %s\n\t"
+        "protect_disabled_mask  = %s\n\t"
+        "root_protect_mask      = %s\n\t"
+        "root_protect_timeout   = %u\n\t"
+        "fastspan_mask          = %s\n\t"
+        "fastspan_admin_mask    = %s\n\t"
+        "fastuplink_admin_mask  = %s\n\t"
+        "stp_drop_count     = %u\n\t"
+        "tcn_drop_count     = %u\n\t"
+        "max port           = %u\n",
+        sizeof(STP_GLOBAL),
+        sizeof(STP_CLASS),
+        sizeof(STP_PORT_CLASS),
+        stp_global.max_instances,
+        stp_global.active_instances,
+        stp_global.tick_id,
+        stp_global.fast_span,
+        stp_global.class_array,
+        &stp_global.config_bpdu,
+        &stp_global.tcn_bpdu,
+        &stp_global.pvst_config_bpdu,
+        &stp_global.pvst_tcn_bpdu,
+        enable_string,
+        enable_admin_string,
+        protect_string,
+        protect_do_disable_string,
+        protect_disabled_string,
+        root_protect_string,
+        stp_global.root_protect_timeout,
+        fastspan_string,
+        fastspan_admin_string,
+        fastuplink_admin_string,
+        stp_global.stp_drop_count,
+        stp_global.tcn_drop_count,
+        g_max_stp_port);
+}
+
 /**
  * @brief Выводит данные о заданной структуре класса STP.
  *

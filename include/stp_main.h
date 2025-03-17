@@ -203,6 +203,7 @@ typedef struct STPD_CONTEXT
 
     struct sockaddr_in addr_resp_ipc; //структура для хранения адреса посылок для send_resp_ipc_packet
     int (*send_resp_ipc_packet)(struct STPD_CONTEXT*, const char*, size_t);  //функция для отправки пакета данных в ответ на команду или событие в WBOS
+    uint8_t* buf_to_wbos;
 } STPD_CONTEXT;
 
 extern char msgtype_str[][64];

@@ -286,17 +286,24 @@ void stpmgr_3000ms_timer(evutil_socket_t fd, short what, void* arg)
     ctx->send_resp_ipc_packet(ctx, test_messages_periodic, sizeof(test_messages_periodic));
 }
 
-// Функция отправки пакета с повторами
+
+/**
+ * @brief метод класса для отправки сообщений в wbos
+ * 
+ * @param ctx указатель на базовый класс
+ * @param message указатель на подготовленное посылаемое соббщение
+ * @param len длинна сообщения
+ * @return int 0 -> OK
+ */
 int send_resp_ipc_packet(STPD_CONTEXT* ctx, const char* message, size_t len)
 {
-    if (!ctx || ctx->response_ipc_fd < 0 || !message)
+    if (!ctx || ctx->response_ipc_fd < 0 || !message || !len)
     {
         // fprintf(stderr, "Invalid arguments\n");
         STP_LOG_ERR("Invalid context or message");
         return -1;
     }
 
-    int retries = 0;
     ssize_t bytes_sent;
 
     bytes_sent = sendto(ctx->response_ipc_fd, message, len, 0, (struct sockaddr*)&ctx->addr_resp_ipc, sizeof(ctx->addr_resp_ipc));
@@ -345,13 +352,15 @@ int stpd_main()
 {
     int rc = 0;
     struct timeval stp_100ms_tv = {0, STPD_100MS_TIMEOUT};
-    struct timeval stp_3000ms_tv = {3, 100};
+    struct timeval stp_3000ms_tv = {5, 42}; //5.000042 sec
     struct timeval msec_50 = {0, 50 * 1000};
     struct event* evtimer_100ms = 0;
     struct event* evtimer_3000ms = 0;
     struct event* evpkt = 0;
     struct event_config* cfg = 0;
     int8_t ret = 0;
+
+    static uint8_t send_msg_to_wbos_buffer[8*1024]={0}; //глобальный буфер для дампа статистики и посылки сообщений в wbos
 
     // Регистрация обработчиков
     atexit(cleanup);
@@ -371,6 +380,7 @@ int stpd_main()
 
     /* Обнуление структуры контекста STP */
     memset(&stpd_context, 0, sizeof(STPD_CONTEXT));
+    stpd_context.buf_to_wbos=send_msg_to_wbos_buffer; //глобальный статический буфер на стеке
 
     /* Установка расширенного режима */
     stpmgr_set_extend_mode(true); // STP<->RSTP?
