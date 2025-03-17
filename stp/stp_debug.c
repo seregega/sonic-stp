@@ -18,6 +18,9 @@
 
 #include "stp_inc.h"
 
+#define MIN(a, b) ((a) < (b) ? (a) : (b))
+#define MAX(a, b) ((a) > (b) ? (a) : (b))
+
 FILE* dbgfp = NULL;
 
 #define STP_DUMP_START dbgfp = fopen("/var/log/stpd_wbos_dmp.log", "w+")
@@ -244,165 +247,26 @@ int stpdm_global_wbos(char* buffer, size_t buffer_size)
 
     uint32_t ret_size = 0;
     int status = 0;
-    // UINT8 enable_string[500];
-    // UINT8 enable_admin_string[500];
-    // UINT8 fastspan_string[500];
-    // UINT8 fastspan_admin_string[500];
-    // UINT8 fastuplink_admin_string[500];
-    // UINT8 protect_string[500];
-    // UINT8 protect_do_disable_string[500];
-    // UINT8 protect_disabled_string[500];
-    // UINT8 root_protect_string[500];
+    uint8_t temp_buf[500];
     do
     {
-        /* code */
-
-        // status=mask_to_string(g_stp_enable_mask, enable_string, sizeof(enable_string);
-        status = mask_to_string(g_stp_enable_mask, current_pos, buffer_size);
-        if (status)
-            ; // PORT_MASK BITMAP_T)
-        {
-            ret_size += status;
-        }
-        else break;
-
-        // status = mask_to_string(g_stp_enable_config_mask, enable_admin_string, sizeof(enable_admin_string));
-        status = mask_to_string(g_stp_enable_config_mask, current_pos + ret_size, buffer_size - ret_size);
-        if (status)
-            ; // PORT_MASK BITMAP_T)
-        {
-            ret_size += status;
-        }
-        else break;
-
-        // status = mask_to_string(stp_global.protect_mask, protect_string, sizeof(protect_string));
-        status = mask_to_string(stp_global.protect_mask, current_pos + ret_size, buffer_size - ret_size);
-        if (status)
-            ; // PORT_MASK BITMAP_T)
-        {
-            ret_size += status;
-        }
-        else break;
-
-        // status = mask_to_string(stp_global.protect_do_disable_mask, protect_do_disable_string, sizeof(protect_do_disable_string));
-        status = mask_to_string(stp_global.protect_do_disable_mask, current_pos + ret_size, buffer_size - ret_size);
-
-        if (status)
-            ; // PORT_MASK BITMAP_T)
-        {
-            ret_size += status;
-        }
-        else break;
-
-        status = mask_to_string(stp_global.protect_disabled_mask, current_pos + ret_size, buffer_size - ret_size);
-        if (status)
-            ; // PORT_MASK BITMAP_T)
-        {
-            ret_size += status;
-        }
-        else break;
-
-        status = mask_to_string(stp_global.root_protect_mask, current_pos + ret_size, buffer_size - ret_size);
-        if (status)
-            ; // PORT_MASK BITMAP_T)
-        {
-            ret_size += status;
-        }
-        else break;
-
-        status = mask_to_string(g_fastspan_mask, current_pos + ret_size, buffer_size - ret_size);
-        if (status)
-            ; // PORT_MASK BITMAP_T)
-        {
-            ret_size += status;
-        }
-        else break;
-
-        status = mask_to_string(g_fastspan_config_mask, current_pos + ret_size, buffer_size - ret_size);
-        if (status)
-            ; // PORT_MASK BITMAP_T)
-        {
-            ret_size += status;
-        }
-        else break;
-
-        status = mask_to_string(g_fastuplink_mask, current_pos + ret_size, buffer_size - ret_size);
-        if (status)
-            ; // PORT_MASK BITMAP_T)
-        {
-            ret_size += status;
-        }
-        else break;
-
         // STP_DUMP("STP GLOBAL DATA STRUCTURE\n");
         status = snprintf(current_pos + ret_size, buffer_size - ret_size, "STP GLOBAL DATA STRUCTURE\n");
         if (status)
-            ; // PORT_MASK BITMAP_T)
         {
             ret_size += status;
         }
-        else break;
+        else
+            break;
 
         // STP_DUMP("==============================\n\n\t");
         status = snprintf(current_pos + ret_size, buffer_size - ret_size, "==============================\n\n\t");
         if (status)
-            ; // PORT_MASK BITMAP_T)
         {
             ret_size += status;
         }
-        else break;
-
-        // STP_DUMP(
-        //     "sizeof(STP_GLOBAL)     = %lu bytes\n\t"
-        //     "sizeof(STP_CLASS)      = %lu bytes\n\t"
-        //     "sizeof(STP_PORT_CLASS) = %lu bytes\n\t"
-        //     "max_instances          = %d\n\t"
-        //     "active_instances       = %d\n\t"
-        //     "tick_id                = %d\n\t"
-        //     "fast_span              = %d\n\t"
-        //     "class_array            = 0x%p\n\t"
-        //     "config_bpdu            = 0x%p\n\t"
-        //     "tcn_bpdu               = 0x%p\n\t"
-        //     "pvst_config_bpdu       = 0x%p\n\t"
-        //     "pvst_tcn_bpdu          = 0x%p\n\t"
-        //     "enable_mask            = %s\n\t"
-        //     "enable_admin_mask      = %s\n\t"
-        //     "protect_mask           = %s\n\t"
-        //     "protect_do_disable_mask= %s\n\t"
-        //     "protect_disabled_mask  = %s\n\t"
-        //     "root_protect_mask      = %s\n\t"
-        //     "root_protect_timeout   = %u\n\t"
-        //     "fastspan_mask          = %s\n\t"
-        //     "fastspan_admin_mask    = %s\n\t"
-        //     "fastuplink_admin_mask  = %s\n\t"
-        //     "stp_drop_count     = %u\n\t"
-        //     "tcn_drop_count     = %u\n\t"
-        //     "max port           = %u\n",
-        //     sizeof(STP_GLOBAL),
-        //     sizeof(STP_CLASS),
-        //     sizeof(STP_PORT_CLASS),
-        //     stp_global.max_instances,
-        //     stp_global.active_instances,
-        //     stp_global.tick_id,
-        //     stp_global.fast_span,
-        //     stp_global.class_array,
-        //     &stp_global.config_bpdu,
-        //     &stp_global.tcn_bpdu,
-        //     &stp_global.pvst_config_bpdu,
-        //     &stp_global.pvst_tcn_bpdu,
-        //     enable_string,
-        //     enable_admin_string,
-        //     protect_string,
-        //     protect_do_disable_string,
-        //     protect_disabled_string,
-        //     root_protect_string,
-        //     stp_global.root_protect_timeout,
-        //     fastspan_string,
-        //     fastspan_admin_string,
-        //     fastuplink_admin_string,
-        //     stp_global.stp_drop_count,
-        //     stp_global.tcn_drop_count,
-        //     g_max_stp_port);
+        else
+            break;
 
         status = snprintf(current_pos + ret_size, buffer_size - ret_size, "sizeof(STP_GLOBAL)     = %lu bytes\n\t"
                                                                           "sizeof(STP_CLASS)      = %lu bytes\n\t"
@@ -416,19 +280,10 @@ int stpdm_global_wbos(char* buffer, size_t buffer_size)
                                                                           "tcn_bpdu               = 0x%p\n\t"
                                                                           "pvst_config_bpdu       = 0x%p\n\t"
                                                                           "pvst_tcn_bpdu          = 0x%p\n\t"
-                                                                          "enable_mask            = %s\n\t"
-                                                                          "enable_admin_mask      = %s\n\t"
-                                                                          "protect_mask           = %s\n\t"
-                                                                          "protect_do_disable_mask= %s\n\t"
-                                                                          "protect_disabled_mask  = %s\n\t"
-                                                                          "root_protect_mask      = %s\n\t"
-                                                                          "root_protect_timeout   = %u\n\t"
-                                                                          "fastspan_mask          = %s\n\t"
-                                                                          "fastspan_admin_mask    = %s\n\t"
-                                                                          "fastuplink_admin_mask  = %s\n\t"
                                                                           "stp_drop_count     = %u\n\t"
                                                                           "tcn_drop_count     = %u\n\t"
                                                                           "max port           = %u\n",
+                          "root_protect_timeout   = %u\n\t",
                           sizeof(STP_GLOBAL),
                           sizeof(STP_CLASS),
                           sizeof(STP_PORT_CLASS),
@@ -441,27 +296,172 @@ int stpdm_global_wbos(char* buffer, size_t buffer_size)
                           &stp_global.tcn_bpdu,
                           &stp_global.pvst_config_bpdu,
                           &stp_global.pvst_tcn_bpdu,
-                          enable_string,
-                          enable_admin_string,
-                          protect_string,
-                          protect_do_disable_string,
-                          protect_disabled_string,
-                          root_protect_string,
-                          stp_global.root_protect_timeout,
-                          fastspan_string,
-                          fastspan_admin_string,
-                          fastuplink_admin_string,
                           stp_global.stp_drop_count,
                           stp_global.tcn_drop_count,
-                          g_max_stp_port);
+                          g_max_stp_port,
+                          stp_global.root_protect_timeout);
         if (status)
-            ; // PORT_MASK BITMAP_T)
         {
             ret_size += status;
         }
-        else break;
+        else
+            break;
 
-        return ret_size;
+            total_written=mask_to_string(g_stp_enable_mask, temp_buf, sizeof(temp_buf);
+        // status = mask_to_string(g_stp_enable_mask, current_pos + ret_size, buffer_size - ret_size);
+
+        if (total_written)
+        {
+            // ret_size += status;
+        }
+        else
+            break;
+
+        status = snprintf(current_pos + ret_size, MIN(buffer_size - ret_size,sizeof(temp_buf)),"enable_mask            = %s\n\t",temp_buf);
+        if (status)
+        {
+            ret_size += status;
+        }
+        else
+            break;
+
+            total_written = mask_to_string(g_stp_enable_config_mask, temp_buf, sizeof(temp_buf));
+        // status = mask_to_string(g_stp_enable_config_mask, current_pos + ret_size, buffer_size - ret_size);
+        if (total_written)
+        {
+            // ret_size += status;
+        }
+        else
+            break;
+
+            status = snprintf(current_pos + ret_size, MIN(buffer_size - ret_size,sizeof(temp_buf)),"enable_admin_mask      = %s\n\t",temp_buf);
+            if (status)
+            {
+            ret_size += status;
+            }
+            else
+                break;
+
+        total_written = mask_to_string(stp_global.protect_mask, temp_buf, sizeof(temp_buf));
+        // status = mask_to_string(stp_global.protect_mask, current_pos + ret_size, buffer_size - ret_size);
+        if (total_written)
+        {
+            // ret_size += status;
+        }
+        else
+            break;
+
+            status = snprintf(current_pos + ret_size, MIN(buffer_size - ret_size,sizeof(temp_buf)),"protect_mask           = %s\n\t",temp_buf);
+            if (status)
+            {
+            ret_size += status;
+            }
+            else
+                break;
+
+            
+
+        total_written = mask_to_string(stp_global.protect_do_disable_mask, temp_buf, sizeof(temp_buf));
+        // status = mask_to_string(stp_global.protect_do_disable_mask, current_pos + ret_size, buffer_size - ret_size);
+        if (total_written)
+        {
+            // ret_size += status;
+        }
+        else
+            break;
+
+            status = snprintf(current_pos + ret_size, MIN(buffer_size - ret_size,sizeof(temp_buf)),"protect_do_disable_mask= %s\n\t",temp_buf);
+            if (status)
+            {
+            ret_size += status;
+            }
+            else
+                break;
+        
+
+                total_written = mask_to_string(stp_global.protect_disabled_mask,  temp_buf, sizeof(temp_buf));
+        if (total_written)
+        {
+            // ret_size += status;
+        }
+        else
+            break;
+
+            status = snprintf(current_pos + ret_size, MIN(buffer_size - ret_size,sizeof(temp_buf)),"protect_disabled_mask  = %s\n\t",temp_buf);
+            if (status)
+            {
+            ret_size += status;
+            }
+            else
+                break;
+
+            total_written = mask_to_string(stp_global.root_protect_mask,  temp_buf, sizeof(temp_buf));
+        if (total_written)
+        {
+            // ret_size += status;
+        }
+        else
+            break;
+
+                                        
+            status = snprintf(current_pos + ret_size, MIN(buffer_size - ret_size,sizeof(temp_buf)),"root_protect_mask      = %s\n\t",temp_buf);
+            if (status)
+            {
+            ret_size += status;
+            }
+            else
+                break;
+
+            total_written = mask_to_string(g_fastspan_mask,  temp_buf, sizeof(temp_buf));
+        if (total_written)
+        {
+            // ret_size += status;
+        }
+        else
+            break;
+
+                                                
+            status = snprintf(current_pos + ret_size, MIN(buffer_size - ret_size,sizeof(temp_buf)),"fastspan_mask          = %s\n\t",temp_buf);
+            if (status)
+            {
+            ret_size += status;
+            }
+            else
+                break;
+
+            total_written = mask_to_string(g_fastspan_config_mask,  temp_buf, sizeof(temp_buf));
+        if (total_written)
+        {
+            // ret_size += status;
+        }
+        else
+            break;
+
+            status = snprintf(current_pos + ret_size, MIN(buffer_size - ret_size,sizeof(temp_buf)),"fastspan_admin_mask    = %s\n\t",temp_buf);
+            if (status)
+            {
+            ret_size += status;
+            }
+            else
+                break;
+
+            total_written = mask_to_string(g_fastuplink_mask,  temp_buf, sizeof(temp_buf));
+        if (total_written)
+        {
+            // ret_size += status;
+        }
+        else
+            break;
+
+            status = snprintf(current_pos + ret_size, MIN(buffer_size - ret_size,sizeof(temp_buf)),"fastuplink_admin_mask  = %s\n\t",temp_buf);
+            if (status)
+            {
+            ret_size += status;
+            }
+            else
+                break;
+
+            return ret_size;
 
     } while (false);
 
