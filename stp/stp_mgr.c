@@ -2523,7 +2523,9 @@ static void stpmgr_process_ipc_msg(STP_IPC_MSG* msg, int len, struct sockaddr_un
     {
         STP_LOG_INFO("Server received from %s", client_addr.sun_path);
         stpdbg_process_ctl_msg(msg->data);
-        stpmgr_send_reply(client_addr, (void*)msg, len);
+        //TODO! refactor to internal class sendf
+        //stpmgr_send_reply(client_addr, (void*)msg, len);
+        STP_LOG_ERR("SOMEHOW tried to send to UNIX socket %s", client_addr.sun_path);
         break;
     }
 

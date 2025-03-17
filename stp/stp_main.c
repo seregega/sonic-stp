@@ -22,6 +22,7 @@ STPD_CONTEXT stpd_context;
 #define BUFFER_SIZE 64 * 1024 // максимальное значениедлинны пакета данных
 #define RECV_BUF_SIZE 212992  // размер буфера приема от соника
 // #define MAX_RETRIES 3         // количество попыток на отправку
+#define SEND_STATIC_BUF_SIZE 8*1024
 
 #ifndef STPD_WBOS_RELEASE
 #define STPD_WBOS_DEBUG 1
@@ -271,7 +272,7 @@ int stpd_response_send_wbos_init_ctx(STPD_CONTEXT* ctx, int PORT_UDP_R_WBOS)
 
     // Привязка функции отправки
     ctx->send_resp_ipc_packet = send_resp_ipc_packet;
-    STP_LOG_DEBUG("ipc init done");
+    STP_LOG_DEBUG("ipc to wbos  init done");
 
     return 0;
 }
@@ -283,7 +284,9 @@ void stpmgr_3000ms_timer(evutil_socket_t fd, short what, void* arg)
     const char test_messages_periodic[] = {
         "stpd periodic 3000 message"};
 
-    ctx->send_resp_ipc_packet(ctx, test_messages_periodic, sizeof(test_messages_periodic));
+    stpdm_global_wbos((char*)ctx->buf_to_wbos,SEND_STATIC_BUF_SIZE)
+
+    ctx->send_resp_ipc_packet(ctx, (char*)ctx->buf_to_wbos,SEND_STATIC_BUF_SIZE);
 }
 
 
@@ -360,7 +363,7 @@ int stpd_main()
     struct event_config* cfg = 0;
     int8_t ret = 0;
 
-    static uint8_t send_msg_to_wbos_buffer[8*1024]={0}; //глобальный буфер для дампа статистики и посылки сообщений в wbos
+    static uint8_t send_msg_to_wbos_buffer[SEND_STATIC_BUF_SIZE]={0}; //глобальный буфер для дампа статистики и посылки сообщений в wbos
 
     // Регистрация обработчиков
     atexit(cleanup);

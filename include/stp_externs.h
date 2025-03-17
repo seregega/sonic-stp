@@ -146,7 +146,7 @@ extern void stpdebug_display_bpdu(STP_CONFIG_BPDU* bpdu, bool verbose, bool rx_f
 extern void stpdm_class(STP_CLASS* stp_class);
 extern void stpdm_port_class(STP_CLASS* stp_class, PORT_ID port_number);
 extern void stpdm_global();
-extern void stpdm_global_wbos();
+extern int stpdm_global_wbos(char* buffer, size_t buffer_size);
 extern void stpdm_clear();
 
 extern void stp_show_debug_log(UINT16 instance_id, UINT16 print_count, UINT8 print_all);
