@@ -307,7 +307,7 @@ int stpdm_global_wbos(char* buffer, size_t buffer_size)
         else
             break;
 
-            total_written=mask_to_string(g_stp_enable_mask, temp_buf, sizeof(temp_buf);
+            total_written=mask_to_string(g_stp_enable_mask, temp_buf, sizeof(temp_buf));
         // status = mask_to_string(g_stp_enable_mask, current_pos + ret_size, buffer_size - ret_size);
 
         if (total_written)
