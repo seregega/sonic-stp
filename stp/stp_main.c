@@ -22,7 +22,7 @@ STPD_CONTEXT stpd_context;
 #define BUFFER_SIZE 64 * 1024 // максимальное значениедлинны пакета данных
 #define RECV_BUF_SIZE 212992  // размер буфера приема от соника
 // #define MAX_RETRIES 3         // количество попыток на отправку
-#define SEND_STATIC_BUF_SIZE 8*1024
+#define SEND_STATIC_BUF_SIZE 8 * 1024
 
 #ifndef STPD_WBOS_RELEASE
 #define STPD_WBOS_DEBUG 1
@@ -280,19 +280,23 @@ int stpd_response_send_wbos_init_ctx(STPD_CONTEXT* ctx, int PORT_UDP_R_WBOS)
 void stpmgr_3000ms_timer(evutil_socket_t fd, short what, void* arg)
 {
     STPD_CONTEXT* ctx = (STPD_CONTEXT*)arg;
+    int state = 0;
 
-    const char test_messages_periodic[] = {
-        "stpd periodic 3000 message"};
+    // const char test_messages_periodic[] = {
+    //     "stpd periodic 3000 message"};
 
-    stpdm_global_wbos((char*)ctx->buf_to_wbos,SEND_STATIC_BUF_SIZE)
-
-    ctx->send_resp_ipc_packet(ctx, (char*)ctx->buf_to_wbos,SEND_STATIC_BUF_SIZE);
+    state =  stpdm_global_wbos((char*)ctx->buf_to_wbos, SEND_STATIC_BUF_SIZE);
+    if (state)
+    {
+        ctx->send_resp_ipc_packet(ctx, (char*)ctx->buf_to_wbos, state);
+    }else{
+        STP_LOG_ERR("stpdm_global_wbos processing error, sending");
+    }
 }
-
 
 /**
  * @brief метод класса для отправки сообщений в wbos
- * 
+ *
  * @param ctx указатель на базовый класс
  * @param message указатель на подготовленное посылаемое соббщение
  * @param len длинна сообщения
@@ -355,7 +359,7 @@ int stpd_main()
 {
     int rc = 0;
     struct timeval stp_100ms_tv = {0, STPD_100MS_TIMEOUT};
-    struct timeval stp_3000ms_tv = {5, 42}; //5.000042 sec
+    struct timeval stp_3000ms_tv = {5, 42}; // 5.000042 sec
     struct timeval msec_50 = {0, 50 * 1000};
     struct event* evtimer_100ms = 0;
     struct event* evtimer_3000ms = 0;
@@ -363,7 +367,7 @@ int stpd_main()
     struct event_config* cfg = 0;
     int8_t ret = 0;
 
-    static uint8_t send_msg_to_wbos_buffer[SEND_STATIC_BUF_SIZE]={0}; //глобальный буфер для дампа статистики и посылки сообщений в wbos
+    static uint8_t send_msg_to_wbos_buffer[SEND_STATIC_BUF_SIZE] = {0}; // глобальный буфер для дампа статистики и посылки сообщений в wbos
 
     // Регистрация обработчиков
     atexit(cleanup);
@@ -383,7 +387,7 @@ int stpd_main()
 
     /* Обнуление структуры контекста STP */
     memset(&stpd_context, 0, sizeof(STPD_CONTEXT));
-    stpd_context.buf_to_wbos=send_msg_to_wbos_buffer; //глобальный статический буфер на стеке
+    stpd_context.buf_to_wbos = send_msg_to_wbos_buffer; // глобальный статический буфер на стеке
 
     /* Установка расширенного режима */
     stpmgr_set_extend_mode(true); // STP<->RSTP?
