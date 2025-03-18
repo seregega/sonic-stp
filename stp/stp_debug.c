@@ -251,7 +251,7 @@ int stpdm_global_wbos(char* buffer, size_t buffer_size)
     do
     {
         // STP_DUMP("STP GLOBAL DATA STRUCTURE\n");
-        status = snprintf(current_pos + ret_size, buffer_size - ret_size, "STP GLOBAL DATA STRUCTURE ");
+        status = snprintf(current_pos + ret_size, buffer_size - ret_size, "STP_GLOBAL_DATA_STRUCTURE ");
         if (status)
         {
             ret_size += status;
@@ -268,22 +268,22 @@ int stpdm_global_wbos(char* buffer, size_t buffer_size)
         else
             break;
 
-        status = snprintf(current_pos + ret_size, buffer_size - ret_size, "sizeof(STP_GLOBAL)     = %lu bytes\t"
-                                                                          "sizeof(STP_CLASS)      = %lu bytes\t"
-                                                                          "sizeof(STP_PORT_CLASS) = %lu bytes\t"
-                                                                          "max_instances          = %d\t"
-                                                                          "active_instances       = %d\t"
-                                                                          "tick_id                = %d\t"
-                                                                          "fast_span              = %d\t"
-                                                                          "class_array            = 0x%p\t"
-                                                                          "config_bpdu            = 0x%p\t"
-                                                                          "tcn_bpdu               = 0x%p\t"
-                                                                          "pvst_config_bpdu       = 0x%p\t"
-                                                                          "pvst_tcn_bpdu          = 0x%p\t"
-                                                                          "stp_drop_count     = %u\t"
-                                                                          "tcn_drop_count     = %u\t"
-                                                                          "max port           = %u\t",
-                          "root_protect_timeout   = %u\t",
+        status = snprintf(current_pos + ret_size, buffer_size - ret_size, "sizeof(STP_GLOBAL[bytes])=%lu\t"
+                                                                          "sizeof(STP_CLASS[bytes])= %lu\t"
+                                                                          "sizeof(STP_PORT_CLASS[bytes])= %lu\t"
+                                                                          "max_instances= %d\t"
+                                                                          "active_instances= %d\t"
+                                                                          "tick_id= %d\t"
+                                                                          "fast_span= %d\t"
+                                                                          "class_array= 0x%p\t"
+                                                                          "config_bpdu= 0x%p\t"
+                                                                          "tcn_bpdu= 0x%p\t"
+                                                                          "pvst_config_bpdu= 0x%p\t"
+                                                                          "pvst_tcn_bpdu= 0x%p\t"
+                                                                          "stp_drop_count= %u\t"
+                                                                          "tcn_drop_count= %u\t"
+                                                                          "max port= %u\t",
+                          "root_protect_timeout= %u\t",
                           sizeof(STP_GLOBAL),
                           sizeof(STP_CLASS),
                           sizeof(STP_PORT_CLASS),
@@ -317,7 +317,7 @@ int stpdm_global_wbos(char* buffer, size_t buffer_size)
         else
             break;
 
-        status = snprintf(current_pos + ret_size, MIN(buffer_size - ret_size, sizeof(temp_buf)), "enable_mask            = %s\t", temp_buf);
+        status = snprintf(current_pos + ret_size, MIN(buffer_size - ret_size, sizeof(temp_buf)), "enable_mask= %s\t", temp_buf);
         if (status)
         {
             ret_size += status;
@@ -334,7 +334,7 @@ int stpdm_global_wbos(char* buffer, size_t buffer_size)
         else
             break;
 
-        status = snprintf(current_pos + ret_size, MIN(buffer_size - ret_size, sizeof(temp_buf)), "enable_admin_mask      = %s\t", temp_buf);
+        status = snprintf(current_pos + ret_size, MIN(buffer_size - ret_size, sizeof(temp_buf)), "enable_admin_mask= %s\t", temp_buf);
         if (status)
         {
             ret_size += status;
@@ -351,7 +351,7 @@ int stpdm_global_wbos(char* buffer, size_t buffer_size)
         else
             break;
 
-        status = snprintf(current_pos + ret_size, MIN(buffer_size - ret_size, sizeof(temp_buf)), "protect_mask           = %s\t", temp_buf);
+        status = snprintf(current_pos + ret_size, MIN(buffer_size - ret_size, sizeof(temp_buf)), "protect_mask= %s\t", temp_buf);
         if (status)
         {
             ret_size += status;
@@ -384,7 +384,7 @@ int stpdm_global_wbos(char* buffer, size_t buffer_size)
         else
             break;
 
-        status = snprintf(current_pos + ret_size, MIN(buffer_size - ret_size, sizeof(temp_buf)), "protect_disabled_mask  = %s\t", temp_buf);
+        status = snprintf(current_pos + ret_size, MIN(buffer_size - ret_size, sizeof(temp_buf)), "protect_disabled_mask= %s\t", temp_buf);
         if (status)
         {
             ret_size += status;
@@ -400,7 +400,7 @@ int stpdm_global_wbos(char* buffer, size_t buffer_size)
         else
             break;
 
-        status = snprintf(current_pos + ret_size, MIN(buffer_size - ret_size, sizeof(temp_buf)), "root_protect_mask      = %s\t", temp_buf);
+        status = snprintf(current_pos + ret_size, MIN(buffer_size - ret_size, sizeof(temp_buf)), "root_protect_mask= %s\t", temp_buf);
         if (status)
         {
             ret_size += status;
@@ -416,7 +416,7 @@ int stpdm_global_wbos(char* buffer, size_t buffer_size)
         else
             break;
 
-        status = snprintf(current_pos + ret_size, MIN(buffer_size - ret_size, sizeof(temp_buf)), "fastspan_mask          = %s\t", temp_buf);
+        status = snprintf(current_pos + ret_size, MIN(buffer_size - ret_size, sizeof(temp_buf)), "fastspan_mask= %s\t", temp_buf);
         if (status)
         {
             ret_size += status;
@@ -432,7 +432,7 @@ int stpdm_global_wbos(char* buffer, size_t buffer_size)
         else
             break;
 
-        status = snprintf(current_pos + ret_size, MIN(buffer_size - ret_size, sizeof(temp_buf)), "fastspan_admin_mask    = %s\t", temp_buf);
+        status = snprintf(current_pos + ret_size, MIN(buffer_size - ret_size, sizeof(temp_buf)), "fastspan_admin_mask= %s\t", temp_buf);
         if (status)
         {
             ret_size += status;
@@ -448,7 +448,7 @@ int stpdm_global_wbos(char* buffer, size_t buffer_size)
         else
             break;
 
-        status = snprintf(current_pos + ret_size, MIN(buffer_size - ret_size, sizeof(temp_buf)), "fastuplink_admin_mask  = %s\t", temp_buf);
+        status = snprintf(current_pos + ret_size, MIN(buffer_size - ret_size, sizeof(temp_buf)), "fastuplink_admin_mask= %s\t", temp_buf);
         if (status)
         {
             ret_size += status;
