@@ -259,22 +259,22 @@ int stpdm_global_wbos(char* buffer, size_t buffer_size)
         else
             break;
 
-        status = snprintf(current_pos + ret_size, buffer_size - ret_size, "sizeof(STP_GLOBAL[bytes])= %lu\t"
-                                                                          "sizeof(STP_CLASS[bytes])= %lu\t"
-                                                                          "sizeof(STP_PORT_CLASS[bytes])= %lu\t"
-                                                                          "max_instances= %d\t"
-                                                                          "active_instances= %d\t"
-                                                                          "tick_id= %d\t"
-                                                                          "fast_span= %d\t"
-                                                                          "class_array= %p\t"
-                                                                          "config_bpdu= %p\t"
-                                                                          "tcn_bpdu= %p\t"
-                                                                          "pvst_config_bpdu= %p\t"
-                                                                          "pvst_tcn_bpdu= %p\t"
-                                                                          "stp_drop_count= %u\t"
-                                                                          "tcn_drop_count= %u\t"
-                                                                          "max port= %u\t"
-                                                                          "root_protect_timeout= %u\t",
+        status = snprintf(current_pos + ret_size, buffer_size - ret_size, "sizeof(STP_GLOBAL[bytes])= %lu "
+                                                                          "sizeof(STP_CLASS[bytes])= %lu "
+                                                                          "sizeof(STP_PORT_CLASS[bytes])= %lu "
+                                                                          "max_instances= %d "
+                                                                          "active_instances= %d "
+                                                                          "tick_id= %d "
+                                                                          "fast_span= %d "
+                                                                          "class_array= %p "
+                                                                          "config_bpdu= %p "
+                                                                          "tcn_bpdu= %p "
+                                                                          "pvst_config_bpdu= %p "
+                                                                          "pvst_tcn_bpdu= %p "
+                                                                          "stp_drop_count= %u "
+                                                                          "tcn_drop_count= %u "
+                                                                          "max port= %u "
+                                                                          "root_protect_timeout= %u ",
                           sizeof(STP_GLOBAL),
                           sizeof(STP_CLASS),
                           sizeof(STP_PORT_CLASS),
@@ -306,7 +306,7 @@ int stpdm_global_wbos(char* buffer, size_t buffer_size)
         {
             temp_buf[0] = '-', temp_buf[1] = '-', temp_buf[2] = '-', temp_buf[3] = '\0';
         }
-        status = snprintf(current_pos + ret_size, MIN(buffer_size - ret_size, sizeof(temp_buf)), "enable_mask= %s\t", temp_buf);
+        status = snprintf(current_pos + ret_size, MIN(buffer_size - ret_size, sizeof(temp_buf)), "enable_mask= %s ", temp_buf);
         if (status)
         {
             ret_size += status;
@@ -321,7 +321,7 @@ int stpdm_global_wbos(char* buffer, size_t buffer_size)
             temp_buf[0] = '-', temp_buf[1] = '-', temp_buf[2] = '-', temp_buf[3] = '\0';
         }
 
-        status = snprintf(current_pos + ret_size, MIN(buffer_size - ret_size, sizeof(temp_buf)), "enable_admin_mask= %s\t", temp_buf);
+        status = snprintf(current_pos + ret_size, MIN(buffer_size - ret_size, sizeof(temp_buf)), "enable_admin_mask= %s ", temp_buf);
         if (status)
         {
             ret_size += status;
@@ -336,7 +336,7 @@ int stpdm_global_wbos(char* buffer, size_t buffer_size)
             temp_buf[0] = '-', temp_buf[1] = '-', temp_buf[2] = '-', temp_buf[3] = '\0';
         }
 
-        status = snprintf(current_pos + ret_size, MIN(buffer_size - ret_size, sizeof(temp_buf)), "protect_mask= %s\t", temp_buf);
+        status = snprintf(current_pos + ret_size, MIN(buffer_size - ret_size, sizeof(temp_buf)), "protect_mask= %s ", temp_buf);
         if (status)
         {
             ret_size += status;
@@ -351,7 +351,7 @@ int stpdm_global_wbos(char* buffer, size_t buffer_size)
             temp_buf[0] = '-', temp_buf[1] = '-', temp_buf[2] = '-', temp_buf[3] = '\0';
         }
 
-        status = snprintf(current_pos + ret_size, MIN(buffer_size - ret_size, sizeof(temp_buf)), "protect_do_disable_mask= %s\t", temp_buf);
+        status = snprintf(current_pos + ret_size, MIN(buffer_size - ret_size, sizeof(temp_buf)), "protect_do_disable_mask= %s ", temp_buf);
         if (status)
         {
             ret_size += status;
@@ -365,7 +365,7 @@ int stpdm_global_wbos(char* buffer, size_t buffer_size)
             temp_buf[0] = '-', temp_buf[1] = '-', temp_buf[2] = '-', temp_buf[3] = '\0';
         }
 
-        status = snprintf(current_pos + ret_size, MIN(buffer_size - ret_size, sizeof(temp_buf)), "protect_disabled_mask= %s\t", temp_buf);
+        status = snprintf(current_pos + ret_size, MIN(buffer_size - ret_size, sizeof(temp_buf)), "protect_disabled_mask= %s ", temp_buf);
         if (status)
         {
             ret_size += status;
@@ -379,7 +379,7 @@ int stpdm_global_wbos(char* buffer, size_t buffer_size)
             temp_buf[0] = '-', temp_buf[1] = '-', temp_buf[2] = '-', temp_buf[3] = '\0';
         }
 
-        status = snprintf(current_pos + ret_size, MIN(buffer_size - ret_size, sizeof(temp_buf)), "root_protect_mask= %s\t", temp_buf);
+        status = snprintf(current_pos + ret_size, MIN(buffer_size - ret_size, sizeof(temp_buf)), "root_protect_mask= %s ", temp_buf);
         if (status)
         {
             ret_size += status;
@@ -393,7 +393,7 @@ int stpdm_global_wbos(char* buffer, size_t buffer_size)
             temp_buf[0] = '-', temp_buf[1] = '-', temp_buf[2] = '-', temp_buf[3] = '\0';
         }
 
-        status = snprintf(current_pos + ret_size, MIN(buffer_size - ret_size, sizeof(temp_buf)), "fastspan_mask= %s\t", temp_buf);
+        status = snprintf(current_pos + ret_size, MIN(buffer_size - ret_size, sizeof(temp_buf)), "fastspan_mask= %s ", temp_buf);
         if (status)
         {
             ret_size += status;
@@ -407,7 +407,7 @@ int stpdm_global_wbos(char* buffer, size_t buffer_size)
             temp_buf[0] = '-', temp_buf[1] = '-', temp_buf[2] = '-', temp_buf[3] = '\0';
         }
 
-        status = snprintf(current_pos + ret_size, MIN(buffer_size - ret_size, sizeof(temp_buf)), "fastspan_admin_mask= %s\t", temp_buf);
+        status = snprintf(current_pos + ret_size, MIN(buffer_size - ret_size, sizeof(temp_buf)), "fastspan_admin_mask= %s ", temp_buf);
         if (status)
         {
             ret_size += status;
@@ -421,7 +421,7 @@ int stpdm_global_wbos(char* buffer, size_t buffer_size)
             temp_buf[0] = '-', temp_buf[1] = '-', temp_buf[2] = '-', temp_buf[3] = '\0';
         }
 
-        status = snprintf(current_pos + ret_size, MIN(buffer_size - ret_size, sizeof(temp_buf)), "fastuplink_admin_mask= %s\t", temp_buf);
+        status = snprintf(current_pos + ret_size, MIN(buffer_size - ret_size, sizeof(temp_buf)), "fastuplink_admin_mask= %s ", temp_buf);
         if (status)
         {
             ret_size += status;
