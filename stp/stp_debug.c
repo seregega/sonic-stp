@@ -282,7 +282,7 @@ int stpdm_global_wbos(char* buffer, size_t buffer_size)
                                                                           "pvst_tcn_bpdu= 0x%p\t"
                                                                           "stp_drop_count= %u\t"
                                                                           "tcn_drop_count= %u\t"
-                                                                          "max port= %u\t",
+                                                                          "max port= %u\t"
                           "root_protect_timeout= %u\t",
                           sizeof(STP_GLOBAL),
                           sizeof(STP_CLASS),
