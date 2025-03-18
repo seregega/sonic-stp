@@ -251,7 +251,7 @@ int stpdm_global_wbos(char* buffer, size_t buffer_size)
     do
     {
         // STP_DUMP("STP GLOBAL DATA STRUCTURE\n");
-        status = snprintf(current_pos + ret_size, buffer_size - ret_size, "stpd status global state vector start=> ");
+        status = snprintf(current_pos + ret_size, buffer_size - ret_size, "stpd status global state vector start>> ");
         if (status)
         {
             ret_size += status;
@@ -273,7 +273,7 @@ int stpdm_global_wbos(char* buffer, size_t buffer_size)
                                                                           "pvst_tcn_bpdu= %p "
                                                                           "stp_drop_count= %u "
                                                                           "tcn_drop_count= %u "
-                                                                          "max port= %u "
+                                                                          "max_port= %u "
                                                                           "root_protect_timeout= %u ",
                           sizeof(STP_GLOBAL),
                           sizeof(STP_CLASS),
