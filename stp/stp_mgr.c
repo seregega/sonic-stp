@@ -2567,14 +2567,14 @@ void stpmgr_recv_client_msg(evutil_socket_t fd, short what, void* arg)
     {
         STP_LOG_ERR("message error, len too small= %d", len);
     }
-    else if (!((buffer[0] == 'w') && (buffer[1] == 'b') && (buffer[2] == 'o') && (buffer[3] == 's') && (buffer[4] == ' ')))
+    else if (!((buffer[0] == 'w') && (buffer[1] == 'b') && (buffer[2] == 'o') && (buffer[3] == 's') && (buffer[4] == 'b')))
     {
-        STP_LOG_INFO("message error, magic is wrong bin ,essage= %.*s", 4, buffer);
-        stpmgr_process_ipc_msg((STP_IPC_MSG*)(buffer), (len), client_sock);
+        STP_LOG_ERR("message error, magic is wrong bin header, message= %.*s", 5, buffer);
+        //stpmgr_process_ipc_msg((STP_IPC_MSG*)(buffer), (len), client_sock);
     }
     else
     {
-        STP_LOG_INFO("magic is ok, alpha message = %.*s", 4, buffer);
+        STP_LOG_INFO("magic is ok, alpha message = %.*s", 5, buffer);
         stpmgr_process_ipc_msg((STP_IPC_MSG*)(buffer + 5), (len - 5), client_sock);
     }
 }
