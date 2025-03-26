@@ -285,11 +285,13 @@ void stpmgr_3000ms_timer(evutil_socket_t fd, short what, void* arg)
     // const char test_messages_periodic[] = {
     //     "stpd periodic 3000 message"};
 
-    state =  stpdm_global_wbos((char*)ctx->buf_to_wbos, SEND_STATIC_BUF_SIZE);
+    state = stpdm_global_wbos((char*)ctx->buf_to_wbos, SEND_STATIC_BUF_SIZE);
     if (state)
     {
         ctx->send_resp_ipc_packet(ctx, (char*)ctx->buf_to_wbos, state);
-    }else{
+    }
+    else
+    {
         STP_LOG_ERR("stpdm_global_wbos processing error, sending");
     }
 }
@@ -443,10 +445,12 @@ int stpd_main()
         return -1;
     }
 
+#ifdef STPD_WBOS_DEBUG
     const char test_messages[] = {
-        "stpd info start"};
+        "stpd info cold start"};
 
     stpd_context.send_resp_ipc_packet(&stpd_context, test_messages, sizeof(test_messages));
+#endif // STPD_WBOS_DEBUG
 
     /**
      * @brief инициализация функции переодической отправки статуса в wbos для статистики и контроля состояния

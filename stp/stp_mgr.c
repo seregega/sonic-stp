@@ -134,6 +134,14 @@ void stpmgr_init(UINT16 max_stp_instances)
         sys_assert(0);
     }
 
+// TODO! написать сообщение об успешом ините
+#ifdef STPD_WBOS_DEBUG
+    const char test_messages[] = {
+        "stpd info init ok"};
+
+        stpd_context.send_resp_ipc_packet(&stpd_context, test_messages, sizeof(test_messages));
+#endif // STPD_WBOS_DEBUG
+
     STP_LOG_INFO("init done, max stp instances %d", max_stp_instances);
 }
 
@@ -2523,8 +2531,8 @@ static void stpmgr_process_ipc_msg(STP_IPC_MSG* msg, int len, struct sockaddr_un
     {
         STP_LOG_INFO("Server received from %s", client_addr.sun_path);
         stpdbg_process_ctl_msg(msg->data);
-        //TODO! refactor to internal class sendf
-        //stpmgr_send_reply(client_addr, (void*)msg, len);
+        // TODO! refactor to internal class sendf
+        // stpmgr_send_reply(client_addr, (void*)msg, len);
         STP_LOG_ERR("SOMEHOW tried to send to UNIX socket %s", client_addr.sun_path);
         break;
     }
@@ -2570,7 +2578,7 @@ void stpmgr_recv_client_msg(evutil_socket_t fd, short what, void* arg)
     else if (!((buffer[0] == 'w') && (buffer[1] == 'b') && (buffer[2] == 'o') && (buffer[3] == 's') && (buffer[4] == 'b')))
     {
         STP_LOG_ERR("message error, magic is wrong bin header, message= %.*s", 5, buffer);
-        //stpmgr_process_ipc_msg((STP_IPC_MSG*)(buffer), (len), client_sock);
+        // stpmgr_process_ipc_msg((STP_IPC_MSG*)(buffer), (len), client_sock);
     }
     else
     {
