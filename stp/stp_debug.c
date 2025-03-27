@@ -429,7 +429,7 @@ int stpdm_global_wbos(char* buffer, size_t buffer_size)
         else
             break;
 
-        status = snprintf(current_pos + ret_size, MIN(buffer_size - ret_size, sizeof(temp_buf)), "\n"); // end of the message
+        status = snprintf(current_pos + ret_size, MIN(buffer_size - ret_size, sizeof(temp_buf)), "\n\0"); // end of the message
         if (status)
         {
             ret_size += status;
