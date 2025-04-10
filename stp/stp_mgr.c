@@ -2051,10 +2051,10 @@ static void stpmgr_process_bridge_config_msg(void* msg)
         stp_global.enable = true;
         stp_global.proto_mode = pmsg->stp_mode;
 
-        if (pmsg->stp_mode==L2_NONE)
-        {
-            stp_global.sstp_enabled = 1; //этот флаг заставляет отказаться от отправки pvst bpdu и отправлять ieee bpdu
-        }
+        // if (pmsg->stp_mode==L2_NONE)
+        // {
+        //     stp_global.sstp_enabled = 1; //этот флаг заставляет отказаться от отправки pvst bpdu и отправлять ieee bpdu
+        // }
         
 
         stpmgr_config_root_protect_timeout(pmsg->rootguard_timeout);
