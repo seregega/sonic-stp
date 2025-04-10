@@ -1108,7 +1108,7 @@ bool stpmgr_add_control_port(STP_INDEX stp_index, PORT_ID port_number, uint8_t m
 
     set_mask_bit(stp_class->control_mask, port_number);
 
-    if (mode == 0) // UnTagged mode
+    if (mode == 0) // UnTagged mode //если сюда попали с мод0 то будет циско бпду
         set_mask_bit(stp_class->untag_mask, port_number);
 
     stpmgr_initialize_control_port(stp_class, port_number);
@@ -2050,6 +2050,12 @@ static void stpmgr_process_bridge_config_msg(void* msg)
     {
         stp_global.enable = true;
         stp_global.proto_mode = pmsg->stp_mode;
+
+        if (pmsg->stp_mode==L2_NONE)
+        {
+            stp_global.sstp_enabled = 1; //этот флаг заставляет отказаться от отправки pvst bpdu и отправлять ieee bpdu
+        }
+        
 
         stpmgr_config_root_protect_timeout(pmsg->rootguard_timeout);
 
