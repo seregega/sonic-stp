@@ -947,19 +947,27 @@ void stputil_send_pvst_bpdu(STP_CLASS *stp_class, PORT_ID port_number, enum STP_
     vlan_id = stp_class->vlan_id;
 
     untagged = stputil_is_port_untag(vlan_id, port_number);
-
-    if (-1 == stp_pkt_tx_handler(port_number, vlan_id, (void *)bpdu, bpdu_size, !untagged))
-    {
-        // Handle send err
-        STP_LOG_ERR("Send PVST-BPDU Failed Vlan %u Port %u", vlan_id, port_number);
-    }
-
-    // PVST+ compatibility
-    // send an untagged IEEE BPDU when sending a PVST BPDU for VLAN 1
-    if (stp_class->vlan_id == 1)
+    
+    if (g_stp_pvst_config_bpdu.protocol_id==L2_NONE)
     {
         stputil_send_bpdu(stp_class, port_number, type);
+    }else{
+
+        if (-1 == stp_pkt_tx_handler(port_number, vlan_id, (void *)bpdu, bpdu_size, !untagged))
+        {
+            // Handle send err
+            STP_LOG_ERR("Send PVST-BPDU Failed Vlan %u Port %u", vlan_id, port_number);
+        }
+    
+        // PVST+ compatibility
+        // send an untagged IEEE BPDU when sending a PVST BPDU for VLAN 1
+        if (stp_class->vlan_id == 1)
+        {
+            stputil_send_bpdu(stp_class, port_number, type);
+        }
     }
+
+
 }
 
 /**
