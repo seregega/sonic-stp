@@ -139,7 +139,7 @@ void stpmgr_init(UINT16 max_stp_instances)
     const char test_messages[] = {
         "stpd info init ok"};
 
-        stpd_context.send_resp_ipc_packet(&stpd_context, test_messages, sizeof(test_messages));
+    stpd_context.send_resp_ipc_packet(&stpd_context, test_messages, sizeof(test_messages));
 #endif // STPD_WBOS_DEBUG
 
     STP_LOG_INFO("init done, max stp instances %d", max_stp_instances);
@@ -2051,11 +2051,10 @@ static void stpmgr_process_bridge_config_msg(void* msg)
         stp_global.enable = true;
         stp_global.proto_mode = pmsg->stp_mode;
 
-        if (pmsg->stp_mode==L2_NONE)
+        if (stp_global.proto_mode == L2_NONE) // RSTP!
         {
-            stp_global.config_bpdu.protocol_version_id = RSTP_BPDU_TYPE; //этот флаг заставляет отказаться от отправки pvst bpdu и отправлять ieee RSTP bpdu
+            stp_global.config_bpdu.protocol_version_id = RSTP_BPDU_TYPE; // этот флаг заставляет отказаться от отправки pvst bpdu и отправлять ieee RSTP bpdu
         }
-        
 
         stpmgr_config_root_protect_timeout(pmsg->rootguard_timeout);
 
@@ -2097,23 +2096,31 @@ static void stpmgr_process_bridge_config_msg(void* msg)
  * @return `true`, если STP был успешно активирован для VLAN,
  *         `false`, если произошла ошибка.
  */
-static bool stpmgr_vlan_stp_enable(STP_VLAN_CONFIG_MSG* pmsg)
+
+//**
+*@brief Инициализирует клас и подготавливает инстанс для работы с портом.Должна вызываться при первичной инициализации, затем только добавляются порты и настраиваются приоритеты через остальные функции
+                                                                                                                                *
+                                                                                                                                    *@param pmsg
+                                                                                                                                        *@ return true *
+                                                                                                                            @ return false * /
+                                                                                                                            static bool stpmgr_vlan_stp_enable(STP_VLAN_CONFIG_MSG * pmsg)
 {
     PORT_ATTR* attr;
     int port_count;
     uint32_t port_id;
 
-    volatile  STP_VLAN_CONFIG_MSG* msg_body;
-    msg_body=pmsg;
+    volatile STP_VLAN_CONFIG_MSG* msg_body;
+    msg_body = pmsg;
 
     // STP_LOG_DEBUG("newInst:%d inst_id:%d", pmsg->newInstance, pmsg->inst_id);
     STP_LOG_DEBUG("newInst:%d inst_id:%d", msg_body->newInstance, msg_body->inst_id);
 
-    if (msg_body->newInstance)
+    if (stp_global.proto_mode == L2_NONE) // RSTP!
     {
+        // TODO ! recurent enter
         stpdata_init_class(pmsg->inst_id, pmsg->vlan_id);
 
-        stpsync_add_vlan_to_instance(pmsg->vlan_id, pmsg->inst_id);
+        // stpsync_add_vlan_to_instance(pmsg->vlan_id, pmsg->inst_id);
 
         attr = pmsg->port_list;
         for (port_count = 0; port_count < pmsg->count; port_count++)
@@ -2132,6 +2139,35 @@ static bool stpmgr_vlan_stp_enable(STP_VLAN_CONFIG_MSG* pmsg)
             {
                 /* STP not enabled on this interface. Make it FORWARDING */
                 stpsync_update_port_state(attr[port_count].intf_name, pmsg->inst_id, FORWARDING);
+            }
+        }
+    }
+    else // PVSTP
+    {
+        if (msg_body->newInstance)
+        {
+            stpdata_init_class(pmsg->inst_id, pmsg->vlan_id);
+
+            stpsync_add_vlan_to_instance(pmsg->vlan_id, pmsg->inst_id);
+
+            attr = pmsg->port_list;
+            for (port_count = 0; port_count < pmsg->count; port_count++)
+            {
+                STP_LOG_INFO("Intf:%s Enab:%d Mode:%d", attr[port_count].intf_name, attr[port_count].enabled, attr[port_count].mode);
+                port_id = stp_intf_get_port_id_by_name(attr[port_count].intf_name);
+
+                if (port_id == BAD_PORT_ID)
+                    continue;
+
+                if (attr[port_count].enabled)
+                {
+                    stpmgr_add_control_port(pmsg->inst_id, port_id, attr[port_count].mode); // Sets control_mask
+                }
+                else
+                {
+                    /* STP not enabled on this interface. Make it FORWARDING */
+                    stpsync_update_port_state(attr[port_count].intf_name, pmsg->inst_id, FORWARDING);
+                }
             }
         }
     }
@@ -2182,7 +2218,7 @@ static bool stpmgr_vlan_stp_disable(STP_VLAN_CONFIG_MSG* pmsg)
  */
 static void stpmgr_process_vlan_config_msg(void* msg)
 {
-    STP_VLAN_CONFIG_MSG* pmsg = (STP_VLAN_CONFIG_MSG*)msg;
+    volatile STP_VLAN_CONFIG_MSG* pmsg = (STP_VLAN_CONFIG_MSG*)msg;
 
     if (!pmsg)
     {
