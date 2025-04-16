@@ -2092,6 +2092,7 @@ static void stpmgr_process_bridge_config_msg(void* msg)
  * @return `true`, если STP был успешно активирован для VLAN,
  *         `false`, если произошла ошибка.
  */
+static bool stpmgr_vlan_stp_enable(STP_VLAN_CONFIG_MSG* pmsg)
 {
     PORT_ATTR* attr;
     int port_count;
