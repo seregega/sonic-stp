@@ -2207,7 +2207,7 @@ static bool stpmgr_vlan_stp_disable(STP_VLAN_CONFIG_MSG* pmsg)
  */
 static void stpmgr_process_vlan_config_msg(void* msg)
 {
-    volatile STP_VLAN_CONFIG_MSG* pmsg = (STP_VLAN_CONFIG_MSG*)msg;
+    STP_VLAN_CONFIG_MSG* pmsg = (STP_VLAN_CONFIG_MSG*)msg;
 
     if (!pmsg)
     {
