@@ -2103,7 +2103,11 @@ static bool stpmgr_vlan_stp_enable(STP_VLAN_CONFIG_MSG* pmsg)
     int port_count;
     uint32_t port_id;
 
-    STP_LOG_DEBUG("newInst:%d inst_id:%d", pmsg->newInstance, pmsg->inst_id);
+    static STP_VLAN_CONFIG_MSG* msg_body;
+    msg_body=pmsg;
+
+    // STP_LOG_DEBUG("newInst:%d inst_id:%d", pmsg->newInstance, pmsg->inst_id);
+    STP_LOG_DEBUG("newInst:%d inst_id:%d", msg_body->newInstance, msg_body->inst_id);
 
     if (pmsg->newInstance)
     {
